@@ -4,9 +4,9 @@ import numpy as np
 import pandas as pd
 
 import dask.array as da
-
 import sys
 import os
+
 fluidity_fp  = '/mnt/c/Users/julia/fluidity/fluidity-master/python'
 DA_project_fp = '/mnt/c/Users/julia/Documents/Imperial/DA_project'
 sys.path.append(fluidity_fp)
@@ -22,10 +22,12 @@ print(ug2.GetFieldNames())
 #read the values of the tracers and copy in a vector named p
 p = ug2.GetVectorField('Velocity')
 
-p = da.from_array(p, chunks = [5000, 3])
+#create a dask array
+p = da.from_array(p, chunks = [5000, 63])
 n = len(p)
 print(n)
 
-
+#create background matrix
 Background = da.matmul(p, p.T)
-print(Background.shape)
+Background.compute()
+print(Background[0,0])
