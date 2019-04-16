@@ -5,6 +5,8 @@ import sys
 import os
 
 sys.path.append('fluidity-master')
+sys.path.append('fluidity-master/python')
+sys.path.append('simulation')
 import vtktools
 
 

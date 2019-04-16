@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 
 
 import numpy as np
@@ -7,9 +8,9 @@ import dask.array as da
 import sys
 import os
 
-fluidity_fp  = '/mnt/c/Users/julia/fluidity/fluidity-master/python'
+#fluidity_fp  = '/mnt/c/Users/julia/fluidity/fluidity-master/python'
 DA_project_fp = '/mnt/c/Users/julia/Documents/Imperial/DA_project'
-sys.path.append(fluidity_fp)
+#sys.path.append(fluidity_fp)
 sys.path.append(DA_project_fp)
 
 import vtktools
