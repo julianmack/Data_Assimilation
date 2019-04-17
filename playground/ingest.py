@@ -17,12 +17,12 @@ INTERMEDIATE_FP = "data/small3D_intermediate/"
 
 def main():
     field_name = "Tracer"
-    # fps_sorted = get_sorted_fps_U(DATA_FP, field_name)
-    # U = create_U_from_fps(fps_sorted, field_name)
-    # print(U.shape)
-    # np.save(U_FP, U)
+    fps_sorted = get_sorted_fps_U(DATA_FP, field_name)
+    X = create_X_from_fps(fps_sorted, field_name)
+    print(X.shape)
+    np.save(X_FP, X)
     V = create_V_from_X(X_FP)
-    V_T = trunc_SVD(V)
+    #V_T = trunc_SVD(V)
 
 
 def get_sorted_fps_U(data_dir, field_name):
@@ -71,9 +71,11 @@ def create_X_from_fps(fps, field_name, field_type  = "scalar"):
     return output.T #return (n x M)
 
 def create_V_from_X(input_FP = X_FP):
-    U = np.load(input_FP)
-    V = U - np.matmul(np.mean(U, axis=1), np.ones(U.shape[0]))
-
+    X = np.load(input_FP)
+    # V = X - np.matmul(np.mean(X, axis=1), np.ones(X.shape[0]))
+    n, M = X.shape
+    V = X - np.mean(X, axis=1) @ np.ones(n)
+    V = (M - 1) ** (- 0.5) * V
     return V
 
 def trunc_SVD(V):
