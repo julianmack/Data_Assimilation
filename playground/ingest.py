@@ -16,19 +16,22 @@ INTERMEDIATE_FP = "data/small3D_intermediate/"
 
 
 def main():
-    field_name = "Tracer"
-    fps_sorted = get_sorted_fps_U(DATA_FP, field_name)
-    print("Got sorted list")
-    X = create_X_from_fps(fps_sorted, field_name)
-    print(X.shape)
-    np.save(X_FP, X)
-    V = create_V_from_X(X_FP)
+    # field_name = "Tracer"
+    # fps_sorted = get_sorted_fps_U(DATA_FP, field_name)
+    # print("Got sorted list")
+    # X = create_X_from_fps(fps_sorted, field_name)
+    # print(X.shape)
+    # np.save(X_FP, X)
+    X = np.load(X_FP)
+    V = create_V_from_X(X)
     V_T = trunc_SVD(V)
 
 
 def get_sorted_fps_U(data_dir, field_name):
-    """Creates and returns list of .vtu filepaths sorted according to timestamp in name.
-    Input files in data_dir must be of the form XXXLSBU_<TIMESTAMP_IDX>.vtu"""
+    """Creates and returns list of .vtu filepaths sorted according
+    to timestamp in name.
+    Input files in data_dir must be of the
+    form <XXXX>LSBU_<TIMESTEP INDEX>.vtu"""
 
     fps = os.listdir(data_dir)
 
@@ -36,7 +39,7 @@ def get_sorted_fps_U(data_dir, field_name):
     idx_fps = []
     for fp in fps:
         _, file_number = fp.split("LSBU_")
-        #file_number is of form 'XXX.vtu'
+        #file_number is of form '<IDX>.vtu'
         idx = int(file_number.replace(".vtu", ""))
         idx_fps.append(idx)
 
@@ -80,9 +83,16 @@ def create_X_from_fps(fps, field_name, field_type  = "scalar"):
 
     return output.T #return (n x M)
 
-def create_V_from_X(input_FP = X_FP):
-    X = np.load(input_FP)
-    # V = X - np.matmul(np.mean(X, axis=1), np.ones(X.shape[0]))
+def create_V_from_X(X_fp):
+    """Creates a mean centred matrix V from input matrix X.
+    X_FP can be a numpy matrix or a fp to X"""
+    if type(X_fp) == str:
+        X = np.load(X_fp)
+    elif type(X_fp) == np.ndarray:
+        X = X_fp
+    else:
+        raise TypeError("X_fp must be a filpath or a numpy.ndarray")
+
     n, M = X.shape
     V = X - np.mean(X, axis=1) @ np.ones(n)
     V = (M - 1) ** (- 0.5) * V
@@ -91,6 +101,7 @@ def create_V_from_X(input_FP = X_FP):
 def trunc_SVD(V):
     """Performs Truncated SVD where Truncation parameter is calculated
     according to Rossella et al. 2018 (Optimal Reduced space ...)"""
+
     print("Starting SVD")
     U, s, VH = np.linalg.svd(V, False)
     print("U:", U.shape)
@@ -110,7 +121,6 @@ def trunc_SVD(V):
             trunc_idx += 1
 
     print("# modes kept: ", trunc_idx)
-
     singular = np.zeros_like(s)
     singular[: trunc_idx] = s[: trunc_idx]
     V_trunc = np.matmul(U, np.matmul(np.diag(singular), VH))
