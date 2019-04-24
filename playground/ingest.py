@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-
+"""Ingests data and creates """
 import numpy as np
 import sys
 import os
@@ -54,9 +54,7 @@ def create_X_from_fps(fps, field_name, field_type  = "scalar"):
     """Creates a numpy array of values of scalar field_name
     Input list must be sorted"""
     M = len(fps) #number timesteps
-    n = 100040 #hardcode for now
 
-    output = np.zeros((M, n))
     for idx, fp in enumerate(fps):
         # create array of tracer
         ug = vtktools.vtu(fp)
@@ -67,6 +65,17 @@ def create_X_from_fps(fps, field_name, field_type  = "scalar"):
         else:
             raise ValueError("field_name must be in {\'scalar\', \'vector\'}")
         #print("Length of vector:", vector.shape)
+
+        vec_len, = vector.shape
+        if idx == 0:
+            #fix length of vectors and initialize the output array:
+            n = vec_len
+            output = np.zeros((M, n))
+        else:
+            #enforce all vectors are of the same length
+            assert vec_len == n, "All input .vtu files must be of the same length."
+
+
         output[idx] = vector
 
     return output.T #return (n x M)
