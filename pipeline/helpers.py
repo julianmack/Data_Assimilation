@@ -146,7 +146,7 @@ class VarDataAssimilationPipeline():
             singular[: trunc_idx] = s[: trunc_idx]
             V_trunc2 = U * singular @ W
             assert np.allclose(V_trunc, V_trunc2)
-            
+
         return V_trunc, U_trunc, s_trunc, W_trunc
 
     @staticmethod
@@ -186,17 +186,47 @@ class VarDataAssimilationPipeline():
         return R_inv
 
     @staticmethod
-    def cost_function_J(w, d, G, V, V_plus, u_0, obs, R_inv, alpha, test=True):
-        """Computes VarDA cost function"""
-        trunc, = w.shape
-        n, = u_0.shape
-        nobs, = R_inv.shape[0]
+    def cost_function_J(w, d, G, V, alpha, sigma = None, R_inv = None, test=True):
+        """Computes VarDA cost function.
+        NOTE: eventually - implement this by hand as grad_J and J share quantity Q"""
+        # trunc, = w.shape
+        # n, = u_0.shape
+        # nobs, = R_inv.shape[0]
+
+        print("G {}, V {}, w {}, d {}".format(G.shape, V.shape, w.shape, d.shape))
+        Q = (G @ V @ w - d)
+        if not R_inv and sigma:
+            #When R is proportional to identity
+            J_o = 0.5 / sigma ** 2 * np.dot(Q, Q)
+        elif R_inv:
+            J_o = 0.5 * Q.T @ R_inv @ Q
+        else:
+            raise ValueError("Either R_inv or sigma must be non-zero")
+
+        J_b = 0.5 * alpha * np.dot(w, w)
+        J = alpha * J_b + J_o
+        return J
 
 
+        # if test:
+        #     #check dimensions
+        #     assert G.shape[1] == V.shape[0]
+        #     assert np.allclose(V @ V_plus @ V, V), "V_plus must be the generalized inverse of V"
+        #     assert  R_inv.shape[0] == nobs
+        #     assert d.shape == (nobs,)
+    @staticmethod
+    def grad_J(w, d, G, V, alpha, sigma = None, R_inv = None):
 
-        if test:
-            #check dimensions
-            assert G.shape[1] == V.shape[0]
-            assert np.allclose(V @ V_plus @ V, V), "V_plus must be the generalized inverse of V"
-            assert  R_inv.shape[0] == nobs
-            assert d.shape == (nobs,)
+        Q = (G @ V @ w - d)
+        P = V.T @ G.T
+        if not R_inv and sigma:
+            #When R is proportional to identity
+            grad_o = 0.5 / sigma ** 2 * np.dot(P, Q)
+        elif R_inv:
+            J_o = 0.5 * P @ R_inv @ Q
+        else:
+            raise ValueError("Either R_inv or sigma must be non-zero")
+
+        grad_J = alpha * w + grad_o
+
+        return grad_J

@@ -37,7 +37,6 @@ def main():
     u_c = X[:, t_DA]
     V, u_0 = vda.create_V_from_X(hist_X, return_mean = True)
 
-    V = V[:4, :2] #TODO - delete this line
 
     # Define observations as a random subset of the control state.
     nobs = int(OBS_FRAC * n) #number of observations
@@ -46,15 +45,27 @@ def main():
     observations = np.take(u_c, obs_idx)
 
     #Now define quantities required for 3D-VarDA - see Algorithm 1 in Rossella et al (2019)
-    H = vda.create_H(obs_idx, n, nobs)
-    d = observations - H @ u_0 #'d' in literature
-    R_inv = vda.create_R_inv(OBS_VARIANCE, nobs)
+    H_0 = vda.create_H(obs_idx, n, nobs)
+    d = observations - H_0 @ u_0 #'d' in literature
+    #R_inv = vda.create_R_inv(OBS_VARIANCE, nobs)
     V_trunc, U, s, W = vda.trunc_SVD(V)
 
-    
+    #V_plus_trunc = W.T * (1 / s) @  U.T
 
+    num_modes = s.shape[0]
+    #Define intial w_0
 
+    w_0 = np.zeros((num_modes,)) #TODO - I'm not sure about this - can we assume this?
 
+    #Define costJ and grad_J
+    args =  (d, H_0, V_trunc, ALPHA, OBS_VARIANCE) # list of all args required for cost_function_J and grad_J
+    #args =  (d, H_0, V_trunc, ALPHA, None, R_inv) # list of all args required for cost_function_J and grad_J
+    w_opt = minimize(vda.cost_function_J, w_0, args = args, method='L-BFGS-B', jac=vda.grad_J)
+
+    delta_u_DA = V_trunc @ w_opt
+    u_DA = u_0 + delta_u_DA
+
+    #Compare abs(u_0 - u_c).sum() with abs(u_DA - u_c).sum() in paraview
 
 
 if __name__ == "__main__":
