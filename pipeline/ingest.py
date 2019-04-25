@@ -4,9 +4,9 @@ import numpy as np
 import sys
 import os
 
-sys.path.append('fluidity-master')
-sys.path.append('fluidity-master/python')
-sys.path.append('simulation')
+# sys.path.append('fluidity-master')
+# sys.path.append('fluidity-master/python')
+# sys.path.append('simulation')
 import vtktools
 
 
@@ -19,8 +19,11 @@ def main():
     field_name = "Tracer"
     fps_sorted = get_sorted_fps_U(DATA_FP, field_name)
     print("Got sorted list")
+    exit()
     X = create_X_from_fps(fps_sorted, field_name)
     print(X.shape)
+
+
     np.save(X_FP, X)
 
     V = create_V_from_X(X)
@@ -29,6 +32,7 @@ def main():
 class VarDataAssimilationPipeline():
     """Class to hold @static_method pipeline functions for
     Variational DA
+
     """
 
     def __init__(self):
