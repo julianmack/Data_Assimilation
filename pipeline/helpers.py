@@ -8,7 +8,6 @@ import os
 class VarDataAssimilationPipeline():
     """Class to hold @static_method pipeline functions for
     Variational DA
-
     """
 
     def __init__(self):
@@ -72,7 +71,7 @@ class VarDataAssimilationPipeline():
 
         return output.T #return (n x M)
     @staticmethod
-    def create_V_from_X(X_fp):
+    def create_V_from_X(X_fp, return_mean = False):
         """Creates a mean centred matrix V from input matrix X.
         X_FP can be a numpy matrix or a fp to X"""
         if type(X_fp) == str:
@@ -83,8 +82,12 @@ class VarDataAssimilationPipeline():
             raise TypeError("X_fp must be a filpath or a numpy.ndarray")
 
         n, M = X.shape
-        V = X - np.mean(X, axis=1) @ np.ones(n)
+        mean = np.mean(X, axis=1)
+        V = X - mean @ np.ones(n)
         V = (M - 1) ** (- 0.5) * V
+
+        if return_mean:
+            return V, mean
         return V
 
     @staticmethod

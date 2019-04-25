@@ -1,12 +1,12 @@
 #!/usr/bin/python3
-"""Ingests data and creates """
+"""trunc_SVD pipeline"""
 import numpy as np
-from helpers import VarDataAssimilationPipeline as VarDa
+from helpers import VarDataAssimilationPipeline as VarDA
 import settings
 
 
 def main():
-    vda = VarDa()
+    vda = VarDA()
 
     field_name = "Tracer"
     fps_sorted = vda.get_sorted_fps_U(settings.DATA_FP, field_name)
