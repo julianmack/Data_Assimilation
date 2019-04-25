@@ -119,3 +119,39 @@ class VarDataAssimilationPipeline():
         V_trunc = np.matmul(U, np.matmul(np.diag(singular), VH))
 
         return V_trunc
+
+    @staticmethod
+    def create_H(obs_idxs, n, nobs):
+        """Creates the mapping matrix from the statespace to the observations.
+            :obs_idxs - an iterable of indexes @ which the observations are made
+            :n - size of state space
+            :nobs - number of observations
+        returns
+            :H - numpy array of size (nobs x n)
+        """
+
+        H = np.zeros((nobs, n))
+        H[range(nobs), obs_idxs] = 1
+
+        assert H[0, obs_idxs[0]] == 1, "1s were not correctly assigned"
+        assert H[0, (obs_idxs[0] + 1) % n ] == 0, "0s were not correctly assigned"
+        assert H[nobs - 1, obs_idxs[-1]] == 1, "1s were not correctly assigned"
+        assert H.shape == (nobs, n)
+
+        return H
+
+    @staticmethod
+    def create_R_inv(sigma, nobs):
+        """Creates inverse of R: the observation error matrix.
+        Assume all observations are independent s.t. R = sigma**2 * identity.
+        args
+            :sigma - observation error variance
+            :nobs - number of observations
+        returns
+            :R_inv - (nobs x nobs) array"""
+
+        R_inv = 1.0 / sigma ** 2 * np.eye(nobs)
+
+        assert R_inv.shape == (nobs, nobs)
+        
+        return R_inv

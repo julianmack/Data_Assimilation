@@ -12,9 +12,9 @@ import utils
 
 #hyperparameters
 ALPHA = 1.0
-OBS_VARIANCE = 0.1 #TODO - this is specific to the sensors (in this case to the model obs)
+OBS_VARIANCE = 0.01 #TODO - CHECK this is specific to the sensors (in this case - the error in model predictions)
 
-OBS_FRAC = 0.01 #fraction of state used as "observations"
+OBS_FRAC = 0.001 #fraction of state used as "observations"
 HIST_FRAC = 1 / 3.0 #fraction of data used as "history"
 
 def main():
@@ -42,9 +42,10 @@ def main():
     obs_idx = random.sample(range(n), nobs) #select nobs integers w/o replacement
     observations = np.take(u_c, obs_idx)
 
-
-    #Now define quantities required for VarDA
-
+    #Now define quantities required for 3D-VarDA
+    H = vda.create_H(obs_idx, n, nobs)
+    R_inv = vda.create_R_inv(OBS_VARIANCE, nobs)
+    
 
 
 
