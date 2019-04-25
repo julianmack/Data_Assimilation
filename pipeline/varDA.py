@@ -6,6 +6,7 @@ from helpers import VarDataAssimilationPipeline as VarDA
 import settings
 import sys
 import random
+from scipy.optimize import minimize
 
 sys.path.append('/home/jfm1118')
 import utils
@@ -36,16 +37,23 @@ def main():
     u_c = X[:, t_DA]
     V, u_0 = vda.create_V_from_X(hist_X, return_mean = True)
 
+    V = V[:4, :2] #TODO - delete this line
+
     # Define observations as a random subset of the control state.
     nobs = int(OBS_FRAC * n) #number of observations
     utils.set_seeds(seed = settings.SEED) #set seeds so that the selected subset is the same every time
     obs_idx = random.sample(range(n), nobs) #select nobs integers w/o replacement
     observations = np.take(u_c, obs_idx)
 
-    #Now define quantities required for 3D-VarDA
+    #Now define quantities required for 3D-VarDA - see Algorithm 1 in Rossella et al (2019)
     H = vda.create_H(obs_idx, n, nobs)
+    d = observations - H @ u_0 #'d' in literature
     R_inv = vda.create_R_inv(OBS_VARIANCE, nobs)
+    V_trunc, U, s, W = vda.trunc_SVD(V)
+
     
+
+
 
 
 

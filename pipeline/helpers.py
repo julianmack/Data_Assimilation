@@ -81,44 +81,73 @@ class VarDataAssimilationPipeline():
         else:
             raise TypeError("X_fp must be a filpath or a numpy.ndarray")
 
+
         n, M = X.shape
         mean = np.mean(X, axis=1)
-        V = X - mean @ np.ones(n)
+        V = X.T - mean
+        V = V.T
         V = (M - 1) ** (- 0.5) * V
-
         if return_mean:
             return V, mean
         return V
 
     @staticmethod
-    def trunc_SVD(V):
+    def trunc_SVD(V, trunc_idx=None, test=False):
         """Performs Truncated SVD where Truncation parameter is calculated
-        according to Rossella et al. 2018 (Optimal Reduced space ...)"""
+        via one of two methods:
+            1) according to Rossella et al. 2018 (Optimal Reduced space ...).
+            2) Alternatively, if trunc_ixd=n (where n is int), choose n modes with
+                largest variance
+        arguments
+            :V - numpy array (n x M)
+            :trunc_idx (opt) - index at which to truncate V.
+        returns
+            :V_trunc - truncated V (n x trunc_idx)
+            :U, :s, :W - i.e. V can be factorized as:
+                        V = U @ np.diag(s) @ W = U * s @ W
+        """
 
-        print("Starting SVD")
-        U, s, VH = np.linalg.svd(V, False)
-        print("U:", U.shape)
-        print("s:", s.shape)
-        print("VH:",VH.shape)
-        print(s[0], s[1], s[2])
+        U, s, W = np.linalg.svd(V, False)
 
         np.save(settings.INTERMEDIATE_FP + "U.npy", U)
         np.save(settings.INTERMEDIATE_FP + "s.npy", s)
-        np.save(settings.INTERMEDIATE_FP + "VH.npy", VH)
+        np.save(settings.INTERMEDIATE_FP + "W.npy", W)
         #first singular value
         sing_1 = s[0]
         threshold = np.sqrt(sing_1)
-        trunc_idx = 0 #number of modes to retain
-        for sing in s:
-            if sing > threshold:
-                trunc_idx += 1
+
+        if not trunc_idx:
+            trunc_idx = 0 #number of modes to retain
+            for sing in s:
+                if sing > threshold:
+                    trunc_idx += 1
+            if trunc_idx == 0: #when all singular values are < 1
+                trunc_idx = 1
+        else:
+            assert type(trunc_idx) == int, "trunc_idx must be an integer"
 
         print("# modes kept: ", trunc_idx)
-        singular = np.zeros_like(s)
-        singular[: trunc_idx] = s[: trunc_idx]
-        V_trunc = np.matmul(U, np.matmul(np.diag(singular), VH))
+        U_trunc = U[:, :trunc_idx]
+        W_trunc = W[:trunc_idx, :]
+        s_trunc = s[:trunc_idx]
+        V_trunc = U_trunc * s_trunc @ W_trunc
 
-        return V_trunc
+        if test:
+            #1) Check generalized inverses
+            V_plus = W.T * (1 / s) @  U.T #Equivalent to W.T @ np.diag(1 / s) @  U.T
+            V_plus_trunc =  W_trunc.T * (1 / s_trunc) @  U_trunc.T
+
+            assert np.allclose(V @ V_plus @ V, V), "V_plus should be generalized inverse of V"
+            assert np.allclose(V_trunc @ V_plus_trunc @ V_trunc, V_trunc), "V_plus_trunc should be generalized inverse of V_trunc"
+
+            #2) Check both methods to find V_trunc are equivalent
+            # Another way to calculate V_trunc is as follows:
+            singular = np.zeros_like(s)
+            singular[: trunc_idx] = s[: trunc_idx]
+            V_trunc2 = U * singular @ W
+            assert np.allclose(V_trunc, V_trunc2)
+            
+        return V_trunc, U_trunc, s_trunc, W_trunc
 
     @staticmethod
     def create_H(obs_idxs, n, nobs):
@@ -153,5 +182,21 @@ class VarDataAssimilationPipeline():
         R_inv = 1.0 / sigma ** 2 * np.eye(nobs)
 
         assert R_inv.shape == (nobs, nobs)
-        
+
         return R_inv
+
+    @staticmethod
+    def cost_function_J(w, d, G, V, V_plus, u_0, obs, R_inv, alpha, test=True):
+        """Computes VarDA cost function"""
+        trunc, = w.shape
+        n, = u_0.shape
+        nobs, = R_inv.shape[0]
+
+
+
+        if test:
+            #check dimensions
+            assert G.shape[1] == V.shape[0]
+            assert np.allclose(V @ V_plus @ V, V), "V_plus must be the generalized inverse of V"
+            assert  R_inv.shape[0] == nobs
+            assert d.shape == (nobs,)
