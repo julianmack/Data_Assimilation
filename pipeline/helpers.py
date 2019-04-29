@@ -258,6 +258,7 @@ class VarDataAssimilationPipeline():
 
     @staticmethod
     def save_vtu_file(arr, name, filename, sample_fp=None):
+        """Saves a VTU file - NOTE TODO - should be using deep copy method in vtktools.py -> VtuDiff()"""
         if sample_fp == None:
             sample_fp = vda.get_sorted_fps_U(settings.DATA_FP)[0]
 
@@ -265,4 +266,3 @@ class VarDataAssimilationPipeline():
 
         ug.AddScalarField('name', arr)
         ug.Write(filename)
-        
