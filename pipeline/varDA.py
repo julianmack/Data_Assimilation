@@ -4,13 +4,7 @@
 import numpy as np
 from helpers import VarDataAssimilationPipeline as VarDA
 import settings
-import sys
 from scipy.optimize import minimize
-
-sys.path.append('/home/jfm1118')
-import utils
-
-
 
 #hyperparameters
 ALPHA = 0
@@ -18,16 +12,19 @@ OBS_VARIANCE = 0.01 #TODO - CHECK this is specific to the sensors (in this case 
 NUMBER_MODES = 4  #Set this to None if you want to use the Rossella et al. selection of truncation parameter
 
 OBS_FRAC = 0.01 #fraction of state used as "observations"
+MODE = "single_max" #"single_max" or "rand"
+
 HIST_FRAC = 1 / 3.0 #fraction of data used as "history"
 TOL = 1e-3
 
 def main():
-    #initialize helper function class
     print("alpha =", ALPHA)
     print("obs_var =", OBS_VARIANCE)
     print("obs_frac =", OBS_FRAC)
     print("hist_frac =", HIST_FRAC)
     print("Tol =", TOL)
+
+    #initialize helper function class
     vda = VarDA()
 
     #The X array should already be saved in settings.X_FP
@@ -45,9 +42,7 @@ def main():
     u_c = X[:, t_DA]
     V, u_0 = vda.create_V_from_X(hist_X, return_mean = True)
 
-
-    # observations, obs_idx, nobs = vda.select_obs("rand", u_c, {"fraction": OBS_FRAC})
-    observations, obs_idx, nobs = vda.select_obs("single_max", u_c, {"fraction": OBS_FRAC})
+    observations, obs_idx, nobs = vda.select_obs(MODE, u_c, {"fraction": OBS_FRAC}) #options are specific for rand
 
 
     #Now define quantities required for 3D-VarDA - see Algorithm 1 in Rossella et al (2019)
@@ -56,12 +51,13 @@ def main():
     #R_inv = vda.create_R_inv(OBS_VARIANCE, nobs)
     V_trunc, U, s, W = vda.trunc_SVD(V, NUMBER_MODES)
 
-    #V_plus_trunc = W.T * (1 / s) @  U.T
+
 
     num_modes = s.shape[0]
     #Define intial w_0
-
     w_0 = np.zeros((W.shape[-1],)) #TODO - I'm not sure about this - can we assume is it 0?
+        # in algorithm 2 we use:
+        # V_plus_trunc = W.T * (1 / s) @  U.T
 
     #Define costJ and grad_J
     args =  (d, H_0, V_trunc, ALPHA, OBS_VARIANCE) # list of all args required for cost_function_J and grad_J
