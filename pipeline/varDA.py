@@ -18,7 +18,7 @@ ALPHA = 0
 OBS_VARIANCE = 0.01 #TODO - CHECK this is specific to the sensors (in this case - the error in model predictions)
 NUMBER_MODES = 4  #Set this to None if you want to use the Rossella et al. selection of truncation parameter
 
-OBS_FRAC = 0.01 #fraction of state used as "observations"
+OBS_FRAC = 0.01 #fraction of state used as "observations" 
 HIST_FRAC = 1 / 3.0 #fraction of data used as "history"
 TOL = 1e-3
 
