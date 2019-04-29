@@ -4,6 +4,10 @@ import numpy as np
 import vtktools
 import settings
 import os
+import sys
+import random
+sys.path.append('/home/jfm1118')
+import utils
 
 class VarDataAssimilationPipeline():
     """Class to hold @static_method pipeline functions for
@@ -14,7 +18,7 @@ class VarDataAssimilationPipeline():
         pass
 
     @staticmethod
-    def get_sorted_fps_U(data_dir, field_name):
+    def get_sorted_fps_U(data_dir):
         """Creates and returns list of .vtu filepaths sorted according
         to timestamp in name.
         Input files in data_dir must be of the
@@ -148,6 +152,26 @@ class VarDataAssimilationPipeline():
             assert np.allclose(V_trunc, V_trunc2)
 
         return V_trunc, U_trunc, s_trunc, W_trunc
+    @staticmethod
+    def select_obs(mode, vec, options):
+        """Selects and return a subset of observations and their indexes
+        from vec according to a user selected mode"""
+        n = vec.shape[0]
+
+        if mode == "rand":
+            # Define observations as a random subset of the control state.
+            frac = options["fraction"]
+            nobs = int(frac * n) #number of observations
+            utils.set_seeds(seed = settings.SEED) #set seeds so that the selected subset is the same every time
+            obs_idx = random.sample(range(n), nobs) #select nobs integers w/o replacement
+            observations = np.take(vec, obs_idx)
+        elif mode == "single_max":
+            nobs = 1
+            obs_idx = np.argmax(vec)
+            obs_idx = [obs_idx]
+            observations = np.take(vec, obs_idx)
+
+        return observations, obs_idx, nobs
 
     @staticmethod
     def create_H(obs_idxs, n, nobs):
@@ -193,7 +217,7 @@ class VarDataAssimilationPipeline():
         # n, = u_0.shape
         # nobs, = R_inv.shape[0]
 
-        print("G {}, V {}, w {}, d {}".format(G.shape, V.shape, w.shape, d.shape))
+        #print("G {}, V {}, w {}, d {}".format(G.shape, V.shape, w.shape, d.shape))
         Q = (G @ V @ w - d)
         if not R_inv and sigma:
             #When R is proportional to identity
@@ -204,7 +228,8 @@ class VarDataAssimilationPipeline():
             raise ValueError("Either R_inv or sigma must be non-zero")
 
         J_b = 0.5 * alpha * np.dot(w, w)
-        J = alpha * J_b + J_o
+        J = J_b + J_o
+        print("J_b = {:.2f}, J_o = {:.2f}, w[3] = {}".format(J_b, J_o, w[3]))
         return J
 
 

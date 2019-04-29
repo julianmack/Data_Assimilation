@@ -5,21 +5,30 @@ import numpy as np
 from helpers import VarDataAssimilationPipeline as VarDA
 import settings
 import sys
-import random
 from scipy.optimize import minimize
 
 sys.path.append('/home/jfm1118')
 import utils
 
-#hyperparameters
-ALPHA = 1.0
-OBS_VARIANCE = 0.01 #TODO - CHECK this is specific to the sensors (in this case - the error in model predictions)
+import vtktools
 
-OBS_FRAC = 0.001 #fraction of state used as "observations"
+
+#hyperparameters
+ALPHA = 0
+OBS_VARIANCE = 0.01 #TODO - CHECK this is specific to the sensors (in this case - the error in model predictions)
+NUMBER_MODES = 4  #Set this to None if you want to use the Rossella et al. selection of truncation parameter
+
+OBS_FRAC = 0.01 #fraction of state used as "observations"
 HIST_FRAC = 1 / 3.0 #fraction of data used as "history"
+TOL = 1e-3
 
 def main():
     #initialize helper function class
+    print("alpha =", ALPHA)
+    print("obs_var =", OBS_VARIANCE)
+    print("obs_frac =", OBS_FRAC)
+    print("hist_frac =", HIST_FRAC)
+    print("Tol =", TOL)
     vda = VarDA()
 
     #The X array should already be saved in settings.X_FP
@@ -38,35 +47,58 @@ def main():
     V, u_0 = vda.create_V_from_X(hist_X, return_mean = True)
 
 
-    # Define observations as a random subset of the control state.
-    nobs = int(OBS_FRAC * n) #number of observations
-    utils.set_seeds(seed = settings.SEED) #set seeds so that the selected subset is the same every time
-    obs_idx = random.sample(range(n), nobs) #select nobs integers w/o replacement
-    observations = np.take(u_c, obs_idx)
+    # observations, obs_idx, nobs = vda.select_obs("rand", u_c, {"fraction": OBS_FRAC})
+    observations, obs_idx, nobs = vda.select_obs("single_max", u_c, {"fraction": OBS_FRAC})
+
 
     #Now define quantities required for 3D-VarDA - see Algorithm 1 in Rossella et al (2019)
     H_0 = vda.create_H(obs_idx, n, nobs)
     d = observations - H_0 @ u_0 #'d' in literature
     #R_inv = vda.create_R_inv(OBS_VARIANCE, nobs)
-    V_trunc, U, s, W = vda.trunc_SVD(V)
+    V_trunc, U, s, W = vda.trunc_SVD(V, NUMBER_MODES)
 
     #V_plus_trunc = W.T * (1 / s) @  U.T
 
     num_modes = s.shape[0]
     #Define intial w_0
 
-    w_0 = np.zeros((num_modes,)) #TODO - I'm not sure about this - can we assume this?
+    w_0 = np.zeros((W.shape[-1],)) #TODO - I'm not sure about this - can we assume is it 0?
 
     #Define costJ and grad_J
     args =  (d, H_0, V_trunc, ALPHA, OBS_VARIANCE) # list of all args required for cost_function_J and grad_J
     #args =  (d, H_0, V_trunc, ALPHA, None, R_inv) # list of all args required for cost_function_J and grad_J
-    w_opt = minimize(vda.cost_function_J, w_0, args = args, method='L-BFGS-B', jac=vda.grad_J)
+    res = minimize(vda.cost_function_J, w_0, args = args, method='L-BFGS-B', jac=vda.grad_J, tol=TOL)
 
+    w_opt = res.x
     delta_u_DA = V_trunc @ w_opt
     u_DA = u_0 + delta_u_DA
 
+    ref_MAE = np.abs(u_0 - u_c)
+    da_MAE = np.abs(u_DA - u_c)
+
+    ref_MAE_mean = np.mean(ref_MAE)
+    da_MAE_mean = np.mean(da_MAE)
+
+    print("RESULTS")
+    print("Reference MAE: ", ref_MAE_mean)
+    print("DA MAE: ", da_MAE_mean)
+    print("If DA has worked, DA MAE > Ref_MAE")
     #Compare abs(u_0 - u_c).sum() with abs(u_DA - u_c).sum() in paraview
 
+    #Save .vtu files so that I can look @ in paraview
+    #TODO - put this functionality in helpers (remove import @ top)
+
+    sample_fp = vda.get_sorted_fps_U(settings.DATA_FP)[0]
+    ug = vtktools.vtu(sample_fp) #use sample fp to initialize positions on grid
+
+    # print(len(ref_MAE))
+    # print(ug.ugrid.GetNumberOfPoints())
+    # print(ug.ugrid.GetNumberOfCells())
+    # exit()
+    ug.AddScalarField('ref_MAE', ref_MAE)
+    ug.Write(settings.INTERMEDIATE_FP + "ref_MAE.vtu")
+    ug.AddScalarField('DA_MAE', da_MAE)
+    ug.Write(settings.INTERMEDIATE_FP + "DA_MAE.vtu")
 
 if __name__ == "__main__":
     main()
