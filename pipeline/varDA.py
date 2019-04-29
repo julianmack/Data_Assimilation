@@ -10,7 +10,6 @@ from scipy.optimize import minimize
 sys.path.append('/home/jfm1118')
 import utils
 
-import vtktools
 
 
 #hyperparameters
@@ -18,7 +17,7 @@ ALPHA = 0
 OBS_VARIANCE = 0.01 #TODO - CHECK this is specific to the sensors (in this case - the error in model predictions)
 NUMBER_MODES = 4  #Set this to None if you want to use the Rossella et al. selection of truncation parameter
 
-OBS_FRAC = 0.01 #fraction of state used as "observations" 
+OBS_FRAC = 0.01 #fraction of state used as "observations"
 HIST_FRAC = 1 / 3.0 #fraction of data used as "history"
 TOL = 1e-3
 
@@ -86,19 +85,13 @@ def main():
     #Compare abs(u_0 - u_c).sum() with abs(u_DA - u_c).sum() in paraview
 
     #Save .vtu files so that I can look @ in paraview
-    #TODO - put this functionality in helpers (remove import @ top)
-
     sample_fp = vda.get_sorted_fps_U(settings.DATA_FP)[0]
-    ug = vtktools.vtu(sample_fp) #use sample fp to initialize positions on grid
+    out_fp_ref = settings.INTERMEDIATE_FP + "ref_MAE.vtu"
+    out_fp_DA =  settings.INTERMEDIATE_FP + "DA_MAE.vtu"
 
-    # print(len(ref_MAE))
-    # print(ug.ugrid.GetNumberOfPoints())
-    # print(ug.ugrid.GetNumberOfCells())
-    # exit()
-    ug.AddScalarField('ref_MAE', ref_MAE)
-    ug.Write(settings.INTERMEDIATE_FP + "ref_MAE.vtu")
-    ug.AddScalarField('DA_MAE', da_MAE)
-    ug.Write(settings.INTERMEDIATE_FP + "DA_MAE.vtu")
+    vda.save_vtu_file(ref_MAE, "ref_MAE", out_fp_ref, sample_fp)
+    vda.save_vtu_file(da_MAE, "DA_MAE", out_fp_DA, sample_fp)
+
 
 if __name__ == "__main__":
     main()

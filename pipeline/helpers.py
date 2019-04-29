@@ -255,3 +255,14 @@ class VarDataAssimilationPipeline():
         grad_J = alpha * w + grad_o
 
         return grad_J
+
+    @staticmethod
+    def save_vtu_file(arr, name, filename, sample_fp=None):
+        if sample_fp == None:
+            sample_fp = vda.get_sorted_fps_U(settings.DATA_FP)[0]
+
+        ug = vtktools.vtu(sample_fp) #use sample fp to initialize positions on grid
+
+        ug.AddScalarField('name', arr)
+        ug.Write(filename)
+        
