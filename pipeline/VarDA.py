@@ -7,23 +7,15 @@ import settings
 from scipy.optimize import minimize
 
 #hyperparameters
-ALPHA = 1
-OBS_VARIANCE = 0.01 #TODO - CHECK this is specific to the sensors (in this case - the error in model predictions)
-NUMBER_MODES = 4  #Set this to None if you want to use the Rossella et al. selection of truncation parameter
 
-OBS_FRAC = 0.01 #fraction of state used as "observations"
-MODE = "single_max" #"single_max" or "rand"
-
-HIST_FRAC = 1 / 3.0 #fraction of data used as "history"
 TOL = 1e-3
 
-TRUNCATION_METHOD = "SVD" # "SVD"/"AE"
 
 def main():
-    print("alpha =", ALPHA)
-    print("obs_var =", OBS_VARIANCE)
-    print("obs_frac =", OBS_FRAC)
-    print("hist_frac =", HIST_FRAC)
+    print("alpha =", settings.ALPHA)
+    print("obs_var =", settings.OBS_VARIANCE)
+    print("obs_frac =", settings.OBS_FRAC)
+    print("hist_frac =", settings.HIST_FRAC)
     print("Tol =", TOL)
 
     #initialize helper function class
@@ -38,20 +30,20 @@ def main():
     # assimilate "observations" at a single timestep t_DA
     # which corresponds to the control state u_c
     # We will take initial condition u_0, as mean of historical data
-    hist_idx = int(M * HIST_FRAC)
+    hist_idx = int(M * settings.HIST_FRAC)
     hist_X = X[:, : hist_idx]
     t_DA = M - 2 #i.e. second to last
     u_c = X[:, t_DA]
     V, u_0 = vda.create_V_from_X(hist_X, return_mean = True)
 
-    observations, obs_idx, nobs = vda.select_obs(MODE, u_c, {"fraction": OBS_FRAC}) #options are specific for rand
+    observations, obs_idx, nobs = vda.select_obs(settings.MODE, u_c, {"fraction": settings.OBS_FRAC}) #options are specific for rand
 
     #Now define quantities required for 3D-VarDA - see Algorithm 1 in Rossella et al (2019)
     H_0 = vda.create_H(obs_idx, n, nobs)
     d = observations - H_0 @ u_0 #'d' in literature
     #R_inv = vda.create_R_inv(OBS_VARIANCE, nobs)
-    if TRUNCATION_METHOD == "SVD":
-        V_trunc, U, s, W = vda.trunc_SVD(V, NUMBER_MODES)
+    if settings.TRUNCATION_METHOD == "SVD":
+        V_trunc, U, s, W = vda.trunc_SVD(V, settings.NUMBER_MODES)
         #Define intial w_0
         w_0 = np.zeros((W.shape[-1],)) #TODO - I'm not sure about this - can we assume is it 0?
         # in algorithm 2 we use:
@@ -62,14 +54,14 @@ def main():
         #     #I'm not clear if there is any difference - we are minimizing so expect them to
         #     #be equivalent
         # w_0 = w_0_v2
-    elif TRUNCATION_METHOD == "AE":
+    elif settings.TRUNCATION_METHOD == "AE":
         #TODO - load saved model and use to compress
         pass
     else:
         raise ValueError("TRUNCATION_METHOD must be in {SVD, AE}")
 
     #Define costJ and grad_J
-    args =  (d, H_0, V_trunc, ALPHA, OBS_VARIANCE) # list of all args required for cost_function_J and grad_J
+    args =  (d, H_0, V_trunc, settings.ALPHA, settings.OBS_VARIANCE) # list of all args required for cost_function_J and grad_J
     #args =  (d, H_0, V_trunc, ALPHA, None, R_inv) # list of all args required for cost_function_J and grad_J
     res = minimize(vda.cost_function_J, w_0, args = args, method='L-BFGS-B', jac=vda.grad_J, tol=TOL)
 
