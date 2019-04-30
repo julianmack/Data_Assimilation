@@ -17,7 +17,7 @@ MODE = "single_max" #"single_max" or "rand"
 HIST_FRAC = 1 / 3.0 #fraction of data used as "history"
 TOL = 1e-3
 
-LATENT_DIM = 100
+TRUNCATION_METHOD = "SVD" # "SVD"/"AE"
 
 def main():
     print("alpha =", ALPHA)
@@ -50,20 +50,23 @@ def main():
     H_0 = vda.create_H(obs_idx, n, nobs)
     d = observations - H_0 @ u_0 #'d' in literature
     #R_inv = vda.create_R_inv(OBS_VARIANCE, nobs)
-    V_trunc, U, s, W = vda.trunc_SVD(V, NUMBER_MODES)
-
-
-    num_modes = s.shape[0]
-    #Define intial w_0
-    w_0 = np.zeros((W.shape[-1],)) #TODO - I'm not sure about this - can we assume is it 0?
+    if TRUNCATION_METHOD == "SVD":
+        V_trunc, U, s, W = vda.trunc_SVD(V, NUMBER_MODES)
+        #Define intial w_0
+        w_0 = np.zeros((W.shape[-1],)) #TODO - I'm not sure about this - can we assume is it 0?
         # in algorithm 2 we use:
 
-    #OR - Alternatively, use the following:
-    # V_plus_trunc = W.T * (1 / s) @  U.T
-    # w_0_v2 = V_plus_trunc @ u_0 #i.e. this is the value given in Rossella et al (2019).
-    #     #I'm not clear if there is any difference - we are minimizing so expect them to
-    #     #be equivalent
-    # w_0 = w_0_v2
+        #OR - Alternatively, use the following:
+        # V_plus_trunc = W.T * (1 / s) @  U.T
+        # w_0_v2 = V_plus_trunc @ u_0 #i.e. this is the value given in Rossella et al (2019).
+        #     #I'm not clear if there is any difference - we are minimizing so expect them to
+        #     #be equivalent
+        # w_0 = w_0_v2
+    elif TRUNCATION_METHOD == "AE":
+        #TODO - load saved model and use to compress
+        pass
+    else:
+        raise ValueError("TRUNCATION_METHOD must be in {SVD, AE}")
 
     #Define costJ and grad_J
     args =  (d, H_0, V_trunc, ALPHA, OBS_VARIANCE) # list of all args required for cost_function_J and grad_J
