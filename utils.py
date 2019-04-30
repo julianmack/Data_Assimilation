@@ -24,6 +24,8 @@ class ML_utils():
     @staticmethod
     def training_loop(model, optimizer, loss, train_loader, print_every, epochs, device):
         """Runs a torch model training loop"""
+        set_seeds()
+        
         model.train()
         for epoch in range(epoch):
             for batch_idx, data in enumerate(train_loader):
