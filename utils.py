@@ -13,6 +13,8 @@ def set_seeds(seed = SEED):
     np.random.seed(SEED)
     random.seed(SEED)
     torch.cuda.manual_seed(SEED)
+    if torch.cuda.is_available():
+        torch.backends.cudnn.deterministic = True
 
 
 class ML_utils():
@@ -22,11 +24,45 @@ class ML_utils():
         pass
 
     @staticmethod
-    def training_loop(model, optimizer, loss, train_loader, print_every, epochs, device):
-        """Runs a torch model training loop"""
+    def training_loop_AE(model, optimizer, loss_fn, train_loader, test_loader,
+            num_epoch, device=None, print_every=1, test_every=5):
+        """Runs a torch AE model training loop"""
         set_seeds()
-        
-        model.train()
-        for epoch in range(epoch):
+        if device == None:
+            device = get_device()
+        for epoch in range(num_epoch):
+            train_loss = 0
+            model.to(device)
+
             for batch_idx, data in enumerate(train_loader):
-                pass
+                model.train()
+                x, = data
+                x = x.to(device)
+                optimizer.zero_grad()
+                y = model(x)
+
+                loss = loss_fn(y, x)
+                loss.backward()
+                train_loss += loss.item()
+                optimizer.step()
+            if epoch % print_every == 0 or epoch in [0, num_epoch - 1]:
+                print('epoch [{}/{}], loss:{:.4f}'.format(epoch + 1, epochs, train_loss / len(train_loader.dataset)))
+            if epoch % test_every == 0 or epoch == num_epoch - 1:
+                model.eval()
+                test_loss = 0
+                for batch_idx, data in enumerate(test_loader):
+                    x_test, = data
+                    x_test = x_test.to(device)
+                    y_test = model(x_test)
+                    loss = loss_fn(y_test, x_test)
+                    test_loss += loss.item()
+                print('epoch [{}/{}], validation loss:{:.4f}'.format(epoch + 1, epochs, test_loss / len(test_loader.dataset)))
+
+    @staticmethod
+    def get_device(use_gpu=True, device_idx=0):
+        """get torch device type"""
+        if use_gpu:
+            device = torch.device("cuda:"+str(device_idx) if torch.cuda.is_available() else "cpu")
+        else:
+            device = torch.device("cpu")
+        return device

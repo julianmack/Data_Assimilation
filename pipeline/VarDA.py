@@ -1,15 +1,12 @@
 #!/usr/bin/python3
-"""3D VarDA pipeline to assimilate a single observation"""
+"""3D VarDA pipeline. See settings.py for options"""
 
 import numpy as np
 from helpers import VarDataAssimilationPipeline as VarDA
 import settings
 from scipy.optimize import minimize
 
-#hyperparameters
-
 TOL = 1e-3
-
 
 def main():
     print("alpha =", settings.ALPHA)

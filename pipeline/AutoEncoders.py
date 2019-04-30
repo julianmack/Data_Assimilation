@@ -2,12 +2,12 @@
 import with:
     from ML_AEs import AEs"""
 
-import torch
+import torch.nn as nn
 import numpy
 import settings
 
 
-class VanillaAE(nn.module):
+class VanillaAE(nn.Module):
     """Variable size AE - using only fully connected layers.
     Arguments (for initialization):
         :input_size - int. size of input (and output)
@@ -15,8 +15,8 @@ class VanillaAE(nn.module):
         :layers - int list. size of hidden layers"""
 
     def __init__(self, input_size, latent_size, hid_layers=None):
-        super(VanillaNN, self).__init__()
-        assert type(hid_layers) == NoneType or type(hid_layers) == list
+        super(VanillaAE, self).__init__()
+        assert hid_layers == None or type(hid_layers) == list
 
         #create a list of all dimension sizes (including input/output)
 
@@ -32,6 +32,7 @@ class VanillaAE(nn.module):
             #decoder:
             for size in hid_layers[::-1]: #reversed list
                 layers.append(size)
+            layers.append(input_size)
 
         #now create the fc layers and store in nn.module list
         self.fclayers = nn.ModuleList([])
@@ -40,7 +41,7 @@ class VanillaAE(nn.module):
             nn.init.xavier_uniform_(fc.weight)
             self.fclayers.append(fc)
 
-        self.lrelu = nn.LeakyRelu(negative_slope = 0.05, inplace=False)
+        self.lrelu = nn.LeakyReLU(negative_slope = 0.05, inplace=False)
 
         self.num_encode = len(hid_layers) + 1
         self.num_decode = self.num_encode
@@ -53,7 +54,8 @@ class VanillaAE(nn.module):
     def encode(self, x):
         encode_fc = self.fclayers[:self.num_encode]
         assert len(encode_fc) == self.num_encode
-
+        print("size of input:", x.shape)
+        exit()
         for fc in encode_fc[:-1]:
             x = self.lrelu(fc(x))
 
