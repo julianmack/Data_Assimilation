@@ -22,9 +22,9 @@ class ML_utils():
         pass
 
     @staticmethod
-    def training_loop(model, optimizer, loss, train_loader, print_every=1, epochs, device):
+    def training_loop(model, optimizer, loss, train_loader, print_every, epochs, device):
         """Runs a torch model training loop"""
         model.train()
         for epoch in range(epoch):
             for batch_idx, data in enumerate(train_loader):
-                
+                pass
