@@ -28,6 +28,8 @@ class ML_utils():
             num_epoch, device=None, print_every=1, test_every=5):
         """Runs a torch AE model training loop"""
         set_seeds()
+        train_losses = []
+        test_losses = []
         if device == None:
             device = get_device()
         for epoch in range(num_epoch):
@@ -45,6 +47,7 @@ class ML_utils():
                 loss.backward()
                 train_loss += loss.item()
                 optimizer.step()
+            train_losses.append((epoch, train_loss))
             if epoch % print_every == 0 or epoch in [0, num_epoch - 1]:
                 print('epoch [{}/{}], loss:{:.4f}'.format(epoch + 1, num_epoch, train_loss / len(train_loader.dataset)))
             if epoch % test_every == 0 or epoch == num_epoch - 1:
@@ -57,7 +60,8 @@ class ML_utils():
                     loss = loss_fn(y_test, x_test)
                     test_loss += loss.item()
                 print('epoch [{}/{}], validation loss:{:.4f}'.format(epoch + 1, num_epoch, test_loss / len(test_loader.dataset)))
-
+                test_losses.append((epoch, test_loss))
+        return train_losses, test_losses
     @staticmethod
     def get_device(use_gpu=True, device_idx=0):
         """get torch device type"""
