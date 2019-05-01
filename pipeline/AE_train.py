@@ -11,7 +11,7 @@ sys.path.append('/home/jfm1118')
 import utils
 
 
-MODEL_FP = "models/AE_1.pth"
+MODEL_FP = "models/AE_100.pth"
 BATCH = 64
 
 def main():
@@ -32,7 +32,7 @@ def main():
 
     #AE hyperparams
     input_size = n
-    latent_size = 1
+    latent_size = 100
     layers = [1000, 100]
 
     #training hyperparams
@@ -47,7 +47,7 @@ def main():
 
     print(model)
     utils.ML_utils.training_loop_AE(model, optimizer, loss_fn, train_loader, test_loader,
-            num_epoch, device, print_every=1, test_every=1)
+            num_epoch, device, print_every=1, test_every=5)
     torch.save(model.state_dict(), MODEL_FP)
 
 if __name__ == "__main__":
