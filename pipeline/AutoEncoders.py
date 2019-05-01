@@ -54,8 +54,6 @@ class VanillaAE(nn.Module):
     def encode(self, x):
         encode_fc = self.fclayers[:self.num_encode]
         assert len(encode_fc) == self.num_encode
-        print("size of input:", x.shape)
-        exit()
         for fc in encode_fc[:-1]:
             x = self.lrelu(fc(x))
 
@@ -65,7 +63,7 @@ class VanillaAE(nn.Module):
 
     def decode(self, x):
         decode_fc = self.fclayers[self.num_decode:]
-        assert len(encode_fc) == self.num_decode
+        assert len(decode_fc) == self.num_decode
 
         for fc in decode_fc[:-1]:
             x = self.lrelu(fc(x))

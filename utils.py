@@ -46,7 +46,7 @@ class ML_utils():
                 train_loss += loss.item()
                 optimizer.step()
             if epoch % print_every == 0 or epoch in [0, num_epoch - 1]:
-                print('epoch [{}/{}], loss:{:.4f}'.format(epoch + 1, epochs, train_loss / len(train_loader.dataset)))
+                print('epoch [{}/{}], loss:{:.4f}'.format(epoch + 1, num_epoch, train_loss / len(train_loader.dataset)))
             if epoch % test_every == 0 or epoch == num_epoch - 1:
                 model.eval()
                 test_loss = 0
@@ -56,7 +56,7 @@ class ML_utils():
                     y_test = model(x_test)
                     loss = loss_fn(y_test, x_test)
                     test_loss += loss.item()
-                print('epoch [{}/{}], validation loss:{:.4f}'.format(epoch + 1, epochs, test_loss / len(test_loader.dataset)))
+                print('epoch [{}/{}], validation loss:{:.4f}'.format(epoch + 1, num_epoch, test_loss / len(test_loader.dataset)))
 
     @staticmethod
     def get_device(use_gpu=True, device_idx=0):

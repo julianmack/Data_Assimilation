@@ -23,16 +23,16 @@ def main():
     test_X = X[:, hist_idx : -3] #leave final three elements for DA
 
     print("train shape:", hist_X.shape)
-    print("train tensor shape:", torch.Tensor(hist_X).shape)
+    print("train tensor shape:", torch.Tensor(hist_X.T).shape)
     #Dataloaders
-    train_dataset = TensorDataset(torch.Tensor(hist_X))
+    train_dataset = TensorDataset(torch.Tensor(hist_X.T))
     train_loader = DataLoader(train_dataset, BATCH, shuffle=True)
-    test_dataset = TensorDataset(torch.Tensor(test_X))
+    test_dataset = TensorDataset(torch.Tensor(test_X.T))
     test_loader = DataLoader(test_dataset, test_X.shape[1])
 
     #AE hyperparams
     input_size = n
-    latent_size = 50
+    latent_size = 1
     layers = [1000, 100]
 
     #training hyperparams
@@ -41,7 +41,7 @@ def main():
     print("Device:", device)
 
 
-    loss_fn = F.l1_loss
+    loss_fn = torch.nn.L1Loss(reduction='sum')
     model = VanillaAE(input_size, latent_size, layers)
     optimizer = optim.Adam(model.parameters())
 
