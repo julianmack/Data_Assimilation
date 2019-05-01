@@ -47,6 +47,7 @@ def main():
         loss_fn = torch.nn.L1Loss(reduction='sum')
         model = VanillaAE(input_size, latent_size, layers)
         optimizer = optim.Adam(model.parameters())
+        
 
         print(model)
         train_losses, test_losses = utils.ML_utils.training_loop_AE(model, optimizer, loss_fn, train_loader, test_loader,
@@ -55,7 +56,7 @@ def main():
             pickle.dump(train_losses, fp)
         with open(results_fp_test, 'wb') as fp:
             pickle.dump(test_losses, fp)
-        torch.save(model.state_dict(), model_fp)
+        torch.save(model.state_dict(), model_fpnh g)
 
 if __name__ == "__main__":
     main()
