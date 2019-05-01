@@ -31,6 +31,10 @@ def main():
     test_dataset = TensorDataset(torch.Tensor(test_X.T))
     test_loader = DataLoader(test_dataset, test_X.shape[1])
 
+    print("train_size = ", len(train_loader.dataset))
+    print("test_size = ", len(test_loader.dataset))
+
+    exit()
     #training hyperparams
     num_epoch = 120
     device = utils.ML_utils.get_device()
@@ -47,7 +51,7 @@ def main():
         loss_fn = torch.nn.L1Loss(reduction='sum')
         model = VanillaAE(input_size, latent_size, layers)
         optimizer = optim.Adam(model.parameters())
-        
+
 
         print(model)
         train_losses, test_losses = utils.ML_utils.training_loop_AE(model, optimizer, loss_fn, train_loader, test_loader,
@@ -56,7 +60,7 @@ def main():
             pickle.dump(train_losses, fp)
         with open(results_fp_test, 'wb') as fp:
             pickle.dump(test_losses, fp)
-        torch.save(model.state_dict(), model_fpnh g)
+        torch.save(model.state_dict(), model_fp)
 
 if __name__ == "__main__":
     main()
