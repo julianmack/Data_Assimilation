@@ -26,7 +26,9 @@ class ML_utils():
     @staticmethod
     def training_loop_AE(model, optimizer, loss_fn, train_loader, test_loader,
             num_epoch, device=None, print_every=1, test_every=5):
-        """Runs a torch AE model training loop"""
+        """Runs a torch AE model training loop.
+        NOTE: Ensure that the loss_fn is in mode "sum"
+        """
         set_seeds()
         train_losses = []
         test_losses = []
@@ -47,7 +49,7 @@ class ML_utils():
                 loss.backward()
                 train_loss += loss.item()
                 optimizer.step()
-            train_losses.append((epoch, train_loss))
+            train_losses.append((epoch, train_loss / len(train_loader.dataset)))
             if epoch % print_every == 0 or epoch in [0, num_epoch - 1]:
                 print('epoch [{}/{}], loss:{:.4f}'.format(epoch + 1, num_epoch, train_loss / len(train_loader.dataset)))
             if epoch % test_every == 0 or epoch == num_epoch - 1:
@@ -60,7 +62,7 @@ class ML_utils():
                     loss = loss_fn(y_test, x_test)
                     test_loss += loss.item()
                 print('epoch [{}/{}], validation loss:{:.4f}'.format(epoch + 1, num_epoch, test_loss / len(test_loader.dataset)))
-                test_losses.append((epoch, test_loss))
+                test_losses.append((epoch, test_loss/len(test_loader.dataset)))
         return train_losses, test_losses
     @staticmethod
     def get_device(use_gpu=True, device_idx=0):
