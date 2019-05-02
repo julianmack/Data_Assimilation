@@ -52,7 +52,8 @@ def main():
         #     #be equivalent
         # w_0 = w_0_v2
     elif settings.TRUNCATION_METHOD == "AE":
-        #TODO - load saved model and use to compress
+        V_trunc = vda.AE_forward(V)
+
         pass
     else:
         raise ValueError("TRUNCATION_METHOD must be in {SVD, AE}")
