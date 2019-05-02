@@ -94,7 +94,9 @@ class VarDataAssimilationPipeline():
         if return_mean:
             return V, mean
         return V
-
+    @staticmethod
+    def AE_forward():
+        pass
     @staticmethod
     def trunc_SVD(V, trunc_idx=None, test=False):
         """Performs Truncated SVD where Truncation parameter is calculated
