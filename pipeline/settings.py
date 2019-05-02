@@ -4,6 +4,8 @@ DATA_FP = "data/small3DLSBU/"
 X_FP = "data/small3D_intermediate/X_small3D_Tracer.npy"
 INTERMEDIATE_FP = "data/small3D_intermediate/"
 
+AE_MODEL = "models/AE_dim40_epoch120.pth"
+
 SEED = 42
 
 #Parameters to divide up data between "History", "observation" and "control_state"
