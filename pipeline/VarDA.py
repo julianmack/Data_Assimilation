@@ -52,7 +52,8 @@ def main():
         #     #be equivalent
         # w_0 = w_0_v2
     elif settings.TRUNCATION_METHOD == "AE":
-        V_trunc = vda.AE_forward(V)
+        kwargs = {}
+        encoder, decoder = load_AE(ModelClass, settings.MODEL_FP, kwargs)
 
         pass
     else:
@@ -74,6 +75,7 @@ def main():
     da_MAE_mean = np.mean(da_MAE)
 
     print("RESULTS")
+
     print("Reference MAE: ", ref_MAE_mean)
     print("DA MAE: ", da_MAE_mean)
     print("If DA has worked, DA MAE > Ref_MAE")

@@ -64,6 +64,17 @@ class ML_utils():
                 print('epoch [{}/{}], validation loss:{:.4f}'.format(epoch + 1, num_epoch, test_loss / len(test_loader.dataset)))
                 test_losses.append((epoch, test_loss/len(test_loader.dataset)))
         return train_losses, test_losses
+
+    @staticmethod
+    def load_AE(ModelClass, path = settings.MODEL_FP, **kwargs):
+        """Loads an encoder and decoder"""
+        model = ModelClass(**kwargs)
+        model.load_state_dict(torch.load(path))
+        encoder = model.encoder
+        decoder = model.decoder
+
+        return encoder, decoder
+
     @staticmethod
     def get_device(use_gpu=True, device_idx=0):
         """get torch device type"""
