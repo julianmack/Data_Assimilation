@@ -3,6 +3,13 @@
 
 import numpy as np
 from helpers import VarDataAssimilationPipeline as VarDA
+import  AutoEncoders as AE
+import sys
+sys.path.append('/home/jfm1118')
+
+import utils
+
+
 import settings
 from scipy.optimize import minimize
 
@@ -52,10 +59,10 @@ def main():
         #     #be equivalent
         # w_0 = w_0_v2
     elif settings.TRUNCATION_METHOD == "AE":
-        kwargs = {}
-        encoder, decoder = load_AE(ModelClass, settings.MODEL_FP, kwargs)
+        kwargs = {"input_size":n, "latent_size":1,"hidden":[1000, 200]}
+        encoder, decoder = utils.ML_utils.load_AE(AE.VanillaAE, settings.AE_MODEL, kwargs)
+        exit()
 
-        pass
     else:
         raise ValueError("TRUNCATION_METHOD must be in {SVD, AE}")
 

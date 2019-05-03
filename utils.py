@@ -3,6 +3,8 @@
 import torch
 import numpy as np
 import random
+import settings
+
 
 SEED = 42
 
@@ -66,7 +68,7 @@ class ML_utils():
         return train_losses, test_losses
 
     @staticmethod
-    def load_AE(ModelClass, path = settings.MODEL_FP, **kwargs):
+    def load_AE(ModelClass, path = settings.AE_MODEL, **kwargs):
         """Loads an encoder and decoder"""
         model = ModelClass(**kwargs)
         model.load_state_dict(torch.load(path))
