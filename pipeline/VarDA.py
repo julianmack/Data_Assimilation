@@ -2,9 +2,11 @@
 """3D VarDA pipeline. See settings.py for options"""
 
 import numpy as np
+import torch
 from helpers import VarDataAssimilationPipeline as VarDA
 import  AutoEncoders as AE
 import sys
+
 sys.path.append('/home/jfm1118')
 
 import utils
@@ -59,8 +61,12 @@ def main():
         #     #be equivalent
         # w_0 = w_0_v2
     elif settings.TRUNCATION_METHOD == "AE":
-        kwargs = {"input_size":n, "latent_size":1,"hidden":[1000, 200]}
-        encoder, decoder = utils.ML_utils.load_AE(AE.VanillaAE, settings.AE_MODEL, kwargs)
+        latent_size = 1
+        kwargs = {"input_size": n, "latent_size": latent_size,"hid_layers":[1000, 200]}
+        encoder, decoder = utils.ML_utils.load_AE(AE.VanillaAE, settings.AE_MODEL, **kwargs)
+        w_0 = torch.zeros((latent_size, ))
+        u_0 = decoder(w_0)
+        print(u_0[2:23])
         exit()
 
     else:
