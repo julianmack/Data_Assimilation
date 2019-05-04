@@ -253,8 +253,9 @@ class VarDataAssimilationPipeline():
             Q = (G @ V @ w - d)
             P = V.T @ G.T
         elif mode == "AE":
-            assert type(V_grad) = function, "V_grad must be a function if mode=AE is used"
-            Q = (G @ V(w) - d)
+            assert type(V_grad) == "function", "V_grad must be a function if mode=AE is used"
+            x = V(w)
+            Q = (G @ x - d)
             P = V.T @ G.T
         if not R_inv and sigma:
             #When R is proportional to identity

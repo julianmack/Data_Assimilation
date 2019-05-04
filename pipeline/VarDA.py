@@ -64,9 +64,10 @@ def main():
         latent_size = 1
         kwargs = {"input_size": n, "latent_size": latent_size,"hid_layers":[1000, 200]}
         encoder, decoder = utils.ML_utils.load_AE(AE.VanillaAE, settings.AE_MODEL, **kwargs)
-        w_0 = torch.zeros((latent_size, ))
+        w_0 = torch.zeros((latent_size, ), requires_grad = True)
         u_0 = decoder(w_0)
-
+        u_0.backward()
+        print(w_0.grad)
         exit()
 
     else:
