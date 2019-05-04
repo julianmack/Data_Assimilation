@@ -66,6 +66,10 @@ def main():
         encoder, decoder = utils.ML_utils.load_AE(AE.VanillaAE, settings.AE_MODEL, **kwargs)
         w_0 = torch.zeros((latent_size, 1), requires_grad = True)
         u_0 = decoder(w_0).reshape((-1, 1))
+        gradients = torch.autograd.grad(u_0, w_0)
+        print(gradients)
+        #check this link: https://discuss.pytorch.org/t/efficient-way-of-calculating-jacobians/40202/9
+        exit()
         u_0.backward(w_0)
         print(w_0.grad)
         exit()
