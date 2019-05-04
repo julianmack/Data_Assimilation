@@ -66,8 +66,22 @@ def main():
         encoder, decoder = utils.ML_utils.load_AE(AE.VanillaAE, settings.AE_MODEL, **kwargs)
         w_0 = torch.zeros((latent_size, ), requires_grad = True)
         u_0 = decoder(w_0)
-        u_0.backward()
+        u_0.backward(u_0)
         print(w_0.grad)
+        exit()
+        x = torch.randn(3, requires_grad=True)
+
+
+        y = x * 2
+        while y.data.norm() < 1000:
+            y = y * 2
+
+        print(y)
+
+        v = torch.tensor([0.1, 1.0, 0.0001], dtype=torch.float)
+        y.backward(v)
+
+        print(x.grad)
         exit()
 
     else:
