@@ -212,7 +212,8 @@ class VarDataAssimilationPipeline():
         return R_inv
 
     @staticmethod
-    def cost_function_J(w, d, G, V, alpha, sigma = None, R_inv = None, test=True):
+    def cost_function_J(w, d, G, V, alpha, sigma = None, R_inv = None, test=True,
+            mode=settings.TRUNCATION_METHOD):
         """Computes VarDA cost function.
         NOTE: eventually - implement this by hand as grad_J and J share quantity Q"""
         # trunc, = w.shape
@@ -220,7 +221,11 @@ class VarDataAssimilationPipeline():
         # nobs, = R_inv.shape[0]
 
         #print("G {}, V {}, w {}, d {}".format(G.shape, V.shape, w.shape, d.shape))
-        Q = (G @ V @ w - d)
+        if mode == "SVM":
+            Q = (G @ V @ w - d)
+        elif mode == "AE":
+            Q = (G @ V(w) - d)
+
         if not R_inv and sigma:
             #When R is proportional to identity
             J_o = 0.5 / sigma ** 2 * np.dot(Q, Q)
@@ -242,10 +247,15 @@ class VarDataAssimilationPipeline():
         #     assert  R_inv.shape[0] == nobs
         #     assert d.shape == (nobs,)
     @staticmethod
-    def grad_J(w, d, G, V, alpha, sigma = None, R_inv = None):
+    def grad_J(w, d, G, V, alpha, V_grad = None, sigma = None, R_inv = None):
 
-        Q = (G @ V @ w - d)
-        P = V.T @ G.T
+        if mode == "SVM":
+            Q = (G @ V @ w - d)
+            P = V.T @ G.T
+        elif mode == "AE":
+            assert type(V_grad) = function, "V_grad must be a function if mode=AE is used"
+            Q = (G @ V(w) - d)
+            P = V.T @ G.T
         if not R_inv and sigma:
             #When R is proportional to identity
             grad_o = 0.5 / sigma ** 2 * np.dot(P, Q)

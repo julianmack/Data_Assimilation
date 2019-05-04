@@ -66,7 +66,7 @@ def main():
         encoder, decoder = utils.ML_utils.load_AE(AE.VanillaAE, settings.AE_MODEL, **kwargs)
         w_0 = torch.zeros((latent_size, ))
         u_0 = decoder(w_0)
-        print(u_0[2:23])
+
         exit()
 
     else:
