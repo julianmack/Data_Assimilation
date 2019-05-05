@@ -61,14 +61,24 @@ def main():
         #     #be equivalent
         # w_0 = w_0_v2
     elif settings.TRUNCATION_METHOD == "AE":
+        def jacobian(inputs, outputs):
+            return torch.stack([torch.autograd.grad([outputs[:, i].sum()], inputs, retain_graph=True, create_graph=True)[0]
+                                for i in range(outputs.size(1))], dim=-1)
         latent_size = 1
         kwargs = {"input_size": n, "latent_size": latent_size,"hid_layers":[1000, 200]}
         encoder, decoder = utils.ML_utils.load_AE(AE.VanillaAE, settings.AE_MODEL, **kwargs)
         w_0 = torch.zeros((latent_size, 1), requires_grad = True)
-        u_0 = decoder(w_0).reshape((-1, 1))
-        gradients = torch.autograd.grad(u_0, w_0)
-        print(gradients)
-        #check this link: https://discuss.pytorch.org/t/efficient-way-of-calculating-jacobians/40202/9
+        u_0 = decoder(w_0)
+
+        out = u_0
+        inp = w_0
+
+
+        jac = jacobian(w_0, u_0)
+        print(jac)
+        print(jac.shape)
+
+
         exit()
         u_0.backward(w_0)
         print(w_0.grad)
