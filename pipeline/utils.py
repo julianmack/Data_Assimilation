@@ -1,10 +1,7 @@
-
-
+"""Helper functions"""
 import torch
 import numpy as np
 import random
-import config
-settings = config.Config
 
 SEED = 42
 
@@ -68,7 +65,7 @@ class ML_utils():
         return train_losses, test_losses
 
     @staticmethod
-    def load_AE(ModelClass, path = settings.AE_MODEL_FP, **kwargs):
+    def load_AE(ModelClass, path, **kwargs):
         """Loads an encoder and decoder"""
         model = ModelClass(**kwargs)
         model.load_state_dict(torch.load(path))
@@ -81,7 +78,7 @@ class ML_utils():
     def get_device(use_gpu=True, device_idx=0):
         """get torch device type"""
         if use_gpu:
-            device = torch.device("cuda:"+str(device_idx) if torch.cuda.is_available() else "cpu")
+            device = torch.device("cuda:" + str(device_idx) if torch.cuda.is_available() else "cpu")
         else:
             device = torch.device("cpu")
         return device

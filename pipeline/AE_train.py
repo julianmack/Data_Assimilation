@@ -1,15 +1,14 @@
 """Run training for AE"""
+import torch
 import torch.nn.functional as F
 import torch.optim as optim
 from torch.utils.data import TensorDataset, DataLoader
-import torch
 import numpy as np
+import pickle
+
 import config
 from AutoEncoders import VanillaAE
-import sys
 import utils
-
-import pickle
 
 settings = config.Config
 

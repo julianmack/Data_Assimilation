@@ -1,14 +1,15 @@
 """All VarDA ingesting and evaluation helpers"""
 
 import numpy as np
-import vtktools
-import config
-
 import os
 import sys
 import random
-import utils
 import torch
+
+import vtktools
+import config
+import utils
+
 settings = config.Config
 
 class DAPipeline():

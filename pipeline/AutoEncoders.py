@@ -3,9 +3,6 @@ import with:
     from ML_AEs import AEs"""
 
 import torch.nn as nn
-import numpy
-
-
 
 
 class VanillaAE(nn.Module):
