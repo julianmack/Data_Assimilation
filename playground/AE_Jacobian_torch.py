@@ -5,7 +5,7 @@ def jacobian(inputs, outputs):
                         for i in range(outputs.size(1))], dim=-1)
 latent_size = 2
 kwargs = {"input_size": n, "latent_size": latent_size,"hid_layers":[1000, 200]}
-encoder, decoder = utils.ML_utils.load_AE(AE.VanillaAE, settings.AE_MODEL, **kwargs)
+encoder, decoder = utils.ML_utils.load_AE(settings.AE_MODEL_TYPE, settings.AE_MODEL_FP, **kwargs)
 w_0 = torch.zeros((1, latent_size), requires_grad = True)
 u_0 = decoder(w_0)
 

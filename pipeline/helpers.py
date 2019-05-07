@@ -9,7 +9,7 @@ import sys
 import random
 sys.path.append('/home/jfm1118')
 import utils
-
+import torch 
 settings = config.Config
 
 class VarDataAssimilationPipeline():
@@ -19,6 +19,98 @@ class VarDataAssimilationPipeline():
 
     def __init__(self):
         pass
+
+    def Var_DA_routine(self, settings = config.Config):
+        """Runs the variational DA routine using settings from the passed config class
+        (see config.py for example)"""
+        #initialize helper function class
+        X, n, M, hist_idx, hist_X, t_DA, u_c, V, u_0, \
+                        observations, obs_idx, nobs, H_0, d = self.vda_setup(settings)
+
+        if settings.COMPRESSION_METHOD == "SVD":
+            V_trunc, U, s, W = self.trunc_SVD(V, settings.NUMBER_MODES)
+            #Define intial w_0
+            w_0 = np.zeros((W.shape[-1],)) #TODO - I'm not sure about this - can we assume is it 0?
+
+            #OR - Alternatively, use the following:
+            # V_plus_trunc = W.T * (1 / s) @  U.T
+            # w_0_v2 = V_plus_trunc @ u_0 #i.e. this is the value given in Rossella et al (2019).
+            #     #I'm not clear if there is any difference - we are minimizing so expect them to
+            #     #be equivalent
+            # w_0 = w_0_v2
+
+        elif settings.COMPRESSION_METHOD == "AE":
+
+            latent_size = 2
+            kwargs = {"input_size": n, "latent_size": latent_size,"hid_layers":[1000, 200]}
+            encoder, decoder = utils.ML_utils.load_AE(settings.AE_MODEL_TYPE, settings.AE_MODEL_FP, **kwargs)
+            w_0 = torch.zeros((1, latent_size), requires_grad = True)
+            u_0 = decoder(w_0)
+
+            raise NotImplementedError("AE not implemented. Need to calculate NN gradient")
+
+        else:
+            raise ValueError("COMPRESSION_METHOD must be in {SVD, AE}")
+
+        #Define costJ and grad_J
+        args =  (d, H_0, V_trunc, settings.ALPHA, settings.OBS_VARIANCE) # list of all args required for cost_function_J and grad_J
+        #args =  (d, H_0, V_trunc, ALPHA, None, R_inv) # list of all args required for cost_function_J and grad_J
+        res = minimize(self.cost_function_J, w_0, args = args, method='L-BFGS-B', jac=vda.grad_J, tol=TOL)
+
+        w_opt = res.x
+        delta_u_DA = V_trunc @ w_opt
+        u_DA = u_0 + delta_u_DA
+
+        ref_MAE = np.abs(u_0 - u_c)
+        da_MAE = np.abs(u_DA - u_c)
+
+        ref_MAE_mean = np.mean(ref_MAE)
+        da_MAE_mean = np.mean(da_MAE)
+
+        print("RESULTS")
+
+        print("Reference MAE: ", ref_MAE_mean)
+        print("DA MAE: ", da_MAE_mean)
+        print("If DA has worked, DA MAE > Ref_MAE")
+        #Compare abs(u_0 - u_c).sum() with abs(u_DA - u_c).sum() in paraview
+
+        #Save .vtu files so that I can look @ in paraview
+        sample_fp = self.get_sorted_fps_U(settings.DATA_FP)[0]
+        out_fp_ref = settings.INTERMEDIATE_FP + "ref_MAE.vtu"
+        out_fp_DA =  settings.INTERMEDIATE_FP + "DA_MAE.vtu"
+
+        self.save_vtu_file(ref_MAE, "ref_MAE", out_fp_ref, sample_fp)
+        self.save_vtu_file(da_MAE, "DA_MAE", out_fp_DA, sample_fp)
+
+
+    def vda_setup(self, settings):
+        #The X array should already be saved in settings.X_FP
+        #but can be created from .vtu fps if required. see trunc_SVD.py for an example
+        X = np.load(settings.X_FP)
+        n, M = X.shape
+
+        # Split X into historical and present data. We will
+        # assimilate "observations" at a single timestep t_DA
+        # which corresponds to the control state u_c
+        # We will take initial condition u_0, as mean of historical data
+        hist_idx = int(M * settings.HIST_FRAC)
+        t_DA = M - settings.TDA_IDX_FROM_END
+        assert t_DA > hist_idx, "Cannot select observation from historical data. \
+                    Reduce HIST_FRAC or reduce TDA_IDX_FROM_END to prevent overlap"
+
+        hist_X = X[:, : hist_idx]
+        u_c = X[:, t_DA]
+        V, u_0 = self.create_V_from_X(hist_X, return_mean = True)
+
+        observations, obs_idx, nobs = self.select_obs(settings.OBS_MODE, u_c, {"fraction": settings.OBS_FRAC}) #options are specific for rand
+
+        #Now define quantities required for 3D-VarDA - see Algorithm 1 in Rossella et al (2019)
+        H_0 = self.create_H(obs_idx, n, nobs)
+        d = observations - H_0 @ u_0 #'d' in literature
+        #R_inv = self.create_R_inv(OBS_VARIANCE, nobs)
+
+        return X, n, M, hist_idx, hist_X, t_DA, u_c, V, u_0, \
+                        observations, obs_idx, nobs, H_0, d
 
     @staticmethod
     def get_sorted_fps_U(data_dir):

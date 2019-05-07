@@ -3,6 +3,9 @@
 User can create new classes that inherit from class Config and override class variables
 in order to create new combinations of config options."""
 
+from AutoEncoders import VanillaAE
+
+
 class Config:
 
     #filepaths
@@ -10,8 +13,8 @@ class Config:
     X_FP = "data/small3D_intermediate/X_small3D_Tracer.npy"
     INTERMEDIATE_FP = "data/small3D_intermediate/"
 
-    AE_MODEL = "models/AE_dim2_epoch120.pth" #AE_dim40_epoch120.pth"
-
+    AE_MODEL_FP = "models/AE_dim2_epoch120.pth" #AE_dim40_epoch120.pth"
+    AE_MODEL_TYPE = VanillaAE
     SEED = 42
 
     #config options to divide up data between "History", "observation" and "control_state"

@@ -69,7 +69,7 @@ class ML_utils():
         return train_losses, test_losses
 
     @staticmethod
-    def load_AE(ModelClass, path = settings.AE_MODEL, **kwargs):
+    def load_AE(ModelClass, path = settings.AE_MODEL_FP, **kwargs):
         """Loads an encoder and decoder"""
         model = ModelClass(**kwargs)
         model.load_state_dict(torch.load(path))

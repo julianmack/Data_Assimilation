@@ -4,9 +4,7 @@ import with:
 
 import torch.nn as nn
 import numpy
-import config
 
-settings = config.Config
 
 
 
