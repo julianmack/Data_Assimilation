@@ -4,7 +4,7 @@ import numpy as np
 import os
 import random
 import torch
-
+from scipy.optimize import minimize
 import vtktools
 import config
 import utils
@@ -24,7 +24,7 @@ class DAPipeline():
         (see config.py for example)"""
         #initialize helper function class
         X, n, M, hist_idx, hist_X, t_DA, u_c, V, u_0, \
-                        observations, obs_idx, nobs, H_0, d = self.vda_setup(settings)
+                        observations, obs_idx, nobs, H_0, d, std = self.vda_setup(settings)
 
         if settings.COMPRESSION_METHOD == "SVD":
             V_trunc, U, s, W = self.trunc_SVD(V, settings.NUMBER_MODES)
@@ -54,7 +54,8 @@ class DAPipeline():
         #Define costJ and grad_J
         args =  (d, H_0, V_trunc, settings.ALPHA, settings.OBS_VARIANCE) # list of all args required for cost_function_J and grad_J
         #args =  (d, H_0, V_trunc, ALPHA, None, R_inv) # list of all args required for cost_function_J and grad_J
-        res = minimize(self.cost_function_J, w_0, args = args, method='L-BFGS-B', jac=vda.grad_J, tol=TOL)
+        res = minimize(self.cost_function_J, w_0, args = args, method='L-BFGS-B',
+                jac=self.grad_J, tol=settings.TOL)
 
         w_opt = res.x
         delta_u_DA = V_trunc @ w_opt
@@ -96,10 +97,13 @@ class DAPipeline():
         t_DA = M - settings.TDA_IDX_FROM_END
         assert t_DA > hist_idx, "Cannot select observation from historical data. \
                     Reduce HIST_FRAC or reduce TDA_IDX_FROM_END to prevent overlap"
+        if settings.NORMALIZE:
+            std = np.std(X, axis=1)
+            X = (X.T / std).T
 
         hist_X = X[:, : hist_idx]
         u_c = X[:, t_DA]
-        V, u_0 = self.create_V_from_X(hist_X, return_mean = True, normalize=settings.NORMALIZE)
+        V, u_0 = self.create_V_from_X(hist_X, return_mean = True)
 
         observations, obs_idx, nobs = self.select_obs(settings.OBS_MODE, u_c, {"fraction": settings.OBS_FRAC}) #options are specific for rand
 
@@ -109,7 +113,7 @@ class DAPipeline():
         #R_inv = self.create_R_inv(OBS_VARIANCE, nobs)
 
         return X, n, M, hist_idx, hist_X, t_DA, u_c, V, u_0, \
-                        observations, obs_idx, nobs, H_0, d
+                        observations, obs_idx, nobs, H_0, d, std
 
     @staticmethod
     def get_sorted_fps_U(data_dir):
@@ -170,7 +174,7 @@ class DAPipeline():
         return output.T #return (n x M)
 
     @staticmethod
-    def create_V_from_X(X_fp, normalize, return_mean = False, ):
+    def create_V_from_X(X_fp, return_mean = False):
         """Creates a mean centred matrix V from input matrix X.
         X_FP can be a numpy matrix or a fp to X"""
         if type(X_fp) == str:
@@ -180,13 +184,10 @@ class DAPipeline():
         else:
             raise TypeError("X_fp must be a filpath or a numpy.ndarray")
 
-
         n, M = X.shape
         mean = np.mean(X, axis=1)
-        V = X.T - mean
-        V = V.T
-        if normalize:
-            raise NotImplementedError("Normalize functionality not yet impelemted")
+        V = (X.T - mean).T
+
         V = (M - 1) ** (- 0.5) * V
         if return_mean:
             return V, mean
@@ -318,10 +319,12 @@ class DAPipeline():
         # nobs, = R_inv.shape[0]
 
         #print("G {}, V {}, w {}, d {}".format(G.shape, V.shape, w.shape, d.shape))
-        if mode == "SVM":
+        if mode == "SVD":
             Q = (G @ V @ w - d)
         elif mode == "AE":
             Q = (G @ V(w) - d)
+        else:
+            raise ValueError("Invalid mode")
 
         if not R_inv and sigma:
             #When R is proportional to identity
@@ -344,9 +347,9 @@ class DAPipeline():
         #     assert  R_inv.shape[0] == nobs
         #     assert d.shape == (nobs,)
     @staticmethod
-    def grad_J(w, d, G, V, alpha, V_grad = None, sigma = None, R_inv = None):
+    def grad_J(w, d, G, V, alpha, sigma = None, V_grad = None, R_inv = None, mode=SETTINGS.COMPRESSION_METHOD):
 
-        if mode == "SVM":
+        if mode == "SVD":
             Q = (G @ V @ w - d)
             P = V.T @ G.T
         elif mode == "AE":
@@ -378,7 +381,7 @@ class DAPipeline():
         ug.Write(filename)
 
 if __name__ == "__main__":
-    SETTINGS = config.ConfigAE
+    SETTINGS = config.Config
 
     DA = DAPipeline()
     DA.Var_DA_routine(SETTINGS)

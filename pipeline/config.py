@@ -1,7 +1,8 @@
 """Configuration file for VarDA. Custom data structure that holds configuration options.
 
 User can create new classes that inherit from class Config and override class variables
-in order to create new combinations of config options."""
+in order to create new combinations of config options. Alternatively, individual config
+options can be altered one at a time on an ad-hoc basis."""
 
 from AutoEncoders import VanillaAE
 
@@ -13,6 +14,7 @@ class Config:
     X_FP = INTERMEDIATE_FP + "X_small3D_Tracer.npy"
 
     SEED = 42
+    NORMALIZE = True #Whether to normalize input data
 
     #config options to divide up data between "History", "observation" and "control_state"
     #User is responsible for checking that these regions do not overlap
@@ -30,19 +32,20 @@ class Config:
     ALPHA = 1.0
     OBS_VARIANCE = 0.01 #TODO - CHECK this is specific to the sensors (in this case - the error in model predictions)
 
-
     COMPRESSION_METHOD = "SVD" # "SVD"/"AE"
-    NUMBER_MODES = 4  #Number of modes to retain.
+    NUMBER_MODES = None  #Number of modes to retain.
         # If NUMBER_MODES = None (and COMPRESSION_METHOD = "SVD"), we use
         # the Rossella et al. method for selection of truncation parameter
 
+    TOL = 1e-3 #Tolerance in VarDA minimization routine
+
 class ConfigExample(Config):
-    """Override relevant configuration options."""
-    ALPHA = 2.0
+    """Override and add relevant configuration options."""
+    ALPHA = 2.0 #override
+    NEW_OPTION = "FLAG" #Add new
 
 class ConfigAE(Config):
     COMPRESSION_METHOD = "AE"
-    NUMBER_MODES = 4
-
     AE_MODEL_FP = "models/AE_dim2_epoch120.pth" #AE_dim40_epoch120.pth"
-    AE_MODEL_TYPE = VanillaAE
+    NUMBER_MODES = 4 #this must match model above
+    AE_MODEL_TYPE = VanillaAE #this must match
