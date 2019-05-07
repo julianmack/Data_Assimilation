@@ -2,7 +2,6 @@
 
 import numpy as np
 import os
-import sys
 import random
 import torch
 
@@ -10,7 +9,7 @@ import vtktools
 import config
 import utils
 
-settings = config.Config
+SETTINGS = config.Config
 
 class DAPipeline():
     """Class to hold @static_method pipeline functions for
@@ -210,9 +209,9 @@ class DAPipeline():
 
         U, s, W = np.linalg.svd(V, False)
 
-        np.save(settings.INTERMEDIATE_FP + "U.npy", U)
-        np.save(settings.INTERMEDIATE_FP + "s.npy", s)
-        np.save(settings.INTERMEDIATE_FP + "W.npy", W)
+        np.save(SETTINGS.INTERMEDIATE_FP + "U.npy", U)
+        np.save(SETTINGS.INTERMEDIATE_FP + "s.npy", s)
+        np.save(SETTINGS.INTERMEDIATE_FP + "W.npy", W)
         #first singular value
         sing_1 = s[0]
         threshold = np.sqrt(sing_1)
@@ -259,7 +258,7 @@ class DAPipeline():
             # Define observations as a random subset of the control state.
             frac = options["fraction"]
             nobs = int(frac * n) #number of observations
-            utils.set_seeds(seed = settings.SEED) #set seeds so that the selected subset is the same every time
+            utils.set_seeds(seed = SETTINGS.SEED) #set seeds so that the selected subset is the same every time
             obs_idx = random.sample(range(n), nobs) #select nobs integers w/o replacement
             observations = np.take(vec, obs_idx)
         elif mode == "single_max":
@@ -308,7 +307,7 @@ class DAPipeline():
 
     @staticmethod
     def cost_function_J(w, d, G, V, alpha, sigma = None, R_inv = None, test=True,
-            mode=settings.COMPRESSION_METHOD):
+            mode=SETTINGS.COMPRESSION_METHOD):
         """Computes VarDA cost function.
         NOTE: eventually - implement this by hand as grad_J and J share quantity Q"""
         # trunc, = w.shape
@@ -368,7 +367,7 @@ class DAPipeline():
     def save_vtu_file(arr, name, filename, sample_fp=None):
         """Saves a VTU file - NOTE TODO - should be using deep copy method in vtktools.py -> VtuDiff()"""
         if sample_fp == None:
-            sample_fp = vda.get_sorted_fps_U(settings.DATA_FP)[0]
+            sample_fp = vda.get_sorted_fps_U(SETTINGS.DATA_FP)[0]
 
         ug = vtktools.vtu(sample_fp) #use sample fp to initialize positions on grid
 
@@ -376,7 +375,7 @@ class DAPipeline():
         ug.Write(filename)
 
 if __name__ == "__main__":
-    settings = config.Config
+    SETTINGS = config.Config
 
     DA = DAPipeline()
-    DA.Var_DA_routine(settings)
+    DA.Var_DA_routine(SETTINGS)
