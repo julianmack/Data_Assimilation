@@ -1,7 +1,7 @@
 """Configuration file for VarDA. Custom data structure that holds configuration options.
 
-User can create new classes that inherit from Config() to specify new
-combinations of easily accessible config options."""
+User can create new classes that inherit from class Config and override class variables
+in order to create new combinations of config options."""
 
 class Config:
 
@@ -33,3 +33,7 @@ class Config:
     NUMBER_MODES = 4  #Number of modes to retain.
         # If NUMBER_MODES = None (and COMPRESSION_METHOD = "SVD"), we use
         # the Rossella et al. method for selection of truncation parameter
+
+class ConfigExample(Config):
+    """Override relevant configuration options."""
+    ALPHA = 2.0
