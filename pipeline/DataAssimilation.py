@@ -99,7 +99,7 @@ class DAPipeline():
 
         hist_X = X[:, : hist_idx]
         u_c = X[:, t_DA]
-        V, u_0 = self.create_V_from_X(hist_X, return_mean = True)
+        V, u_0 = self.create_V_from_X(hist_X, return_mean = True, normalize=settings.NORMALIZE)
 
         observations, obs_idx, nobs = self.select_obs(settings.OBS_MODE, u_c, {"fraction": settings.OBS_FRAC}) #options are specific for rand
 
@@ -168,8 +168,9 @@ class DAPipeline():
             output[idx] = vector
 
         return output.T #return (n x M)
+
     @staticmethod
-    def create_V_from_X(X_fp, return_mean = False):
+    def create_V_from_X(X_fp, normalize, return_mean = False, ):
         """Creates a mean centred matrix V from input matrix X.
         X_FP can be a numpy matrix or a fp to X"""
         if type(X_fp) == str:
@@ -184,6 +185,8 @@ class DAPipeline():
         mean = np.mean(X, axis=1)
         V = X.T - mean
         V = V.T
+        if normalize:
+            raise NotImplementedError("Normalize functionality not yet impelemted")
         V = (M - 1) ** (- 0.5) * V
         if return_mean:
             return V, mean
@@ -375,7 +378,7 @@ class DAPipeline():
         ug.Write(filename)
 
 if __name__ == "__main__":
-    SETTINGS = config.Config
+    SETTINGS = config.ConfigAE
 
     DA = DAPipeline()
     DA.Var_DA_routine(SETTINGS)
