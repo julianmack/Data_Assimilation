@@ -4,13 +4,16 @@ import torch.optim as optim
 from torch.utils.data import TensorDataset, DataLoader
 import torch
 import numpy as np
-import settings
+import config
+import utils
+
 from AutoEncoders import VanillaAE
 import sys
 sys.path.append('/home/jfm1118')
-import utils
 
 import pickle
+
+settings = config.Config
 
 
 MODEL_FP = "models/AE"
@@ -34,7 +37,7 @@ def main():
     print("train_size = ", len(train_loader.dataset))
     print("test_size = ", len(test_loader.dataset))
 
-    
+
     #training hyperparams
     num_epoch = 120
     device = utils.ML_utils.get_device()

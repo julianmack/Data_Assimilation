@@ -2,12 +2,15 @@
 
 import numpy as np
 import vtktools
-import settings
+import config
+
 import os
 import sys
 import random
 sys.path.append('/home/jfm1118')
 import utils
+
+settings = config.Config
 
 class VarDataAssimilationPipeline():
     """Class to hold @static_method pipeline functions for
@@ -213,7 +216,7 @@ class VarDataAssimilationPipeline():
 
     @staticmethod
     def cost_function_J(w, d, G, V, alpha, sigma = None, R_inv = None, test=True,
-            mode=settings.TRUNCATION_METHOD):
+            mode=settings.COMPRESSION_METHOD):
         """Computes VarDA cost function.
         NOTE: eventually - implement this by hand as grad_J and J share quantity Q"""
         # trunc, = w.shape

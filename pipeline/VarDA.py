@@ -11,13 +11,14 @@ sys.path.append('/home/jfm1118')
 
 import utils
 
-
-import settings
+import config
 from scipy.optimize import minimize
 
 TOL = 1e-3
 
 def main():
+    settings = config.Config
+
     print("alpha =", settings.ALPHA)
     print("obs_var =", settings.OBS_VARIANCE)
     print("obs_frac =", settings.OBS_FRAC)
@@ -37,18 +38,21 @@ def main():
     # which corresponds to the control state u_c
     # We will take initial condition u_0, as mean of historical data
     hist_idx = int(M * settings.HIST_FRAC)
+    t_DA = M - settings.TDA_IDX_FROM_END
+    assert t_DA > hist_idx, "Cannot select observation from historical data. \
+                Reduce HIST_FRAC or reduce TDA_IDX_FROM_END to prevent overlap"
+
     hist_X = X[:, : hist_idx]
-    t_DA = M - 2 #i.e. second to last
     u_c = X[:, t_DA]
     V, u_0 = vda.create_V_from_X(hist_X, return_mean = True)
 
-    observations, obs_idx, nobs = vda.select_obs(settings.MODE, u_c, {"fraction": settings.OBS_FRAC}) #options are specific for rand
+    observations, obs_idx, nobs = vda.select_obs(settings.OBS_MODE, u_c, {"fraction": settings.OBS_FRAC}) #options are specific for rand
 
     #Now define quantities required for 3D-VarDA - see Algorithm 1 in Rossella et al (2019)
     H_0 = vda.create_H(obs_idx, n, nobs)
     d = observations - H_0 @ u_0 #'d' in literature
     #R_inv = vda.create_R_inv(OBS_VARIANCE, nobs)
-    if settings.TRUNCATION_METHOD == "SVD":
+    if settings.COMPRESSION_METHOD == "SVD":
         V_trunc, U, s, W = vda.trunc_SVD(V, settings.NUMBER_MODES)
         #Define intial w_0
         w_0 = np.zeros((W.shape[-1],)) #TODO - I'm not sure about this - can we assume is it 0?
@@ -60,7 +64,7 @@ def main():
         #     #I'm not clear if there is any difference - we are minimizing so expect them to
         #     #be equivalent
         # w_0 = w_0_v2
-    elif settings.TRUNCATION_METHOD == "AE":
+    elif settings.COMPRESSION_METHOD == "AE":
         import time
         def jacobian(inputs, outputs):
             return torch.stack([torch.autograd.grad([outputs[:, i].sum()], inputs, retain_graph=True, create_graph=True)[0]
@@ -107,7 +111,7 @@ def main():
         exit()
 
     else:
-        raise ValueError("TRUNCATION_METHOD must be in {SVD, AE}")
+        raise ValueError("COMPRESSION_METHOD must be in {SVD, AE}")
 
     #Define costJ and grad_J
     args =  (d, H_0, V_trunc, settings.ALPHA, settings.OBS_VARIANCE) # list of all args required for cost_function_J and grad_J

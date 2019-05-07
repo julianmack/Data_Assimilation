@@ -4,7 +4,7 @@ import torch.optim as optim
 from torch.utils.data import TensorDataset, DataLoader
 import torch
 import numpy as np
-import settings
+import config
 from AutoEncoders import VanillaAE
 import sys
 sys.path.append('/home/jfm1118')
@@ -12,6 +12,7 @@ import utils
 
 import pickle
 
+settings = config.Config
 
 MODEL_FP = "models/AE"
 RESULTS_FP = "results/"

@@ -4,7 +4,10 @@ import with:
 
 import torch.nn as nn
 import numpy
-import settings
+import config
+
+settings = config.Config
+
 
 
 class VanillaAE(nn.Module):
