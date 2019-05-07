@@ -1,5 +1,5 @@
 ##New TODO:
-
+Update NUMBER_MODES to LATENT_DIM for AE
 
 ###ALL COMPLETE:
 varDA.py - push this into helpers.py
