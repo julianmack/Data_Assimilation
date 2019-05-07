@@ -24,7 +24,7 @@ class DAPipeline():
         (see config.py for example)"""
         #initialize helper function class
         X, n, M, hist_idx, hist_X, t_DA, u_c, V, u_0, \
-                        observations, obs_idx, nobs, H_0, d, std = self.vda_setup(settings)
+                        observations, obs_idx, nobs, H_0, d, std, mean = self.vda_setup(settings)
 
         if settings.COMPRESSION_METHOD == "SVD":
             V_trunc, U, s, W = self.trunc_SVD(V, settings.NUMBER_MODES)
@@ -60,6 +60,12 @@ class DAPipeline():
         w_opt = res.x
         delta_u_DA = V_trunc @ w_opt
         u_DA = u_0 + delta_u_DA
+
+        #Undo normalization
+        if settings.NORMALIZE:
+            u_DA = (u_DA.T * std + mean).T
+            u_c = (u_c.T * std + mean).T
+            u_0 = (u_0.T * std + mean).T
 
         ref_MAE = np.abs(u_0 - u_c)
         da_MAE = np.abs(u_DA - u_c)
@@ -97,14 +103,26 @@ class DAPipeline():
         t_DA = M - settings.TDA_IDX_FROM_END
         assert t_DA > hist_idx, "Cannot select observation from historical data. \
                     Reduce HIST_FRAC or reduce TDA_IDX_FROM_END to prevent overlap"
+
+        hist_X = X[:, : hist_idx] #select training set data
+
         if settings.NORMALIZE:
+            #use only the training set to calculate mean and std
+            mean = np.mean(X, axis=1)
             std = np.std(X, axis=1)
+            #NOTE: when hist_X -> X in 2 lines above, the MAE reduces massively
+            #In preliminary experiments, this is not true with hist_X
+
+            X = (X.T - mean).T
             X = (X.T / std).T
 
-        hist_X = X[:, : hist_idx]
-        u_c = X[:, t_DA]
-        V, u_0 = self.create_V_from_X(hist_X, return_mean = True)
+            hist_X = X[:, : hist_idx]
+            V, u_0, _ = self.create_V_from_X(hist_X, return_mean = True)
+        else:
+            V, mean, std = self.create_V_from_X(hist_X, return_mean = True)
+            u_0 = mean
 
+        u_c = X[:, t_DA]
         observations, obs_idx, nobs = self.select_obs(settings.OBS_MODE, u_c, {"fraction": settings.OBS_FRAC}) #options are specific for rand
 
         #Now define quantities required for 3D-VarDA - see Algorithm 1 in Rossella et al (2019)
@@ -113,7 +131,7 @@ class DAPipeline():
         #R_inv = self.create_R_inv(OBS_VARIANCE, nobs)
 
         return X, n, M, hist_idx, hist_X, t_DA, u_c, V, u_0, \
-                        observations, obs_idx, nobs, H_0, d, std
+                        observations, obs_idx, nobs, H_0, d, std, mean
 
     @staticmethod
     def get_sorted_fps_U(data_dir):
@@ -186,11 +204,13 @@ class DAPipeline():
 
         n, M = X.shape
         mean = np.mean(X, axis=1)
+        std = np.std(X, axis=1)
+
         V = (X.T - mean).T
 
         V = (M - 1) ** (- 0.5) * V
         if return_mean:
-            return V, mean
+            return V, mean, std
         return V
     @staticmethod
     def AE_forward():

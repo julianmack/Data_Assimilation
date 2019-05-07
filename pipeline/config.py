@@ -14,7 +14,7 @@ class Config:
     X_FP = INTERMEDIATE_FP + "X_small3D_Tracer.npy"
 
     SEED = 42
-    NORMALIZE = True #Whether to normalize input data
+    NORMALIZE = False #Whether to normalize input data
 
     #config options to divide up data between "History", "observation" and "control_state"
     #User is responsible for checking that these regions do not overlap
