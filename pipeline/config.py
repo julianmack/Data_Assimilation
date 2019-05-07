@@ -6,15 +6,12 @@ in order to create new combinations of config options."""
 from AutoEncoders import VanillaAE
 
 
-class Config: 
-
+class Config:
     #filepaths
     DATA_FP = "data/small3DLSBU/"
-    X_FP = "data/small3D_intermediate/X_small3D_Tracer.npy"
     INTERMEDIATE_FP = "data/small3D_intermediate/"
+    X_FP = INTERMEDIATE_FP + "X_small3D_Tracer.npy"
 
-    AE_MODEL_FP = "models/AE_dim2_epoch120.pth" #AE_dim40_epoch120.pth"
-    AE_MODEL_TYPE = VanillaAE
     SEED = 42
 
     #config options to divide up data between "History", "observation" and "control_state"
@@ -32,7 +29,9 @@ class Config:
     #VarDA hyperparams
     ALPHA = 1.0
     OBS_VARIANCE = 0.01 #TODO - CHECK this is specific to the sensors (in this case - the error in model predictions)
-    COMPRESSION_METHOD = "AE" # "SVD"/"AE"
+
+
+    COMPRESSION_METHOD = "SVD" # "SVD"/"AE"
     NUMBER_MODES = 4  #Number of modes to retain.
         # If NUMBER_MODES = None (and COMPRESSION_METHOD = "SVD"), we use
         # the Rossella et al. method for selection of truncation parameter
@@ -40,3 +39,10 @@ class Config:
 class ConfigExample(Config):
     """Override relevant configuration options."""
     ALPHA = 2.0
+
+class ConfigAE(Config):
+    COMPRESSION_METHOD = "AE"
+    NUMBER_MODES = 4
+
+    AE_MODEL_FP = "models/AE_dim2_epoch120.pth" #AE_dim40_epoch120.pth"
+    AE_MODEL_TYPE = VanillaAE
