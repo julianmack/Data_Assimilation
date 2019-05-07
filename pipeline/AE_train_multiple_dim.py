@@ -9,7 +9,6 @@ import utils
 
 from AutoEncoders import VanillaAE
 import sys
-sys.path.append('/home/jfm1118')
 
 import pickle
 

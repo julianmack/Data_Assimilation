@@ -6,7 +6,6 @@ import random
 import config
 settings = config.Config
 
-
 SEED = 42
 
 def set_seeds(seed = SEED):

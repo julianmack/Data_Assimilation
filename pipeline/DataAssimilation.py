@@ -7,7 +7,6 @@ import config
 import os
 import sys
 import random
-sys.path.append('/home/jfm1118')
 import utils
 import torch
 settings = config.Config

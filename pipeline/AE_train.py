@@ -7,7 +7,6 @@ import numpy as np
 import config
 from AutoEncoders import VanillaAE
 import sys
-sys.path.append('/home/jfm1118')
 import utils
 
 import pickle

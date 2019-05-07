@@ -6,7 +6,7 @@ in order to create new combinations of config options."""
 from AutoEncoders import VanillaAE
 
 
-class Config:
+class Config: 
 
     #filepaths
     DATA_FP = "data/small3DLSBU/"
