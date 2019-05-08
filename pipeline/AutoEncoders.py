@@ -4,7 +4,6 @@ import with:
 
 import torch.nn as nn
 
-
 class VanillaAE(nn.Module):
     """Variable size AE - using only fully connected layers.
     Arguments (for initialization):
