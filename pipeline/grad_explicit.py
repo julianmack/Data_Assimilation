@@ -70,7 +70,8 @@ class ToyNet(nn.Module):
         # print("B.shape:", B.shape, )
         # print(first.shape)
         # print(jac.shape)
-def plot_time_w_output(outputs, inn, hidden, batch_sz):
+def plot_time_w_output(outputs, inn, hidden, batch_sz, loop=True):
+
     T_2s = []
     T_1s = []
     factors = []
@@ -81,9 +82,9 @@ def plot_time_w_output(outputs, inn, hidden, batch_sz):
 
         input = torch.rand((Batch_sz, INPUT), requires_grad=True)
         output = model(input)
-
         t0 = time.time()
-        jac_true = ML.jacobian_slow_torch(input, output)
+        if loop:
+            jac_true = ML.jacobian_slow_torch(input, output)
         t1 = time.time()
         jac_expl = model.jac_explicit(input)
         t2 = time.time()
@@ -98,23 +99,23 @@ def plot_time_w_output(outputs, inn, hidden, batch_sz):
         T_1s.append(T_1)
         T_2s.append(T_2)
         factors.append(factor)
-
-        print("out = {}. Explicit x{:.1f} faster than loop method".format(out_sz, factor))
-
-
-    plt.plot(outputs, T_1s)
-    plt.show()
+        if loop:
+            print("out = {}. Explicit x{:.1f} faster than loop method".format(out_sz, factor))
+    if loop:
+        plt.plot(outputs, T_1s)
+        plt.show()
+        plt.plot(outputs, factors)
+        plt.show()
     plt.plot(outputs, T_2s)
     plt.show()
-    plt.plot(outputs, factors)
-    plt.show()
+
 
 if __name__ == "__main__":
     INPUT = 32
     HIDDEN = 128
     Batch_sz = 64
-    outputs = [2**x for x in range(17)]
-    plot_time_w_output(outputs, INPUT, HIDDEN, Batch_sz)
+    outputs = [2**x for x in range(20)]
+    plot_time_w_output(outputs, INPUT, HIDDEN, Batch_sz, loop=False)
     exit()
     utils.set_seeds()
 
