@@ -7,6 +7,8 @@ from utils import ML_utils as ML
 import utils
 
 import time
+import matplotlib.pyplot as plt
+
 class ToyNet(nn.Module):
     """Creates simple toy network with one fc hidden layer"""
     def __init__(self, inn, hid, out):
@@ -68,12 +70,52 @@ class ToyNet(nn.Module):
         # print("B.shape:", B.shape, )
         # print(first.shape)
         # print(jac.shape)
+def plot_time_w_output(outputs, inn, hidden, batch_sz):
+    T_2s = []
+    T_1s = []
+    factors = []
+    for out_sz in outputs:
+        utils.set_seeds()
+        model = ToyNet(inn, hidden, out_sz)
+        model.gen_rand_weights()
+
+        input = torch.rand((Batch_sz, INPUT), requires_grad=True)
+        output = model(input)
+
+        t0 = time.time()
+        jac_true = ML.jacobian_slow_torch(input, output)
+        t1 = time.time()
+        jac_expl = model.jac_explicit(input)
+        t2 = time.time()
+        T_1 = t1-t0
+        T_2 = t2-t1
+
+        try:
+            factor = T_1 / T_2
+        except ZeroDivisionError:
+            factor = 0
+
+        T_1s.append(T_1)
+        T_2s.append(T_2)
+        factors.append(factor)
+
+        print("out = {}. Explicit x{:.1f} faster than loop method".format(out_sz, factor))
+
+
+    plt.plot(outputs, T_1s)
+    plt.show()
+    plt.plot(outputs, T_2s)
+    plt.show()
+    plt.plot(outputs, factors)
+    plt.show()
 
 if __name__ == "__main__":
-    INPUT = 40
-    HIDDEN = 50
-    OUT = 60
-    Batch_sz = 4
+    INPUT = 32
+    HIDDEN = 128
+    Batch_sz = 64
+    outputs = [2**x for x in range(17)]
+    plot_time_w_output(outputs, INPUT, HIDDEN, Batch_sz)
+    exit()
     utils.set_seeds()
 
     model = ToyNet(INPUT, HIDDEN, OUT)
@@ -82,9 +124,11 @@ if __name__ == "__main__":
     input = torch.rand((Batch_sz, INPUT), requires_grad=True)
     output = model(input)
 
+    t0 = time.time()
     jac_true = ML.jacobian_slow_torch(input, output)
-
+    t1 = time.time()
     jac_expl = model.jac_explicit(input)
+    t2 = time.time()
 
     # print("True jac shape", jac_true.shape)
     # print("jac explicit shape", jac_expl.shape)
@@ -92,5 +136,12 @@ if __name__ == "__main__":
     # print(jac_true)
     # print(jac_expl)
 
-    assert torch.allclose(jac_true, jac_expl), "Two jacobians are not equal"
+
+    T_1 = t1-t0
+    T_2 = t2-t1
+    print("Time for loop method: {:.4f}s".format(T_1))
+    print("Time for explicit method: {:.4f}s".format(T_2))
+
+    print("Explicit x{:.1f} faster than loop method".format(T_1 / T_2))
+    assert torch.allclose(jac_true, jac_expl, rtol=1e-02), "Two jacobians are not equal"
     print("SUCCESS")
