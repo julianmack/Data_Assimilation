@@ -54,7 +54,7 @@ if __name__ == "__main__":
     INPUT = 32
     HIDDEN = 128
     Batch_sz = 64
-    outputs = [2**x for x in range(20)]
+    outputs = [2**x for x in range(8)]
     plot_time_w_output(outputs, INPUT, HIDDEN, Batch_sz, loop=False)
     exit()
     utils.set_seeds()

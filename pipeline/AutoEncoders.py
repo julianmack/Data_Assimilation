@@ -3,6 +3,8 @@ import with:
     from ML_AEs import AEs"""
 
 import torch.nn as nn
+import torch
+import torch.nn.functional as F
 
 class VanillaAE(nn.Module):
     """Variable size AE - using only fully connected layers.
@@ -125,3 +127,4 @@ class ToyNet(nn.Module):
         jac = torch.transpose(jac, 1, 2)
 
         return jac
+import torch
