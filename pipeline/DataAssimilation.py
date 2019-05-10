@@ -9,7 +9,7 @@ import vtktools
 import config
 import utils
 
-SETTINGS = config.Config
+SETTINGS = config.ToyAEConfig
 
 class DAPipeline():
     """Class to hold @static_method pipeline functions for
@@ -40,7 +40,6 @@ class DAPipeline():
 
         elif settings.COMPRESSION_METHOD == "AE":
 
-            latent_size = 2
             kwargs = {"input_size": n, "latent_size": latent_size,"hid_layers":[1000, 200]}
             encoder, decoder = utils.ML_utils.load_AE(settings.AE_MODEL_TYPE, settings.AE_MODEL_FP, **kwargs)
             w_0 = torch.zeros((1, latent_size), requires_grad = True)
@@ -216,6 +215,7 @@ class DAPipeline():
     def AE_forward():
         pass
     @staticmethod
+
     def trunc_SVD(V, trunc_idx=None, test=False):
         """Performs Truncated SVD where Truncation parameter is calculated
         via one of two methods:

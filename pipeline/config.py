@@ -4,8 +4,7 @@ User can create new classes that inherit from class Config and override class va
 in order to create new combinations of config options. Alternatively, individual config
 options can be altered one at a time on an ad-hoc basis."""
 
-from AutoEncoders import VanillaAE
-
+from AutoEncoders import VanillaAE, ToyNet
 
 class Config:
     #filepaths
@@ -49,3 +48,8 @@ class ConfigAE(Config):
     AE_MODEL_FP = "models/AE_dim2_epoch120.pth" #AE_dim40_epoch120.pth"
     NUMBER_MODES = 4 #this must match model above
     AE_MODEL_TYPE = VanillaAE #this must match
+
+class ToyAEConfig(ConfigAE):
+    AE_MODEL_FP = "models/AE_toy_32_128.pth"
+    NUMBER_MODES = 32
+    AE_MODEL_TYPE = ToyNet
