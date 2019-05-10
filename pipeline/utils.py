@@ -2,10 +2,11 @@
 import torch
 import numpy as np
 import random
+import config
+SETTINGS = config.Config
 
-SEED = 42
 
-def set_seeds(seed = SEED):
+def set_seeds(seed = SETTINGS.SEED):
     "Fix all seeds"
 
     torch.manual_seed(SEED)
