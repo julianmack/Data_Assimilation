@@ -9,10 +9,10 @@ SETTINGS = config.Config
 def set_seeds(seed = SETTINGS.SEED):
     "Fix all seeds"
 
-    torch.manual_seed(SEED)
-    np.random.seed(SEED)
-    random.seed(SEED)
-    torch.cuda.manual_seed(SEED)
+    torch.manual_seed(seed)
+    np.random.seed(seed)
+    random.seed(seed)
+    torch.cuda.manual_seed(seed)
     if torch.cuda.is_available():
         torch.backends.cudnn.deterministic = True
 
@@ -83,3 +83,10 @@ class ML_utils():
         else:
             device = torch.device("cpu")
         return device
+
+    @staticmethod
+    def jacobian_slow_torch(inputs, outputs):
+        """Computes a jacobian of two torch tensor.
+        Uses a loop so linear complexity in dimension of output"""
+        return torch.stack([torch.autograd.grad([outputs[:, i].sum()], inputs, retain_graph=True, create_graph=True)[0]
+                            for i in range(outputs.size(1))], dim=-1)
