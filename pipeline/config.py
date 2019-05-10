@@ -11,6 +11,7 @@ class Config:
     DATA_FP = "data/small3DLSBU/"
     INTERMEDIATE_FP = "data/small3D_intermediate/"
     X_FP = INTERMEDIATE_FP + "X_small3D_Tracer.npy"
+    n = 100040
 
     SEED = 42
     NORMALIZE = False #Whether to normalize input data
@@ -44,12 +45,17 @@ class ConfigExample(Config):
     NEW_OPTION = "FLAG" #Add new
 
 class ConfigAE(Config):
+
     COMPRESSION_METHOD = "AE"
     AE_MODEL_FP = "models/AE_dim2_epoch120.pth" #AE_dim40_epoch120.pth"
     NUMBER_MODES = 4 #this must match model above
     AE_MODEL_TYPE = VanillaAE #this must match
+    kwargs = {"input_size": Config().n, "latent_size": NUMBER_MODES,"hid_layers":[1000, 200]}
+
 
 class ToyAEConfig(ConfigAE):
     AE_MODEL_FP = "models/AE_toy_32_128.pth"
     NUMBER_MODES = 32
     AE_MODEL_TYPE = ToyNet
+
+    kwargs = {"inn":NUMBER_MODES, "hid":128, "out": Config().n}

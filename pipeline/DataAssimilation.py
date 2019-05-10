@@ -39,10 +39,11 @@ class DAPipeline():
             # w_0 = w_0_v2
 
         elif settings.COMPRESSION_METHOD == "AE":
+            kwargs = SETTINGS.kwargs
 
-            kwargs = {"input_size": n, "latent_size": latent_size,"hid_layers":[1000, 200]}
             encoder, decoder = utils.ML_utils.load_AE(settings.AE_MODEL_TYPE, settings.AE_MODEL_FP, **kwargs)
-            w_0 = torch.zeros((1, latent_size), requires_grad = True)
+
+            w_0 = torch.zeros((1, settings.NUMBER_MODES), requires_grad = True)
             u_0 = decoder(w_0)
 
             raise NotImplementedError("AE not implemented. Need to calculate NN gradient")

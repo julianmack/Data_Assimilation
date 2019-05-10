@@ -7,7 +7,7 @@ import numpy as np
 import pickle
 
 import config
-from AutoEncoders import VanillaAE
+from AutoEncoders import VanillaAE, ToyNet
 import utils
 
 settings = config.Config
