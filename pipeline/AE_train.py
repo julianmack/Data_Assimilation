@@ -10,6 +10,7 @@ import config
 from AutoEncoders import VanillaAE, ToyNet
 import utils
 
+
 settings = config.Config
 
 MODEL_FP = "models/AE"
