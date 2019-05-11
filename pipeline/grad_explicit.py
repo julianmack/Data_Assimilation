@@ -21,7 +21,7 @@ def plot_time_w_output(outputs, inn, hidden, batch_sz, loop=True):
         model.gen_rand_weights()
 
         input = torch.rand((Batch_sz, INPUT), requires_grad=True)
-        output = model(input)
+        output = model.decode(input)
         t0 = time.time()
         if loop:
             jac_true = ML.jacobian_slow_torch(input, output)
@@ -63,7 +63,7 @@ if __name__ == "__main__":
     model.gen_rand_weights()
 
     input = torch.rand((Batch_sz, INPUT), requires_grad=True)
-    output = model(input)
+    output = model.decode(input)
 
     t0 = time.time()
     jac_true = ML.jacobian_slow_torch(input, output)

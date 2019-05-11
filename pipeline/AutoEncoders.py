@@ -76,17 +76,31 @@ class ToyNet(nn.Module):
     """
     def __init__(self, inn, hid, out):
         super(ToyNet, self).__init__()
+        #encoder
+        self.fc00 = nn.Linear(out, hid, bias = True)
+        self.fc01 = nn.Linear(hid, inn, bias = True)
+
+        #decoder
         self.fc1 = nn.Linear(inn, hid, bias = True)
         self.fc2 = nn.Linear(hid, out, bias = True)
         self.sizes = [inn, hid, out]
 
-    def forward(self, x):
+    def decode(self, x):
         h = F.relu(self.fc1(x))
         h = self.fc2(h)
         return h
+    def encode(self, x):
+        h = F.relu(self.fc00(x))
+        h = self.fc01(h)
+        return h
+
+    def forward(self, x):
+        x = self.encode(x)
+        x = self.decode(x)
+        return x
 
     def gen_rand_weights(self):
-        """Generates random weights for simple two layer fc network.
+        """Generates random weights for simple two layer fc decoder network.
         """
         [inn, hid, out] = self.sizes
         #weights
@@ -104,7 +118,7 @@ class ToyNet(nn.Module):
         self.fc2.bias = nn.Parameter(b_b)
 
     def jac_explicit(self, x):
-        """Generate explicit gradient
+        """Generate explicit gradient for decoder
         (from hand calculated expression)"""
 
         W_a = self.fc1.weight
@@ -127,4 +141,5 @@ class ToyNet(nn.Module):
         jac = torch.transpose(jac, 1, 2)
 
         return jac
+
 import torch
