@@ -11,11 +11,10 @@ from AutoEncoders import VanillaAE, ToyNet
 import utils
 
 
-settings = config.Config
+settings = config.ToyAEConfig
 
-MODEL_FP = "models/AE"
 RESULTS_FP = "results/"
-BATCH = 128
+BATCH = 256
 
 def main():
     #data
@@ -35,23 +34,21 @@ def main():
     print("test_size = ", len(test_loader.dataset))
 
     #training hyperparams
-    num_epoch = 120
+    num_epoch = 1000
     device = utils.ML_utils.get_device()
     #AE hyperparams
     input_size = n
 
-    layers = [60, 50, 40]
-    latent_size = 40
     learning_rate = 0.0001
     # layers = [1000, 100]
     # latent_size = 10
 
-    model_fp = "{}_dim{}_epoch{}.pth".format(MODEL_FP, latent_size, num_epoch)
-    results_fp_train = "{}train_dim{}_epoch{}.txt".format(RESULTS_FP, latent_size, num_epoch)
-    results_fp_test = "{}test_dim{}_epoch{}.txt".format(RESULTS_FP, latent_size, num_epoch)
+    model_fp = settings.AE_MODEL_FP
+    results_fp_train = "{}toy_train.txt".format(RESULTS_FP)
+    results_fp_test = "{}toy_test.txt".format(RESULTS_FP)
 
     loss_fn = torch.nn.L1Loss(reduction='sum')
-    model = VanillaAE(input_size, latent_size, layers)
+    model = settings.AE_MODEL_TYPE(**settings.kwargs)
     optimizer = optim.Adam(model.parameters(), learning_rate)
 
 
