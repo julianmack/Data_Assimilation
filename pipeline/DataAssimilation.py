@@ -10,7 +10,7 @@ import config
 import utils
 
 SETTINGS = config.ToyAEConfig
-SETTINGS = config.Config
+# SETTINGS = config.Config
 
 
 class DAPipeline():
@@ -92,13 +92,13 @@ class DAPipeline():
             size = len(std)
             if size > 4:
                 size = 4
-            print("std:    ", std[:size])
-            print("mean:   ", mean[:size])
-            print("u_0:    ", u_0[:size])
-            print("u_c:    ", u_c[:size])
-            print("u_DA:   ", u_DA[:size])
-            print("ref_MAE:", ref_MAE[:size])
-            print("da_MAE: ", da_MAE[:size])
+            print("std:    ", std[-size:])
+            print("mean:   ", mean[-size:])
+            print("u_0:    ", u_0[-size:])
+            print("u_c:    ", u_c[-size:])
+            print("u_DA:   ", u_DA[-size:])
+            print("ref_MAE:", ref_MAE[-size:])
+            print("da_MAE: ", da_MAE[-size:])
 
         ref_MAE_mean = np.mean(ref_MAE)
         da_MAE_mean = np.mean(da_MAE)

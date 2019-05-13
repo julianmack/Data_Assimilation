@@ -47,7 +47,7 @@ def main():
 
 
     #training hyperparams
-    num_epoch = 200
+    num_epoch = 100
     device = utils.ML_utils.get_device()
     #AE hyperparams
     input_size = n

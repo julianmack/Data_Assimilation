@@ -17,7 +17,7 @@ class Config:
     DEBUG = False
 
     SEED = 42
-    NORMALIZE = False #Whether to normalize input data
+    NORMALIZE = True #Whether to normalize input data
     UNDO_NORMALIZE = NORMALIZE
 
     #config options to divide up data between "History", "observation" and "control_state"
@@ -59,13 +59,14 @@ class ConfigAE(Config):
 
 class ToyAEConfig(ConfigAE):
     NORMALIZE = True
-    NUMBER_MODES = 16
+    NUMBER_MODES = 8
     HIDDEN = 16
     AE_MODEL_FP = "models/AE_toy_{}_{}_{}.pth".format(NUMBER_MODES, HIDDEN, ConfigAE().FIELD_NAME)
     AE_MODEL_TYPE = ToyNet
     kwargs = {"inn":NUMBER_MODES, "hid":HIDDEN, "out": Config().n}
-    UNDO_NORMALIZE  = False
+    UNDO_NORMALIZE  = True
     DEBUG = True
+
 class SmallTestDomain(Config):
     SAVE = False
     DEBUG = True
