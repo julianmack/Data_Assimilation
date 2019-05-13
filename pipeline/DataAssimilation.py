@@ -50,7 +50,10 @@ class DAPipeline():
             u_0 = decoder(w_0)
 
             #Now access explicit gradient calculation
-            V_grad = settings.AE_MODEL_TYPE(**kwargs).jac_explicit
+            try:
+                V_grad = settings.AE_MODEL_TYPE(**kwargs).jac_explicit
+            except:
+                V_grad = None
         else:
             raise ValueError("COMPRESSION_METHOD must be in {SVD, AE}")
 
@@ -348,14 +351,17 @@ class DAPipeline():
         # trunc, = w.shape
         # n, = u_0.shape
         # nobs, = R_inv.shape[0]
-
+        print("J. w.shape", w.shape)
         #print("G {}, V {}, w {}, d {}".format(G.shape, V.shape, w.shape, d.shape))
         if mode == "SVD":
             Q = (G @ V @ w - d)
         elif mode == "AE":
             w = torch.Tensor(w)
             V_w = V(w).detach().numpy()
+            print("J. V(w).shape", V_w.shape)
             Q = (G @ V_w - d)
+            print("J. Q.shape", Q.shape)
+
         else:
             raise ValueError("Invalid mode")
 
@@ -381,6 +387,7 @@ class DAPipeline():
         #     assert d.shape == (nobs,)
     @staticmethod
     def grad_J(w, d, G, V, alpha, sigma = None, V_grad = None, R_inv = None, mode=SETTINGS.COMPRESSION_METHOD):
+        print("grad_J. w.shape", w.shape)
 
         if mode == "SVD":
             Q = (G @ V @ w - d)
@@ -388,8 +395,14 @@ class DAPipeline():
         elif mode == "AE":
             assert callable(V_grad), "V_grad must be a function if mode=AE is used"
             w = torch.Tensor(w)
+
             V_w = V(w).detach().numpy()
+
             V_grad_w = V_grad(w).detach().numpy()
+            print("grad_J. V_w.shape", V_w.shape)
+            print("grad_J. V_grad_w.shape", V_grad_w.shape)
+
+            exit()
             Q = (G @ V_w - d)
             P = V_grad_w.T @ G.T
         if not R_inv and sigma:

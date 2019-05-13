@@ -46,8 +46,8 @@ class ConfigExample(Config):
 
 class ConfigAE(Config):
     COMPRESSION_METHOD = "AE"
-    AE_MODEL_FP = "models/AE_dim2_epoch120.pth" #AE_dim40_epoch120.pth"
     NUMBER_MODES = 4 #this must match model above
+    AE_MODEL_FP = "models/AE_dim{}_epoch120.pth".format(NUMBER_MODES) #AE_dim40_epoch120.pth"
     AE_MODEL_TYPE = VanillaAE #this must match
     kwargs = {"input_size": Config().n, "latent_size": NUMBER_MODES,"hid_layers":[1000, 200]}
 
