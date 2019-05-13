@@ -15,13 +15,15 @@ def plot_time_w_output(outputs, inn, hidden, batch_sz, loop=True, no_batch=False
     T_2s = []
     T_1s = []
     factors = []
+
+    utils.set_seeds()
+    input = torch.rand((Batch_sz, inn), requires_grad=True)
+    if no_batch:
+        input = input[0]
+
     for out_sz in outputs:
-        utils.set_seeds()
         model = ToyNet(inn, hidden, out_sz)
         model.gen_rand_weights()
-        input = torch.rand((Batch_sz, INPUT), requires_grad=True)
-        if no_batch:
-            input = input[0]
         output = model.decode(input)
         t0 = time.time()
         if loop:
