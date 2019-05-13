@@ -72,7 +72,7 @@ class ML_utils():
         model.load_state_dict(torch.load(path))
         encoder = model.encode
         decoder = model.decode
-
+        
         return encoder, decoder
 
     @staticmethod

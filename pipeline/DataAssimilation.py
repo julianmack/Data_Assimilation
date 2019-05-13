@@ -25,12 +25,14 @@ class DAPipeline():
         #initialize helper function class
         X, n, M, hist_idx, hist_X, t_DA, u_c, V, u_0, \
                         observations, obs_idx, nobs, H_0, d, std, mean = self.vda_setup(settings)
+        R_inv = None
 
         if settings.COMPRESSION_METHOD == "SVD":
             V_trunc, U, s, W = self.trunc_SVD(V, settings.NUMBER_MODES)
             #Define intial w_0
             w_0 = np.zeros((W.shape[-1],)) #TODO - I'm not sure about this - can we assume is it 0?
 
+            V_grad = None
             #OR - Alternatively, use the following:
             # V_plus_trunc = W.T * (1 / s) @  U.T
             # w_0_v2 = V_plus_trunc @ u_0 #i.e. this is the value given in Rossella et al (2019).
@@ -43,20 +45,30 @@ class DAPipeline():
 
             encoder, decoder = utils.ML_utils.load_AE(settings.AE_MODEL_TYPE, settings.AE_MODEL_FP, **kwargs)
 
-            w_0 = torch.zeros((1, settings.NUMBER_MODES), requires_grad = True)
+            V_trunc = decoder
+            w_0 = torch.zeros((1, settings.NUMBER_MODES))
             u_0 = decoder(w_0)
-            
+
+            #Now access explicit gradient calculation
+            V_grad = settings.AE_MODEL_TYPE(**kwargs).jac_explicit
         else:
             raise ValueError("COMPRESSION_METHOD must be in {SVD, AE}")
 
         #Define costJ and grad_J
         args =  (d, H_0, V_trunc, settings.ALPHA, settings.OBS_VARIANCE) # list of all args required for cost_function_J and grad_J
         #args =  (d, H_0, V_trunc, ALPHA, None, R_inv) # list of all args required for cost_function_J and grad_J
+        args = (d, H_0, V_trunc, settings.ALPHA, settings.OBS_VARIANCE, V_grad, R_inv, settings.COMPRESSION_METHOD)
         res = minimize(self.cost_function_J, w_0, args = args, method='L-BFGS-B',
                 jac=self.grad_J, tol=settings.TOL)
 
         w_opt = res.x
-        delta_u_DA = V_trunc @ w_opt
+        if settings.COMPRESSION_METHOD == "SVD":
+            delta_u_DA = V_trunc @ w_opt
+        elif settings.COMPRESSION_METHOD == "AE":
+            delta_u_DA = V_trunc(w_opt)
+        else:
+            pass
+
         u_DA = u_0 + delta_u_DA
 
         #Undo normalization
@@ -329,8 +341,8 @@ class DAPipeline():
         return R_inv
 
     @staticmethod
-    def cost_function_J(w, d, G, V, alpha, sigma = None, R_inv = None, test=True,
-            mode=SETTINGS.COMPRESSION_METHOD):
+    def cost_function_J(w, d, G, V, alpha, sigma = None, V_grad = None, R_inv = None,
+                            mode=SETTINGS.COMPRESSION_METHOD):
         """Computes VarDA cost function.
         NOTE: eventually - implement this by hand as grad_J and J share quantity Q"""
         # trunc, = w.shape
@@ -341,7 +353,9 @@ class DAPipeline():
         if mode == "SVD":
             Q = (G @ V @ w - d)
         elif mode == "AE":
-            Q = (G @ V(w) - d)
+            w = torch.Tensor(w)
+            V_w = V(w).detach().numpy()
+            Q = (G @ V_w - d)
         else:
             raise ValueError("Invalid mode")
 
@@ -372,10 +386,12 @@ class DAPipeline():
             Q = (G @ V @ w - d)
             P = V.T @ G.T
         elif mode == "AE":
-            assert type(V_grad) == "function", "V_grad must be a function if mode=AE is used"
-            x = V(w)
-            Q = (G @ x - d)
-            P = V.T @ G.T
+            assert callable(V_grad), "V_grad must be a function if mode=AE is used"
+            w = torch.Tensor(w)
+            V_w = V(w).detach().numpy()
+            V_grad_w = V_grad(w).detach().numpy()
+            Q = (G @ V_w - d)
+            P = V_grad_w.T @ G.T
         if not R_inv and sigma:
             #When R is proportional to identity
             grad_o = 0.5 / sigma ** 2 * np.dot(P, Q)
