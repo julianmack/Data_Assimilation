@@ -59,8 +59,8 @@ class ConfigAE(Config):
 
 class ToyAEConfig(ConfigAE):
     NORMALIZE = True
-    NUMBER_MODES = 8
-    HIDDEN = 16
+    NUMBER_MODES = 100
+    HIDDEN = 300
     AE_MODEL_FP = "models/AE_toy_{}_{}_{}.pth".format(NUMBER_MODES, HIDDEN, ConfigAE().FIELD_NAME)
     AE_MODEL_TYPE = ToyNet
     kwargs = {"inn":NUMBER_MODES, "hid":HIDDEN, "out": Config().n}
