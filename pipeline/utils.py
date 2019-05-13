@@ -72,7 +72,7 @@ class ML_utils():
         model.load_state_dict(torch.load(path))
         encoder = model.encode
         decoder = model.decode
-        
+
         return encoder, decoder
 
     @staticmethod
@@ -88,5 +88,6 @@ class ML_utils():
     def jacobian_slow_torch(inputs, outputs):
         """Computes a jacobian of two torch tensor.
         Uses a loop so linear complexity in dimension of output"""
-        return torch.stack([torch.autograd.grad([outputs[:, i].sum()], inputs, retain_graph=True, create_graph=True)[0]
-                            for i in range(outputs.size(1))], dim=-1)
+        dims = len(inputs.shape)
+        return torch.transpose(torch.stack([torch.autograd.grad([outputs[:, i].sum()], inputs, retain_graph=True, create_graph=True)[0]
+                            for i in range(outputs.size(1))], dim=-1), dims - 1, dims)
