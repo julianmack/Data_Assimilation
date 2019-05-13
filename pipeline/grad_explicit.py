@@ -56,8 +56,8 @@ if __name__ == "__main__":
     HIDDEN = 128
     Batch_sz = 64
     outputs = [2**x for x in range(8)]
-    outputs = [13]
-    plot_time_w_output(outputs, INPUT, HIDDEN, Batch_sz, loop=False, no_batch=True)
+    outputs = [19]
+    plot_time_w_output(outputs, INPUT, HIDDEN, Batch_sz, loop=True, no_batch=False)
 
     exit()
     utils.set_seeds()
