@@ -10,6 +10,8 @@ import config
 import utils
 
 SETTINGS = config.ToyAEConfig
+#SETTINGS = config.Config
+
 
 class DAPipeline():
     """Class to hold @static_method pipeline functions for
@@ -47,7 +49,7 @@ class DAPipeline():
 
             V_trunc = decoder
             w_0 = torch.zeros((1, settings.NUMBER_MODES))
-            u_0 = decoder(w_0)
+            u_0 = decoder(w_0).detach().numpy()
 
             #Now access explicit gradient calculation
             try:
@@ -68,7 +70,8 @@ class DAPipeline():
         if settings.COMPRESSION_METHOD == "SVD":
             delta_u_DA = V_trunc @ w_opt
         elif settings.COMPRESSION_METHOD == "AE":
-            delta_u_DA = V_trunc(w_opt)
+
+            delta_u_DA = V_trunc(torch.Tensor(w_opt)).detach().numpy()
         else:
             pass
 
@@ -82,7 +85,10 @@ class DAPipeline():
 
         ref_MAE = np.abs(u_0 - u_c)
         da_MAE = np.abs(u_DA - u_c)
-
+        print("VarDA_routine. u_0.shape", u_0.shape)
+        print("VarDA_routine. u_c.shape", u_c.shape)
+        print("VarDA_routine. u_DA.shape", u_DA.shape)
+        print("VarDA_routine. ref_MAE.shape", ref_MAE.shape)
         ref_MAE_mean = np.mean(ref_MAE)
         da_MAE_mean = np.mean(da_MAE)
 
@@ -348,19 +354,13 @@ class DAPipeline():
                             mode=SETTINGS.COMPRESSION_METHOD):
         """Computes VarDA cost function.
         NOTE: eventually - implement this by hand as grad_J and J share quantity Q"""
-        # trunc, = w.shape
-        # n, = u_0.shape
-        # nobs, = R_inv.shape[0]
-        print("J. w.shape", w.shape)
-        #print("G {}, V {}, w {}, d {}".format(G.shape, V.shape, w.shape, d.shape))
+
         if mode == "SVD":
             Q = (G @ V @ w - d)
         elif mode == "AE":
-            w = torch.Tensor(w)
-            V_w = V(w).detach().numpy()
-            print("J. V(w).shape", V_w.shape)
+            w_tensor = torch.Tensor(w)
+            V_w = V(w_tensor).detach().numpy()
             Q = (G @ V_w - d)
-            print("J. Q.shape", Q.shape)
 
         else:
             raise ValueError("Invalid mode")
@@ -387,22 +387,18 @@ class DAPipeline():
         #     assert d.shape == (nobs,)
     @staticmethod
     def grad_J(w, d, G, V, alpha, sigma = None, V_grad = None, R_inv = None, mode=SETTINGS.COMPRESSION_METHOD):
-        print("grad_J. w.shape", w.shape)
 
         if mode == "SVD":
             Q = (G @ V @ w - d)
             P = V.T @ G.T
         elif mode == "AE":
             assert callable(V_grad), "V_grad must be a function if mode=AE is used"
-            w = torch.Tensor(w)
+            w_tensor = torch.Tensor(w)
 
-            V_w = V(w).detach().numpy()
+            V_w = V(w_tensor).detach().numpy()
 
-            V_grad_w = V_grad(w).detach().numpy()
-            print("grad_J. V_w.shape", V_w.shape)
-            print("grad_J. V_grad_w.shape", V_grad_w.shape)
-
-            exit()
+            V_grad_w = V_grad(w_tensor).detach().numpy()
+            
             Q = (G @ V_w - d)
             P = V_grad_w.T @ G.T
         if not R_inv and sigma:
