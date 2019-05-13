@@ -51,12 +51,14 @@ def main():
     model = settings.AE_MODEL_TYPE(**settings.kwargs)
     optimizer = optim.Adam(model.parameters(), learning_rate)
 
-
     print(model)
     print("Number of parameters:", sum(p.numel() for p in model.parameters()))
 
-    train_losses, test_losses = utils.ML_utils.training_loop_AE(model, optimizer, loss_fn, train_loader, test_loader,
-        num_epoch, device, print_every=1, test_every=5)
+    train_losses, test_losses = utils.ML_utils.training_loop_AE(model, optimizer,
+                            loss_fn, train_loader, test_loader,
+                            num_epoch, device, print_every=1, test_every=5)
+
+
     with open(results_fp_train, 'wb') as fp:
         pickle.dump(train_losses, fp)
     with open(results_fp_test, 'wb') as fp:

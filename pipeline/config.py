@@ -12,6 +12,7 @@ class Config:
     INTERMEDIATE_FP = "data/small3D_intermediate/"
     X_FP = INTERMEDIATE_FP + "X_small3D_Tracer.npy"
     n = 100040
+    SAVE = True
 
     SEED = 42
     NORMALIZE = False #Whether to normalize input data
@@ -33,7 +34,7 @@ class Config:
     OBS_VARIANCE = 0.01 #TODO - CHECK this is specific to the sensors (in this case - the error in model predictions)
 
     COMPRESSION_METHOD = "SVD" # "SVD"/"AE"
-    NUMBER_MODES = None  #Number of modes to retain.
+    NUMBER_MODES = 4  #Number of modes to retain.
         # If NUMBER_MODES = None (and COMPRESSION_METHOD = "SVD"), we use
         # the Rossella et al. method for selection of truncation parameter
 
@@ -45,6 +46,7 @@ class ConfigExample(Config):
     NEW_OPTION = "FLAG" #Add new
 
 class ConfigAE(Config):
+    NORMALIZE = True
     COMPRESSION_METHOD = "AE"
     NUMBER_MODES = 4 #this must match model above
     AE_MODEL_FP = "models/AE_dim{}_epoch120.pth".format(NUMBER_MODES) #AE_dim40_epoch120.pth"
@@ -53,8 +55,17 @@ class ConfigAE(Config):
 
 
 class ToyAEConfig(ConfigAE):
+    NORMALIZE = True
     NUMBER_MODES = 32
     HIDDEN = 128
     AE_MODEL_FP = "models/AE_toy_{}_{}.pth".format(NUMBER_MODES, HIDDEN)
     AE_MODEL_TYPE = ToyNet
     kwargs = {"inn":NUMBER_MODES, "hid":HIDDEN, "out": Config().n}
+
+class SmallTestDomain(Config):
+    SAVE = False
+    NORMALIZE = False
+    X_FP = Config().INTERMEDIATE_FP + "X_small3D_Tracer_TINY.npy"
+    n = 4
+    OBS_FRAC = 0.3
+    NUMBER_MODES = 3

@@ -9,13 +9,13 @@ import vtktools
 import config
 import utils
 
-SETTINGS = config.ToyAEConfig
+SETTINGS = config.SmallTestDomain
 #SETTINGS = config.Config
 
 
 class DAPipeline():
     """Class to hold @static_method pipeline functions for
-    Variational DA and Kalman DA
+    Variational DA
     """
 
     def __init__(self):
@@ -48,8 +48,8 @@ class DAPipeline():
             encoder, decoder = utils.ML_utils.load_AE(settings.AE_MODEL_TYPE, settings.AE_MODEL_FP, **kwargs)
 
             V_trunc = decoder
-            w_0 = torch.zeros((1, settings.NUMBER_MODES))
-            u_0 = decoder(w_0).detach().numpy()
+            w_0 = torch.zeros((settings.NUMBER_MODES))
+            #u_0 = decoder(w_0).detach().numpy()
 
             #Now access explicit gradient calculation
             try:
@@ -85,10 +85,6 @@ class DAPipeline():
 
         ref_MAE = np.abs(u_0 - u_c)
         da_MAE = np.abs(u_DA - u_c)
-        print("VarDA_routine. u_0.shape", u_0.shape)
-        print("VarDA_routine. u_c.shape", u_c.shape)
-        print("VarDA_routine. u_DA.shape", u_DA.shape)
-        print("VarDA_routine. ref_MAE.shape", ref_MAE.shape)
         ref_MAE_mean = np.mean(ref_MAE)
         da_MAE_mean = np.mean(da_MAE)
 
@@ -99,19 +95,22 @@ class DAPipeline():
         print("If DA has worked, DA MAE > Ref_MAE")
         #Compare abs(u_0 - u_c).sum() with abs(u_DA - u_c).sum() in paraview
 
-        #Save .vtu files so that I can look @ in paraview
-        sample_fp = self.get_sorted_fps_U(settings.DATA_FP)[0]
-        out_fp_ref = settings.INTERMEDIATE_FP + "ref_MAE.vtu"
-        out_fp_DA =  settings.INTERMEDIATE_FP + "DA_MAE.vtu"
+        if settings.SAVE:
+            #Save .vtu files so that I can look @ in paraview
+            sample_fp = self.get_sorted_fps_U(settings.DATA_FP)[0]
+            out_fp_ref = settings.INTERMEDIATE_FP + "ref_MAE.vtu"
+            out_fp_DA =  settings.INTERMEDIATE_FP + "DA_MAE.vtu"
 
-        self.save_vtu_file(ref_MAE, "ref_MAE", out_fp_ref, sample_fp)
-        self.save_vtu_file(da_MAE, "DA_MAE", out_fp_DA, sample_fp)
+            self.save_vtu_file(ref_MAE, "ref_MAE", out_fp_ref, sample_fp)
+            self.save_vtu_file(da_MAE, "DA_MAE", out_fp_DA, sample_fp)
 
 
     def vda_setup(self, settings):
         #The X array should already be saved in settings.X_FP
         #but can be created from .vtu fps if required. see trunc_SVD.py for an example
+
         X = np.load(settings.X_FP)
+
         n, M = X.shape
 
         # Split X into historical and present data. We will
@@ -127,8 +126,8 @@ class DAPipeline():
 
         if settings.NORMALIZE:
             #use only the training set to calculate mean and std
-            mean = np.mean(X, axis=1)
-            std = np.std(X, axis=1)
+            mean = np.mean(hist_X, axis=1)
+            std = np.std(hist_X, axis=1)
             #NOTE: when hist_X -> X in 2 lines above, the MAE reduces massively
             #In preliminary experiments, this is not true with hist_X
 
@@ -141,9 +140,11 @@ class DAPipeline():
             V, mean, std = self.create_V_from_X(hist_X, return_mean = True)
             u_0 = mean
 
-        u_c = X[:, t_DA]
-        observations, obs_idx, nobs = self.select_obs(settings.OBS_MODE, u_c, {"fraction": settings.OBS_FRAC}) #options are specific for rand
 
+
+        u_c = X[:, t_DA]
+
+        observations, obs_idx, nobs = self.select_obs(settings.OBS_MODE, u_c, {"fraction": settings.OBS_FRAC}) #options are specific for rand
         #Now define quantities required for 3D-VarDA - see Algorithm 1 in Rossella et al (2019)
         H_0 = self.create_H(obs_idx, n, nobs)
         d = observations - H_0 @ u_0 #'d' in literature
@@ -223,14 +224,15 @@ class DAPipeline():
 
         n, M = X.shape
         mean = np.mean(X, axis=1)
-        std = np.std(X, axis=1)
 
         V = (X.T - mean).T
 
-        V = (M - 1) ** (- 0.5) * V
+        # V = (M - 1) ** (- 0.5) * V
         if return_mean:
+            std = np.std(X, axis=1)
             return V, mean, std
         return V
+
     @staticmethod
     def AE_forward():
         pass
@@ -302,6 +304,7 @@ class DAPipeline():
             # Define observations as a random subset of the control state.
             frac = options["fraction"]
             nobs = int(frac * n) #number of observations
+
             utils.set_seeds(seed = SETTINGS.SEED) #set seeds so that the selected subset is the same every time
             obs_idx = random.sample(range(n), nobs) #select nobs integers w/o replacement
             observations = np.take(vec, obs_idx)
@@ -375,7 +378,7 @@ class DAPipeline():
 
         J_b = 0.5 * alpha * np.dot(w, w)
         J = J_b + J_o
-        print("J_b = {:.2f}, J_o = {:.2f}, w[3] = {}".format(J_b, J_o, w[3]))
+        print("J_b = {:.2f}, J_o = {:.2f}".format(J_b, J_o))
         return J
 
 
@@ -398,7 +401,7 @@ class DAPipeline():
             V_w = V(w_tensor).detach().numpy()
 
             V_grad_w = V_grad(w_tensor).detach().numpy()
-            
+
             Q = (G @ V_w - d)
             P = V_grad_w.T @ G.T
         if not R_inv and sigma:
@@ -427,4 +430,12 @@ class DAPipeline():
 if __name__ == "__main__":
 
     DA = DAPipeline()
+
+
     DA.Var_DA_routine(SETTINGS)
+
+    exit()
+    #create X:
+    fps = DA.get_sorted_fps_U(SETTINGS.DATA_FP)
+    X = DA.create_X_from_fps(fps, "Tracer", field_type  = "scalar")
+    np.save(SETTINGS.X_FP, X)
