@@ -10,12 +10,15 @@ class Config:
     #filepaths
     DATA_FP = "data/small3DLSBU/"
     INTERMEDIATE_FP = "data/small3D_intermediate/"
-    X_FP = INTERMEDIATE_FP + "X_small3D_Tracer.npy"
+    FIELD_NAME = "Pressure"
+    X_FP = INTERMEDIATE_FP + "X_small3D_{}.npy".format(FIELD_NAME)
     n = 100040
     SAVE = True
+    DEBUG = False
 
     SEED = 42
     NORMALIZE = False #Whether to normalize input data
+    UNDO_NORMALIZE = NORMALIZE
 
     #config options to divide up data between "History", "observation" and "control_state"
     #User is responsible for checking that these regions do not overlap
@@ -34,7 +37,7 @@ class Config:
     OBS_VARIANCE = 0.01 #TODO - CHECK this is specific to the sensors (in this case - the error in model predictions)
 
     COMPRESSION_METHOD = "SVD" # "SVD"/"AE"
-    NUMBER_MODES = 4  #Number of modes to retain.
+    NUMBER_MODES = 40 #Number of modes to retain.
         # If NUMBER_MODES = None (and COMPRESSION_METHOD = "SVD"), we use
         # the Rossella et al. method for selection of truncation parameter
 
@@ -56,16 +59,18 @@ class ConfigAE(Config):
 
 class ToyAEConfig(ConfigAE):
     NORMALIZE = True
-    NUMBER_MODES = 32
-    HIDDEN = 128
-    AE_MODEL_FP = "models/AE_toy_{}_{}.pth".format(NUMBER_MODES, HIDDEN)
+    NUMBER_MODES = 16
+    HIDDEN = 16
+    AE_MODEL_FP = "models/AE_toy_{}_{}_{}.pth".format(NUMBER_MODES, HIDDEN, ConfigAE().FIELD_NAME)
     AE_MODEL_TYPE = ToyNet
     kwargs = {"inn":NUMBER_MODES, "hid":HIDDEN, "out": Config().n}
-
+    UNDO_NORMALIZE  = False
+    DEBUG = True
 class SmallTestDomain(Config):
     SAVE = False
-    NORMALIZE = False
-    X_FP = Config().INTERMEDIATE_FP + "X_small3D_Tracer_TINY.npy"
+    DEBUG = True
+    NORMALIZE = True
+    X_FP = Config().INTERMEDIATE_FP + "X_small3D_{}_TINY.npy".format(Config().FIELD_NAME)
     n = 4
     OBS_FRAC = 0.3
     NUMBER_MODES = 3
