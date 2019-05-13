@@ -22,10 +22,22 @@ def main():
     n, M = X.shape
     hist_idx = int(M * settings.HIST_FRAC)
     hist_X = X[:, : hist_idx]
-    test_X = X[:, hist_idx : -3] #leave final three elements for DA
+
+    #Normalize:
+    #use only the training set to calculate mean and std
+    mean = np.mean(hist_X, axis=1)
+    std = np.std(hist_X, axis=1)
+    #NOTE: when hist_X -> X in 2 lines above, the MAE reduces massively
+    #In preliminary experiments, this is not true with hist_X
+
+    X_norm = (X.T - mean).T
+    X_norm = (X.T / std).T
+
+    train_X = X_norm[:, : hist_idx]
+    test_X = X_norm[:, hist_idx : -3] #leave final three elements for DA
 
     #Dataloaders
-    train_dataset = TensorDataset(torch.Tensor(hist_X.T))
+    train_dataset = TensorDataset(torch.Tensor(train_X.T))
     train_loader = DataLoader(train_dataset, BATCH, shuffle=True)
     test_dataset = TensorDataset(torch.Tensor(test_X.T))
     test_loader = DataLoader(test_dataset, test_X.shape[1])
@@ -33,13 +45,14 @@ def main():
     print("train_size = ", len(train_loader.dataset))
     print("test_size = ", len(test_loader.dataset))
 
+
     #training hyperparams
-    num_epoch = 1000
+    num_epoch = 200
     device = utils.ML_utils.get_device()
     #AE hyperparams
     input_size = n
 
-    learning_rate = 0.0001
+    learning_rate = 0.003
     # layers = [1000, 100]
     # latent_size = 10
 

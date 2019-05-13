@@ -9,8 +9,8 @@ import vtktools
 import config
 import utils
 
-SETTINGS = config.SmallTestDomain
-#SETTINGS = config.Config
+SETTINGS = config.ToyAEConfig
+SETTINGS = config.Config
 
 
 class DAPipeline():
@@ -70,29 +70,48 @@ class DAPipeline():
         if settings.COMPRESSION_METHOD == "SVD":
             delta_u_DA = V_trunc @ w_opt
         elif settings.COMPRESSION_METHOD == "AE":
-
             delta_u_DA = V_trunc(torch.Tensor(w_opt)).detach().numpy()
         else:
             pass
 
         u_DA = u_0 + delta_u_DA
 
+
         #Undo normalization
-        if settings.NORMALIZE:
+        if settings.UNDO_NORMALIZE:
             u_DA = (u_DA.T * std + mean).T
             u_c = (u_c.T * std + mean).T
             u_0 = (u_0.T * std + mean).T
+        elif settings.NORMALIZE:
+            print("Normalization not undone")
 
         ref_MAE = np.abs(u_0 - u_c)
         da_MAE = np.abs(u_DA - u_c)
+
+        if settings.DEBUG:
+            size = len(std)
+            if size > 4:
+                size = 4
+            print("std:    ", std[:size])
+            print("mean:   ", mean[:size])
+            print("u_0:    ", u_0[:size])
+            print("u_c:    ", u_c[:size])
+            print("u_DA:   ", u_DA[:size])
+            print("ref_MAE:", ref_MAE[:size])
+            print("da_MAE: ", da_MAE[:size])
+
         ref_MAE_mean = np.mean(ref_MAE)
         da_MAE_mean = np.mean(da_MAE)
+
+        counts = (ref_MAE > da_MAE).sum()
 
         print("RESULTS")
 
         print("Reference MAE: ", ref_MAE_mean)
         print("DA MAE: ", da_MAE_mean)
+        print("ref_MAE_mean > da_MAE_mean for {}/{}".format(counts, da_MAE.shape[0]))
         print("If DA has worked, DA MAE > Ref_MAE")
+        print("Percentage improvement: {:.2f}%".format(100*(ref_MAE_mean - da_MAE_mean)/ref_MAE_mean))
         #Compare abs(u_0 - u_c).sum() with abs(u_DA - u_c).sum() in paraview
 
         if settings.SAVE:
@@ -112,6 +131,7 @@ class DAPipeline():
         X = np.load(settings.X_FP)
 
         n, M = X.shape
+
 
         # Split X into historical and present data. We will
         # assimilate "observations" at a single timestep t_DA
@@ -140,8 +160,7 @@ class DAPipeline():
             V, mean, std = self.create_V_from_X(hist_X, return_mean = True)
             u_0 = mean
 
-
-
+        #select control state
         u_c = X[:, t_DA]
 
         observations, obs_idx, nobs = self.select_obs(settings.OBS_MODE, u_c, {"fraction": settings.OBS_FRAC}) #options are specific for rand
@@ -431,11 +450,11 @@ if __name__ == "__main__":
 
     DA = DAPipeline()
 
-
     DA.Var_DA_routine(SETTINGS)
-
     exit()
+
     #create X:
     fps = DA.get_sorted_fps_U(SETTINGS.DATA_FP)
-    X = DA.create_X_from_fps(fps, "Tracer", field_type  = "scalar")
+    X = DA.create_X_from_fps(fps, SETTINGS.FIELD_NAME, field_type  = "scalar")
     np.save(SETTINGS.X_FP, X)
+    exit()
