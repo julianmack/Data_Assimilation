@@ -90,4 +90,5 @@ class ML_utils():
         Uses a loop so linear complexity in dimension of output"""
         dims = len(inputs.shape)
         return torch.transpose(torch.stack([torch.autograd.grad([outputs[:, i].sum()], inputs, retain_graph=True, create_graph=True)[0]
-                            for i in range(outputs.size(1))], dim=-1), dims - 1, dims)
+                            for i in range(outputs.size(1))], dim=-1), \
+                            dims - 1, dims)
