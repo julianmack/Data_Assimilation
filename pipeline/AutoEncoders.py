@@ -128,27 +128,34 @@ class ToyNet(nn.Module):
         b_b = self.fc2.bias
 
         z_1 = (x @ W_a.t()) + b_a
+        print("jac_explicit. x.shape:", x.shape)
         print("jac_explicit. b_a.shape:", b_a.shape)
         print("jac_explicit. z_1.shape:", z_1.shape)
-
+        print("jac_explicit. W_b.shape:", W_b.shape)
         #A = torch.sign(z_1).unsqueeze(2)
         # In order to handle both batched and non-batched input:
         batch = False
         if len(z_1.shape) > len(b_a.shape):
             batch = True
             A = (z_1 > 0).unsqueeze(2).type(torch.FloatTensor)
+            B = W_b.t().expand((z_1.shape[0], -1, -1))
         else:
-            raise NotImplemented
-        B = W_b.t().expand((z_1.shape[0], -1, -1))
+            A = (z_1 > 0).unsqueeze(1).type(torch.FloatTensor)
+            B = W_b.t().expand((z_1.shape[0], -1))
+
         print("jac_explicit. A.shape", A.shape)
         print("jac_explicit. B.shape", B.shape)
         first = torch.mul(A, B)
-        first = torch.transpose(first, 1, 2)
-
+        if batch:
+            first = torch.transpose(first, 1, 2)
+        else:
+            first = torch.transpose(first, 0, 1)
         jac = first @ W_a
 
-
-        jac = torch.transpose(jac, 1, 2)
+        if batch:
+            jac = torch.transpose(jac, 1, 2)
+        else:
+            jac = torch.transpose(jac, 0, 1)
         print("jac_explicit. jac.shape", jac.shape)
         exit()
         return jac

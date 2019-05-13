@@ -10,7 +10,7 @@ import time
 import matplotlib.pyplot as plt
 from AutoEncoders import ToyNet
 
-def plot_time_w_output(outputs, inn, hidden, batch_sz, loop=True):
+def plot_time_w_output(outputs, inn, hidden, batch_sz, loop=True, no_batch=False):
 
     T_2s = []
     T_1s = []
@@ -19,8 +19,9 @@ def plot_time_w_output(outputs, inn, hidden, batch_sz, loop=True):
         utils.set_seeds()
         model = ToyNet(inn, hidden, out_sz)
         model.gen_rand_weights()
-
         input = torch.rand((Batch_sz, INPUT), requires_grad=True)
+        if no_batch:
+            input = input[0]
         output = model.decode(input)
         t0 = time.time()
         if loop:
@@ -55,7 +56,9 @@ if __name__ == "__main__":
     HIDDEN = 128
     Batch_sz = 64
     outputs = [2**x for x in range(8)]
-    plot_time_w_output(outputs, INPUT, HIDDEN, Batch_sz, loop=False)
+    outputs = [13]
+    plot_time_w_output(outputs, INPUT, HIDDEN, Batch_sz, loop=False, no_batch=True)
+
     exit()
     utils.set_seeds()
 
