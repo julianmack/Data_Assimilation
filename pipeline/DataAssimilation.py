@@ -19,7 +19,7 @@ class DAPipeline():
     def __init__(self):
         pass
 
-    def Var_DA_routine(self, settings = config.Config):
+    def Var_DA_routine(self, settings = SETTINGS):
         """Runs the variational DA routine using settings from the passed config class
         (see config.py for example)"""
         #initialize helper function class
@@ -45,9 +45,7 @@ class DAPipeline():
 
             w_0 = torch.zeros((1, settings.NUMBER_MODES), requires_grad = True)
             u_0 = decoder(w_0)
-
-            raise NotImplementedError("AE not implemented. Need to calculate NN gradient")
-
+            
         else:
             raise ValueError("COMPRESSION_METHOD must be in {SVD, AE}")
 
@@ -402,7 +400,6 @@ class DAPipeline():
         ug.Write(filename)
 
 if __name__ == "__main__":
-    SETTINGS = config.Config
 
     DA = DAPipeline()
     DA.Var_DA_routine(SETTINGS)

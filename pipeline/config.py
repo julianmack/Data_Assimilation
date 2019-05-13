@@ -45,7 +45,6 @@ class ConfigExample(Config):
     NEW_OPTION = "FLAG" #Add new
 
 class ConfigAE(Config):
-
     COMPRESSION_METHOD = "AE"
     AE_MODEL_FP = "models/AE_dim2_epoch120.pth" #AE_dim40_epoch120.pth"
     NUMBER_MODES = 4 #this must match model above
@@ -54,7 +53,6 @@ class ConfigAE(Config):
 
 
 class ToyAEConfig(ConfigAE):
-
     NUMBER_MODES = 32
     HIDDEN = 128
     AE_MODEL_FP = "models/AE_toy_{}_{}.pth".format(NUMBER_MODES, HIDDEN)
