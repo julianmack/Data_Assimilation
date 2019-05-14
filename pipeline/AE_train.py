@@ -6,7 +6,8 @@ from torch.utils.data import TensorDataset, DataLoader
 import numpy as np
 import pickle
 
-import config
+import pipeline.config as config
+
 from AutoEncoders import VanillaAE, ToyNet
 import utils
 

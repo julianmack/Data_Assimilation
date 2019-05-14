@@ -6,8 +6,8 @@ import random
 import torch
 from scipy.optimize import minimize
 import vtktools
-import config
-import utils
+import pipeline.config as config
+import pipeline.utils as utils
 
 SETTINGS = config.ToyAEConfig
 # SETTINGS = config.Config
@@ -252,7 +252,7 @@ class DAPipeline():
             return V, mean, std
         return V
 
-    
+
     @staticmethod
 
     def trunc_SVD(V, trunc_idx=None, test=False):

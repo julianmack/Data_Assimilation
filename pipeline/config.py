@@ -4,7 +4,7 @@ User can create new classes that inherit from class Config and override class va
 in order to create new combinations of config options. Alternatively, individual config
 options can be altered one at a time on an ad-hoc basis."""
 
-from AutoEncoders import VanillaAE, ToyNet
+from pipeline.AutoEncoders import VanillaAE, ToyNet
 
 class Config:
     #filepaths

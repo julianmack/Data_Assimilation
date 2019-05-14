@@ -2,8 +2,8 @@
 import torch
 import numpy as np
 import random
-import config
-SETTINGS = config.Config
+import pipeline.config
+SETTINGS = pipeline.config.Config
 
 
 def set_seeds(seed = SETTINGS.SEED):
