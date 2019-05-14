@@ -6,11 +6,11 @@ from torch.utils.data import TensorDataset, DataLoader
 import numpy as np
 import pickle
 
-import config
-from AutoEncoders import VanillaAE
-import utils
+import pipeline.config
+from pipeline.AutoEncoders import VanillaAE
+import pipeline.utils
 
-settings = config.Config
+settings = pipeline.config.Config
 
 MODEL_FP = "models/AE"
 RESULTS_FP = "results/"
@@ -45,8 +45,8 @@ def main():
 
     for latent_size in latent_dims:
         model_fp = "{}_dim{}_epoch{}.pth".format(MODEL_FP, latent_size, num_epoch)
-        results_fp_train = "{}train_dim{}_epoch{}.txt".format(RESULTS_FP, latent_size, num_epoch)
-        results_fp_test = "{}test_dim{}_epoch{}.txt".format(RESULTS_FP, latent_size, num_epoch)
+        results_fp_train = "{}dim{}_epoch{}_train.txt".format(RESULTS_FP, latent_size, num_epoch)
+        results_fp_test = "{}dim{}_epoch{}_test.txt".format(RESULTS_FP, latent_size, num_epoch)
 
         loss_fn = torch.nn.L1Loss(reduction='sum')
         model = VanillaAE(input_size, latent_size, layers)
