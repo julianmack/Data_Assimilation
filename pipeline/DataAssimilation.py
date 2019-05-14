@@ -252,9 +252,7 @@ class DAPipeline():
             return V, mean, std
         return V
 
-    @staticmethod
-    def AE_forward():
-        pass
+    
     @staticmethod
 
     def trunc_SVD(V, trunc_idx=None, test=False):
