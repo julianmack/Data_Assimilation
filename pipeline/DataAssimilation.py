@@ -129,7 +129,7 @@ class DAPipeline():
 
 
         X = np.load(settings.X_FP,  allow_pickle=True)
-        
+
         n, M = X.shape
 
 
@@ -138,7 +138,7 @@ class DAPipeline():
         # which corresponds to the control state u_c
         # We will take initial condition u_0, as mean of historical data
         hist_idx = int(M * settings.HIST_FRAC)
-        t_DA = M - settings.TDA_IDX_FROM_END
+        t_DA = M - settings.TDA_IDX_FROM_END - 1
         assert t_DA > hist_idx, "Cannot select observation from historical data. \
                     Reduce HIST_FRAC or reduce TDA_IDX_FROM_END to prevent overlap"
 

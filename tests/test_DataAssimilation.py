@@ -43,8 +43,8 @@ class Test_Setup():
         assert H.shape == (1, 3)
         assert np.array_equal(H, np.array([[0, 0, 1]]))
 
-    def test_vda_setup_not_normalized(self, tmpdir):
-        """End-to-end seteup test"""
+    def test_vda_setup_notnormalized(self, tmpdir):
+        """End-to-end setup test"""
         X = np.zeros((3, 4))
         X[:,:2] = np.arange(6).reshape((3, 2))
         X[0, 3] = 1
@@ -70,28 +70,71 @@ class Test_Setup():
 
         mean_exp = np.array([0.5, 2.5, 4.5])
         std_exp = np.array([0.5, 0.5, 0.5])
-        V_exp = X[0] - mean_exp
+        V_exp = X[:, :2] - mean_exp.reshape((-1, 1))
 
         assert np.array_equal(X, X_ret)
         assert (3, 4) == (n, M)
-        assert [2] == hist_idx
-        assert np.array_equal(np.array(X[:1]), hist_X)
-        assert np.array_equal(np.array(X[-1]), u_c)
+        assert 2 == hist_idx
+        assert np.array_equal(np.array(X[:, :2]), hist_X)
+        assert np.array_equal(np.array(X[:,-1]), u_c)
         assert t_DA == 3
         assert np.array_equal(V_exp, V)
         assert np.array_equal(mean_exp, u_0)
-        assert observation == [1]
+        assert observations == [1]
         assert obs_idx == [0]
         assert nobs == 1
-        assert np.array_equal(np.array([1, 0, 0]), H_0)
+        assert np.allclose(np.array([1, 0, 0]), H_0)
         assert [0.5] == d
         assert np.array_equal(std_exp, std)
         assert np.array_equal(mean_exp, mean)
 
-def test_vda_setup(self):
-    """End-to-end test for vda_setup()"""
-    settings = config.Config()
-    settings.n = 5
+    def test_vda_setup_normalized(self, tmpdir):
+        """End-to-end setup test"""
+        X = np.zeros((3, 4))
+        X[:,:2] = np.arange(6).reshape((3, 2))
+        X[0, 3] = 1
+
+        INTERMEDIATE_FP = "inter"
+        p = tmpdir.mkdir(INTERMEDIATE_FP).join("X_fp.npy")
+        p.dump(X)
+        p.allow_pickel = True
+
+        settings = config.Config()
+        settings.X_FP = str(p)
+        settings.n = 3
+        settings.OBS_MODE = "single_max"
+        settings.OBS_VARIANCE = 0.1
+        settings.TDA_IDX_FROM_END = 0
+        settings.HIST_FRAC = 0.5
+
+        settings.NORMALIZE = True
+
+        X_ret, n, M, hist_idx, hist_X, t_DA, u_c, V, u_0, \
+                        observations, obs_idx, nobs, H_0, d,\
+                        std, mean = DA.vda_setup(settings)
+
+        mean_exp = np.array([0.5, 2.5, 4.5])
+        std_exp = np.array([0.5, 0.5, 0.5])
+        X_exp = ( X - mean_exp.reshape((-1, 1))) * 2
+        X_00_exp = -1
+
+        assert X_00_exp == X_ret[0, 0]
+        assert np.array_equal(X_exp, X_ret)
+        assert (3, 4) == (n, M)
+        assert 2 == hist_idx
+        assert np.array_equal(np.array(X_exp[:, :2]), hist_X)
+        assert np.array_equal(np.array(X_exp[:,-1]), u_c)
+        assert t_DA == 3
+        assert np.array_equal(X_exp[:, :2], V)
+        assert np.allclose(np.zeros((3)), u_0)
+        assert observations == [1.]
+        assert obs_idx == [0]
+        assert nobs == 1
+        assert np.allclose(np.array([1, 0, 0]), H_0)
+        assert [1.] == d
+        assert np.array_equal(std_exp, std)
+        assert np.array_equal(mean_exp, mean)
+
 
 
 class TestDA():
