@@ -6,6 +6,11 @@ DA = DAPipeline()
 import os
 
 class Test_Setup():
+    def test_check_import(self):
+        DA = DAPipeline()
+        method = DA.vda_setup
+        assert callable(method), "Should be able to import DA method"
+
 
     def test_select_obs1(self):
         import numpy.random as random
@@ -136,21 +141,59 @@ class Test_Setup():
         assert np.array_equal(mean_exp, mean)
 
 
-
-class TestDA():
+class TestminimizeJ():
     """End-to-end tests"""
-    def __settings(self):
-        return config.Config()
+    def __settings(self, tmpdir):
+        if hasattr(self, "settings"):
+            return self.settings
+        else:
+            X = np.zeros((3, 4))
+            X[:,:2] = np.arange(6).reshape((3, 2))
+            X[0, 3] = 1
 
-    def test_check_import(self):
-        DA = DAPipeline()
-        method = DA.vda_setup
-        assert callable(method), "Should be able to import DA method"
+            INTERMEDIATE_FP = "inter"
+            p = tmpdir.mkdir(INTERMEDIATE_FP).join("X_fp.npy")
+            p.dump(X)
+            p.allow_pickel = True
 
-    def test_vda_setup(self):
-        DA = DAPipeline()
-        settings = self.__settings()
+            settings = config.Config()
+            settings.X_FP = str(p)
+            settings.n = 3
+            settings.OBS_MODE = "single_max"
+            settings.OBS_VARIANCE = 0.5
+            settings.TDA_IDX_FROM_END = 0
+            settings.HIST_FRAC = 0.5
+
+            settings.NORMALIZE = True
+
+            X_ret, n, M, hist_idx, hist_X, t_DA, u_c, V, u_0, \
+                            observations, obs_idx, nobs, H_0, d,\
+                            std, mean = DA.vda_setup(settings)
+            self.V = V
+            self.H_0 = H_0
+            self.d = d.reshape((-1, 1))
+            self.R_inv = (1 / settings.OBS_VARIANCE) * np.eye(nobs)
+            self.nobs = nobs
+            self.settings = settings
+            return settings
+
+
+    def test_minimize_J_NORMALIZE(self, tmpdir):
+        settings = self.__settings(tmpdir)
         settings.NORMALIZE = True
+        settings.COMPRESSION_METHOD = "SVD" #we aren't actually using SVD truncated matrix here
+        settings.SAVE = False
+        settings.TOL = 1e-8
+        w_opt_ret = DA.Var_DA_routine(settings)
+        alpha = settings.ALPHA
+
+        prefix = self.V.T @ self.H_0.T @ self.R_inv
+        LHS = prefix @ self.d
+        RHS = prefix @ self.H_0 @ self.V - alpha * np.eye(self.nobs)
+        RHS = RHS @ w_opt_ret
+
+        assert np.allclose(LHS, RHS)
+
         #DA.vda_setup(settings)
 
     def test_cost_fn_J(self):

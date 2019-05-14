@@ -122,7 +122,9 @@ class DAPipeline():
 
             self.save_vtu_file(ref_MAE, "ref_MAE", out_fp_ref, sample_fp)
             self.save_vtu_file(da_MAE, "DA_MAE", out_fp_DA, sample_fp)
+        return w_opt
 
+        
     def vda_setup(self, settings):
         #The X array should already be saved in settings.X_FP
         #but can be created from .vtu fps if required. see trunc_SVD.py for an example
@@ -254,7 +256,6 @@ class DAPipeline():
 
 
     @staticmethod
-
     def trunc_SVD(V, trunc_idx=None, test=False):
         """Performs Truncated SVD where Truncation parameter is calculated
         via one of two methods:
@@ -311,6 +312,7 @@ class DAPipeline():
             assert np.allclose(V_trunc, V_trunc2)
 
         return V_trunc, U_trunc, s_trunc, W_trunc
+
     @staticmethod
     def select_obs(mode, vec, frac=None):
         """Selects and return a subset of observations and their indexes
