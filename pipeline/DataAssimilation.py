@@ -128,8 +128,9 @@ class DAPipeline():
         #The X array should already be saved in settings.X_FP
         #but can be created from .vtu fps if required. see trunc_SVD.py for an example
 
-        X = np.load(settings.X_FP)
 
+        X = np.load(settings.X_FP, allow_pickel=True)
+        return
         n, M = X.shape
 
 
@@ -312,14 +313,13 @@ class DAPipeline():
 
         return V_trunc, U_trunc, s_trunc, W_trunc
     @staticmethod
-    def select_obs(mode, vec, options):
+    def select_obs(mode, vec, frac=None):
         """Selects and return a subset of observations and their indexes
         from vec according to a user selected mode"""
         n = vec.shape[0]
 
         if mode == "rand":
             # Define observations as a random subset of the control state.
-            frac = options["fraction"]
             nobs = int(frac * n) #number of observations
 
             utils.set_seeds(seed = SETTINGS.SEED) #set seeds so that the selected subset is the same every time
