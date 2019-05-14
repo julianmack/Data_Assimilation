@@ -123,14 +123,13 @@ class DAPipeline():
             self.save_vtu_file(ref_MAE, "ref_MAE", out_fp_ref, sample_fp)
             self.save_vtu_file(da_MAE, "DA_MAE", out_fp_DA, sample_fp)
 
-
     def vda_setup(self, settings):
         #The X array should already be saved in settings.X_FP
         #but can be created from .vtu fps if required. see trunc_SVD.py for an example
 
 
-        X = np.load(settings.X_FP, allow_pickel=True)
-        return
+        X = np.load(settings.X_FP,  allow_pickle=True)
+        
         n, M = X.shape
 
 
