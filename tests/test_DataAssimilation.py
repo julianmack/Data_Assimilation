@@ -143,8 +143,8 @@ class Test_Setup():
 
 class TestminimizeJ():
     """End-to-end tests"""
-    def __settings(self, tmpdir):
-        if hasattr(self, "settings"):
+    def __settings(self, tmpdir, normalize, force_init=False):
+        if hasattr(self, "settings") and not force_init:
             return self.settings
         else:
             X = np.zeros((3, 4))
@@ -163,38 +163,75 @@ class TestminimizeJ():
             settings.OBS_VARIANCE = 0.5
             settings.TDA_IDX_FROM_END = 0
             settings.HIST_FRAC = 0.5
-
-            settings.NORMALIZE = True
+            settings.ALPHA = 1.0
+            settings.COMPRESSION_METHOD = "SVD" #we aren't actually using SVD truncated matrix here
+            settings.SAVE = False
+            settings.TOL = 1e-8
+            settings.NORMALIZE = normalize
 
             X_ret, n, M, hist_idx, hist_X, t_DA, u_c, V, u_0, \
                             observations, obs_idx, nobs, H_0, d,\
                             std, mean = DA.vda_setup(settings)
+
             self.V = V
             self.H_0 = H_0
-            self.d = d.reshape((-1, 1))
+            self.d = d
             self.R_inv = (1 / settings.OBS_VARIANCE) * np.eye(nobs)
             self.nobs = nobs
             self.settings = settings
             return settings
 
 
-    def test_minimize_J_NORMALIZE(self, tmpdir):
-        settings = self.__settings(tmpdir)
-        settings.NORMALIZE = True
-        settings.COMPRESSION_METHOD = "SVD" #we aren't actually using SVD truncated matrix here
-        settings.SAVE = False
-        settings.TOL = 1e-8
-        w_opt_ret = DA.Var_DA_routine(settings)
+    def test_minimize_J_normalized(self, tmpdir):
+        """Check that system is finding correct answer found by
+        rearranging gradient eqn"""
+        normalize = True
+        settings = self.__settings(tmpdir, normalize, force_init=True)
+
         alpha = settings.ALPHA
 
+        w_opt_ret = DA.Var_DA_routine(settings)
+
         prefix = self.V.T @ self.H_0.T @ self.R_inv
+
         LHS = prefix @ self.d
-        RHS = prefix @ self.H_0 @ self.V - alpha * np.eye(self.nobs)
-        RHS = RHS @ w_opt_ret
+        RHS_ = prefix @ self.H_0 @ self.V + alpha * np.eye(w_opt_ret.shape[0])
+        RHS = RHS_ @ w_opt_ret
 
         assert np.allclose(LHS, RHS)
 
-        #DA.vda_setup(settings)
+    def test_minimize_J_unnormalized(self, tmpdir):
+        #Now check for normalized system
+        normalize = False
+        settings = self.__settings(tmpdir, normalize, force_init=True)
+
+        alpha = settings.ALPHA
+        w_opt_ret = DA.Var_DA_routine(settings)
+
+        prefix = self.V.T @ self.H_0.T @ self.R_inv
+
+        LHS = prefix @ self.d
+        RHS_ = prefix @ self.H_0 @ self.V + alpha * np.eye(w_opt_ret.shape[0])
+        RHS = RHS_ @ w_opt_ret
+
+        print("----------")
+        print("V", self.V)
+        print("RHS_", RHS_)
+        print("w_opt", w_opt_ret)
+        print("RHS_ @ w_opt_ret", RHS_ @ w_opt_ret)
+        print("prefix", prefix)
+        print("d",  self.d)
+        print("LHS", LHS)
+        print("LHS.shape", LHS.shape)
+        print("RHS", RHS)
+        print("RHS.shape", RHS.shape)
+
+        assert np.allclose(LHS, RHS)
+
+
+
+
+
 
     def test_cost_fn_J(self):
         # w, d, G,
