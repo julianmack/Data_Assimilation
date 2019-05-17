@@ -14,7 +14,7 @@ class Config:
     X_FP = INTERMEDIATE_FP + "X_small3D_{}.npy".format(FIELD_NAME)
     n = 100040
     SAVE = True
-    DEBUG = False
+    DEBUG = True
 
     SEED = 42
     NORMALIZE = True #Whether to normalize input data
@@ -37,7 +37,7 @@ class Config:
     OBS_VARIANCE = 0.01 #TODO - CHECK this is specific to the sensors (in this case - the error in model predictions)
 
     COMPRESSION_METHOD = "SVD" # "SVD"/"AE"
-    NUMBER_MODES = 4 #Number of modes to retain.
+    NUMBER_MODES = None #Number of modes to retain.
         # If NUMBER_MODES = None (and COMPRESSION_METHOD = "SVD"), we use
         # the Rossella et al. method for selection of truncation parameter
 
