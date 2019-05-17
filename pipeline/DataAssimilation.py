@@ -39,7 +39,6 @@ class DAPipeline():
             #Define intial w_0
             w_0 = np.zeros((W.shape[-1],)) #TODO - I'm not sure about this - can we assume is it 0?
 
-
             V_grad = None
             #OR - Alternatively, use the following:
             # V_plus_trunc = W.T * (1 / s) @  U.T
@@ -59,7 +58,7 @@ class DAPipeline():
             w_0 = torch.zeros((settings.NUMBER_MODES))
             #u_0 = decoder(w_0).detach().numpy()
 
-            #Now access explicit gradient calculation
+            #Now access explicit gradient function
             try:
                 data["V_grad"] = settings.AE_MODEL_TYPE(**kwargs).jac_explicit
             except:
@@ -76,8 +75,7 @@ class DAPipeline():
             delta_u_DA = V_trunc @ w_opt
         elif settings.COMPRESSION_METHOD == "AE":
             delta_u_DA = V_trunc(torch.Tensor(w_opt)).detach().numpy()
-        else:
-            pass
+
 
         u_DA = u_0 + delta_u_DA
 
@@ -376,8 +374,10 @@ class DAPipeline():
             V_trunc2 = U * singular @ W
             assert np.allclose(V_trunc, V_trunc2)
 
+
+
         return V_trunc, U_trunc, s_trunc, W_trunc
-        
+
     @staticmethod
     def cost_function_J(w, data, settings):
         """Computes VarDA cost function.
@@ -422,13 +422,6 @@ class DAPipeline():
             print("J_b = {:.2f}, J_o = {:.2f}".format(J_b, J_o))
         return J
 
-
-        # if test:
-        #     #check dimensions
-        #     assert G.shape[1] == V.shape[0]
-        #     assert np.allclose(V @ V_plus @ V, V), "V_plus must be the generalized inverse of V"
-        #     assert  R_inv.shape[0] == nobs
-        #     assert d.shape == (nobs,)
 
     @staticmethod
     def grad_J(w, data, settings):

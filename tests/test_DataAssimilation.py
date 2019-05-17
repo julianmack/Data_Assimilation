@@ -150,7 +150,22 @@ class TestSetup():
         assert np.array_equal(std_exp, std)
         assert np.array_equal(mean_exp, mean)
 
+class TestTruncSVD():
 
+
+
+    def test_trunc_SVD(self):
+        "Test truncated SVD Rossella et al. mode"
+        self.settings = config.Config()
+        self.settings.COMPRESSION_METHOD = "SVD"
+        DA = DAPipeline(self.settings)
+        V = np.random.rand(10, 8)
+
+        #There are tests embedded in DA.trunc_SVD:
+        V_trunc, U_trunc, s_trunc, W_trunc = DA.trunc_SVD(V, trunc_idx = 5, test=True)
+        V_trunc, U_trunc, s_trunc, W_trunc = DA.trunc_SVD(V, trunc_idx = None, test=True)
+
+        
 class TestMinimizeJ():
     """End-to-end tests"""
     def __settings(self, tmpdir, normalize, force_init=False):
@@ -278,4 +293,3 @@ class TestMinimizeJ():
 
 if __name__ == "__main__":
     pytest.main()
-    pass
