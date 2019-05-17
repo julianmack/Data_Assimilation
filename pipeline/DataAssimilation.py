@@ -6,24 +6,26 @@ import random
 import torch
 from scipy.optimize import minimize
 import vtktools
+
+
 import pipeline.config as config
 import pipeline.utils as utils
 
-SETTINGS = config.ToyAEConfig
-# SETTINGS = config.Config
-
 
 class DAPipeline():
-    """Class to hold @static_method pipeline functions for
-    Variational DA
+    """Class to hold pipeline functions for Variational DA
     """
 
-    def __init__(self):
-        pass
+    def __init__(self, settings = None):
+        if settings:
+            self.settings = settings
 
-    def Var_DA_routine(self, settings = SETTINGS):
+    def Var_DA_routine(self, settings):
         """Runs the variational DA routine using settings from the passed config class
         (see config.py for example)"""
+
+        self.settings = settings
+
         data, hist_idx, obs_idx, nobs, std, mean = self.vda_setup(settings)
 
         V = data.get("V")
@@ -33,8 +35,10 @@ class DAPipeline():
 
         if settings.COMPRESSION_METHOD == "SVD":
             V_trunc, U, s, W = self.trunc_SVD(V, settings.NUMBER_MODES)
+            data["V_trunc"] = V_trunc
             #Define intial w_0
             w_0 = np.zeros((W.shape[-1],)) #TODO - I'm not sure about this - can we assume is it 0?
+
 
             V_grad = None
             #OR - Alternatively, use the following:
@@ -45,11 +49,13 @@ class DAPipeline():
             # w_0 = w_0_v2
 
         elif settings.COMPRESSION_METHOD == "AE":
-            kwargs = SETTINGS.kwargs
+            kwargs = settings.kwargs
 
             encoder, decoder = utils.ML_utils.load_AE(settings.AE_MODEL_TYPE, settings.AE_MODEL_FP, **kwargs)
 
             V_trunc = decoder
+            data["V_trunc"] = V_trunc
+
             w_0 = torch.zeros((settings.NUMBER_MODES))
             #u_0 = decoder(w_0).detach().numpy()
 
@@ -57,7 +63,7 @@ class DAPipeline():
             try:
                 data["V_grad"] = settings.AE_MODEL_TYPE(**kwargs).jac_explicit
             except:
-                V_grad = None
+                pass
         else:
             raise ValueError("COMPRESSION_METHOD must be in {SVD, AE}")
 
@@ -165,7 +171,7 @@ class DAPipeline():
         #select control state
         u_c = X[:, t_DA]
 
-        observations, obs_idx, nobs = self.select_obs(settings.OBS_MODE, u_c, {"fraction": settings.OBS_FRAC}) #options are specific for rand
+        observations, obs_idx, nobs = self.select_obs(settings.OBS_MODE, u_c, settings.OBS_FRAC) #options are specific for rand
         #Now define quantities required for 3D-VarDA - see Algorithm 1 in Rossella et al (2019)
         H_0 = self.create_H(obs_idx, n, nobs)
         d = observations - H_0 @ u_0 #'d' in literature
@@ -258,8 +264,8 @@ class DAPipeline():
         return V
 
 
-    @staticmethod
-    def trunc_SVD(V, trunc_idx=None, test=False):
+
+    def trunc_SVD(self, V, trunc_idx=None, test=False):
         """Performs Truncated SVD where Truncation parameter is calculated
         via one of two methods:
             1) according to Rossella et al. 2018 (Optimal Reduced space ...).
@@ -273,12 +279,12 @@ class DAPipeline():
             :U, :s, :W - i.e. V can be factorized as:
                         V = U @ np.diag(s) @ W = U * s @ W
         """
-
+        settings = self.settings
         U, s, W = np.linalg.svd(V, False)
 
-        np.save(SETTINGS.INTERMEDIATE_FP + "U.npy", U)
-        np.save(SETTINGS.INTERMEDIATE_FP + "s.npy", s)
-        np.save(SETTINGS.INTERMEDIATE_FP + "W.npy", W)
+        np.save(settings.INTERMEDIATE_FP + "U.npy", U)
+        np.save(settings.INTERMEDIATE_FP + "s.npy", s)
+        np.save(settings.INTERMEDIATE_FP + "W.npy", W)
         #first singular value
         sing_1 = s[0]
         threshold = np.sqrt(sing_1)
@@ -316,8 +322,8 @@ class DAPipeline():
 
         return V_trunc, U_trunc, s_trunc, W_trunc
 
-    @staticmethod
-    def select_obs(mode, vec, frac=None):
+
+    def select_obs(self, mode, vec, frac=None):
         """Selects and return a subset of observations and their indexes
         from vec according to a user selected mode"""
         n = vec.shape[0]
@@ -326,7 +332,7 @@ class DAPipeline():
             # Define observations as a random subset of the control state.
             nobs = int(frac * n) #number of observations
 
-            utils.set_seeds(seed = SETTINGS.SEED) #set seeds so that the selected subset is the same every time
+            utils.set_seeds(seed = self.settings.SEED) #set seeds so that the selected subset is the same every time
             obs_idx = random.sample(range(n), nobs) #select nobs integers w/o replacement
             observations = np.take(vec, obs_idx)
         elif mode == "single_max":
@@ -378,9 +384,11 @@ class DAPipeline():
         """Computes VarDA cost function.
         NOTE: eventually - implement this by hand as grad_J and J share quantity Q"""
 
+
         d = data.get("d")
         G = data.get("G")
-        V = data.get("V")
+        V_trunc = data.get("V_trunc")
+        V =  V_trunc if V_trunc is not None else data.get("V")
         V_grad = data.get("V_grad")
         R_inv = data.get("R_inv")
 
@@ -427,7 +435,8 @@ class DAPipeline():
     def grad_J(w, data, settings):
         d = data.get("d")
         G = data.get("G")
-        V = data.get("V")
+        V_trunc = data.get("V_trunc")
+        V =  V_trunc if V_trunc is not None else data.get("V")
         V_grad = data.get("V_grad")
         R_inv = data.get("R_inv")
 
@@ -464,7 +473,7 @@ class DAPipeline():
     def save_vtu_file(arr, name, filename, sample_fp=None):
         """Saves a VTU file - NOTE TODO - should be using deep copy method in vtktools.py -> VtuDiff()"""
         if sample_fp == None:
-            sample_fp = vda.get_sorted_fps_U(SETTINGS.DATA_FP)[0]
+            sample_fp = vda.get_sorted_fps_U(self.settings.DATA_FP)[0]
 
         ug = vtktools.vtu(sample_fp) #use sample fp to initialize positions on grid
 
@@ -473,13 +482,14 @@ class DAPipeline():
 
 if __name__ == "__main__":
 
-    DA = DAPipeline()
 
-    DA.Var_DA_routine(SETTINGS)
+    DA = DAPipeline()
+    settings = config.Config()
+    DA.Var_DA_routine(settings)
     exit()
 
     #create X:
-    fps = DA.get_sorted_fps_U(SETTINGS.DATA_FP)
-    X = DA.create_X_from_fps(fps, SETTINGS.FIELD_NAME, field_type  = "scalar")
-    np.save(SETTINGS.X_FP, X)
+    fps = DA.get_sorted_fps_U(DA.settings.DATA_FP)
+    X = DA.create_X_from_fps(fps, DA.settings.FIELD_NAME, field_type  = "scalar")
+    np.save(settings.X_FP, X)
     exit()

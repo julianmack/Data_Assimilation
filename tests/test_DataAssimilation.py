@@ -2,7 +2,8 @@ from pipeline import DAPipeline
 from pipeline import config
 import pytest
 import numpy as np
-DA = DAPipeline()
+
+DA = DAPipeline(config.Config())
 import os
 
 class TestSetup():
