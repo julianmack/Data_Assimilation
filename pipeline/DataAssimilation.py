@@ -61,8 +61,8 @@ class DAPipeline():
 
         #Define costJ and grad_J
         args =  (d, H_0, V_trunc, settings.ALPHA,  settings.COMPRESSION_METHOD, settings.OBS_VARIANCE) # list of all args required for cost_function_J and grad_J
-        #args =  (d, H_0, V_trunc, ALPHA, None, R_inv) # list of all args required for cost_function_J and grad_J
-        args = (d, H_0, V_trunc, settings.ALPHA, settings.COMPRESSION_METHOD, settings.OBS_VARIANCE, V_grad, R_inv, settings.COMPRESSION_METHOD)
+        #args =  d, G, V, alpha,                     mode,           sigma_2 = None,     V_grad = None, R_inv = None
+        args = (d, H_0, V_trunc, settings.ALPHA, settings.COMPRESSION_METHOD, settings.OBS_VARIANCE, V_grad, R_inv)
         res = minimize(self.cost_function_J, w_0, args = args, method='L-BFGS-B',
                 jac=self.grad_J, tol=settings.TOL)
 
@@ -374,7 +374,7 @@ class DAPipeline():
     def cost_function_J(w, d, G, V, alpha, mode, sigma_2 = None, V_grad = None, R_inv = None):
         """Computes VarDA cost function.
         NOTE: eventually - implement this by hand as grad_J and J share quantity Q"""
-        mode
+
         if mode == "SVD":
             Q = (G @ V @ w - d)
         elif mode == "AE":

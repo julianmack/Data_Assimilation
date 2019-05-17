@@ -193,12 +193,12 @@ class TestminimizeJ():
         alpha = settings.ALPHA
         R_inv = self.R_inv
         sigma_2 = settings.OBS_VARIANCE
-
+        mode = settings.COMPRESSION_METHOD
         #attempt with sigma
         w_1 = np.array([1, 2])
-        print(settings.COMPRESSION_METHOD)
-        J_1_sigma = DA.cost_function_J(w_1, d, H, V, alpha, sigma_2 = sigma_2, V_grad = None, R_inv = None,)
-        J_1_R_inv = DA.cost_function_J(w_1, d, H, V, alpha, sigma_2 = sigma_2, V_grad = None, R_inv = R_inv)
+
+        J_1_sigma = DA.cost_function_J(w_1, d, H, V, alpha, mode, sigma_2 = sigma_2, V_grad = None, R_inv = None,)
+        J_1_R_inv = DA.cost_function_J(w_1, d, H, V, alpha, mode, sigma_2 = sigma_2, V_grad = None, R_inv = R_inv)
 
         assert J_1_sigma == J_1_sigma
         assert J_1_sigma == 5/2
