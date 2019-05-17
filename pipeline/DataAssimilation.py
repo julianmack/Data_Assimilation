@@ -60,9 +60,9 @@ class DAPipeline():
             raise ValueError("COMPRESSION_METHOD must be in {SVD, AE}")
 
         #Define costJ and grad_J
-        args =  (d, H_0, V_trunc, settings.ALPHA, settings.OBS_VARIANCE) # list of all args required for cost_function_J and grad_J
+        args =  (d, H_0, V_trunc, settings.ALPHA,  settings.COMPRESSION_METHOD, settings.OBS_VARIANCE) # list of all args required for cost_function_J and grad_J
         #args =  (d, H_0, V_trunc, ALPHA, None, R_inv) # list of all args required for cost_function_J and grad_J
-        args = (d, H_0, V_trunc, settings.ALPHA, settings.OBS_VARIANCE, V_grad, R_inv, settings.COMPRESSION_METHOD)
+        args = (d, H_0, V_trunc, settings.ALPHA, settings.COMPRESSION_METHOD, settings.OBS_VARIANCE, V_grad, R_inv, settings.COMPRESSION_METHOD)
         res = minimize(self.cost_function_J, w_0, args = args, method='L-BFGS-B',
                 jac=self.grad_J, tol=settings.TOL)
 
@@ -371,14 +371,14 @@ class DAPipeline():
         return R_inv
 
     @staticmethod
-    def cost_function_J(w, d, G, V, alpha, sigma_2 = None, V_grad = None, R_inv = None,
-                            mode=SETTINGS.COMPRESSION_METHOD):
+    def cost_function_J(w, d, G, V, alpha, mode, sigma_2 = None, V_grad = None, R_inv = None):
         """Computes VarDA cost function.
         NOTE: eventually - implement this by hand as grad_J and J share quantity Q"""
-
+        mode
         if mode == "SVD":
             Q = (G @ V @ w - d)
         elif mode == "AE":
+            assert callable(V), "V must be a function if mode=AE is used"
             w_tensor = torch.Tensor(w)
             V_w = V(w_tensor).detach().numpy()
             Q = (G @ V_w - d)
@@ -406,8 +406,9 @@ class DAPipeline():
         #     assert np.allclose(V @ V_plus @ V, V), "V_plus must be the generalized inverse of V"
         #     assert  R_inv.shape[0] == nobs
         #     assert d.shape == (nobs,)
+
     @staticmethod
-    def grad_J(w, d, G, V, alpha, sigma_2 = None, V_grad = None, R_inv = None, mode=SETTINGS.COMPRESSION_METHOD):
+    def grad_J(w, d, G, V, alpha, mode, sigma_2 = None, V_grad = None, R_inv = None):
 
         if mode == "SVD":
             Q = (G @ V @ w - d)

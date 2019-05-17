@@ -195,9 +195,13 @@ class TestminimizeJ():
         sigma_2 = settings.OBS_VARIANCE
 
         #attempt with sigma
-        w_1 = np.array([0, 0])
+        w_1 = np.array([1, 2])
+        print(settings.COMPRESSION_METHOD)
         J_1_sigma = DA.cost_function_J(w_1, d, H, V, alpha, sigma_2 = sigma_2, V_grad = None, R_inv = None,)
+        J_1_R_inv = DA.cost_function_J(w_1, d, H, V, alpha, sigma_2 = sigma_2, V_grad = None, R_inv = R_inv)
 
+        assert J_1_sigma == J_1_sigma
+        assert J_1_sigma == 5/2
 
     def test_minimize_J_normalized(self, tmpdir):
         """Check that system is finding correct answer found by
@@ -246,7 +250,7 @@ class TestminimizeJ():
         # print("LHS", LHS)
         # print("LHS.shape", LHS.shape)
         # print("RHS", RHS)
-        # print("RHS.shape", RHS.shape)
+        # print("RHS.shape", RHS.shape
 
         assert np.allclose(LHS, RHS)
 
