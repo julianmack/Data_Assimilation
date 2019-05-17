@@ -31,8 +31,8 @@ def main():
     #NOTE: when hist_X -> X in 2 lines above, the MAE reduces massively
     #In preliminary experiments, this is not true with hist_X
 
-    X_norm = (X.T - mean).T
-    X_norm = (X.T / std).T
+    X_centered = (X.T - mean).T
+    X_norm = (X_centered.T / std).T
 
     train_X = X_norm[:, : hist_idx]
     test_X = X_norm[:, hist_idx : -3] #leave final three elements for DA
