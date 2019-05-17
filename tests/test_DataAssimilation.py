@@ -5,7 +5,7 @@ import numpy as np
 DA = DAPipeline()
 import os
 
-class Test_Setup():
+class TestSetup():
     def test_check_import(self):
         DA = DAPipeline()
         method = DA.vda_setup
@@ -70,9 +70,13 @@ class Test_Setup():
 
         settings.NORMALIZE = False
 
-        X_ret, n, M, hist_idx, hist_X, t_DA, u_c, V, u_0, \
-                        observations, obs_idx, nobs, H_0, d,\
-                        std, mean = DA.vda_setup(settings)
+        data, hist_idx, obs_idx, nobs, std, mean = DA.vda_setup(settings)
+        X_ret = data.get("X")
+        V = data.get("V")
+        n, M = X_ret.shape
+        u_c = data.get("u_c")
+        u_0 = data.get("u_0")
+
 
         mean_exp = np.array([0.5, 2.5, 4.5])
         std_exp = np.array([0.5, 0.5, 0.5])
@@ -81,18 +85,19 @@ class Test_Setup():
         assert np.array_equal(X, X_ret)
         assert (3, 4) == (n, M)
         assert 2 == hist_idx
-        assert np.array_equal(np.array(X[:, :2]), hist_X)
+        assert np.array_equal(np.array(X[:, :2]), data.get("hist_X"))
         assert np.array_equal(np.array(X[:,-1]), u_c)
-        assert t_DA == 3
+        assert data.get("t_DA") == 3
         assert np.array_equal(V_exp, V)
         assert np.array_equal(mean_exp, u_0)
-        assert observations == [1]
+        assert data.get("observations") == [1]
         assert obs_idx == [0]
         assert nobs == 1
-        assert np.allclose(np.array([1, 0, 0]), H_0)
-        assert [0.5] == d
+        assert np.allclose(np.array([1, 0, 0]), data.get("G"))
+        assert [0.5] == data.get("d")
         assert np.array_equal(std_exp, std)
         assert np.array_equal(mean_exp, mean)
+
 
     def test_vda_setup_normalized(self, tmpdir):
         """End-to-end setup test"""
@@ -115,9 +120,12 @@ class Test_Setup():
 
         settings.NORMALIZE = True
 
-        X_ret, n, M, hist_idx, hist_X, t_DA, u_c, V, u_0, \
-                        observations, obs_idx, nobs, H_0, d,\
-                        std, mean = DA.vda_setup(settings)
+        data, hist_idx, obs_idx, nobs, std, mean = DA.vda_setup(settings)
+        X_ret = data.get("X")
+        V = data.get("V")
+        n, M = X_ret.shape
+        u_c = data.get("u_c")
+        u_0 = data.get("u_0")
 
         mean_exp = np.array([0.5, 2.5, 4.5])
         std_exp = np.array([0.5, 0.5, 0.5])
@@ -128,21 +136,21 @@ class Test_Setup():
         assert np.array_equal(X_exp, X_ret)
         assert (3, 4) == (n, M)
         assert 2 == hist_idx
-        assert np.array_equal(np.array(X_exp[:, :2]), hist_X)
+        assert np.array_equal(np.array(X_exp[:, :2]), data.get("hist_X"))
         assert np.array_equal(np.array(X_exp[:,-1]), u_c)
-        assert t_DA == 3
+        assert data.get("t_DA") == 3
         assert np.array_equal(X_exp[:, :2], V)
         assert np.allclose(np.zeros((3)), u_0)
-        assert observations == [1.]
+        assert data.get("observations") == [1.]
         assert obs_idx == [0]
         assert nobs == 1
-        assert np.allclose(np.array([1, 0, 0]), H_0)
-        assert [1.] == d
+        assert np.allclose(np.array([1, 0, 0]), data.get("G"))
+        assert [1.] == data.get("d")
         assert np.array_equal(std_exp, std)
         assert np.array_equal(mean_exp, mean)
 
 
-class TestminimizeJ():
+class TestMinimizeJ():
     """End-to-end tests"""
     def __settings(self, tmpdir, normalize, force_init=False):
         if hasattr(self, "settings") and not force_init:
@@ -170,38 +178,49 @@ class TestminimizeJ():
             settings.TOL = 1e-8
             settings.NORMALIZE = normalize
 
-            X_ret, n, M, hist_idx, hist_X, t_DA, u_c, V, u_0, \
-                            observations, obs_idx, nobs, H_0, d,\
-                            std, mean = DA.vda_setup(settings)
+            data, hist_idx, obs_idx, nobs, std, mean = DA.vda_setup(settings)
 
-            self.u_0 = u_0
-            self.V = V
-            self.H_0 = H_0
-            self.d = d
+
+
+            self.u_0 = data.get("u_0")
+            self.V = data.get("V")
+            self.H_0 = data.get("G")
+            self.d = data.get("d")
             self.R_inv = (1 / settings.OBS_VARIANCE) * np.eye(nobs)
+            data["R_inv"] = self.R_inv
+
             self.nobs = nobs
             self.settings = settings
+            self.data = data
+
             return settings
 
     def test_cost_fn_J(self, tmpdir):
         #Now check for normalized system
         normalize = False
         settings = self.__settings(tmpdir, normalize, force_init=True)
-        d = self.d
-        H = self.H_0
-        V = self.V
-        alpha = settings.ALPHA
-        R_inv = self.R_inv
-        sigma_2 = settings.OBS_VARIANCE
-        mode = settings.COMPRESSION_METHOD
-        #attempt with sigma
+
         w_1 = np.array([1, 2])
+        data = self.data
 
-        J_1_sigma = DA.cost_function_J(w_1, d, H, V, alpha, mode, sigma_2 = sigma_2, V_grad = None, R_inv = None,)
-        J_1_R_inv = DA.cost_function_J(w_1, d, H, V, alpha, mode, sigma_2 = sigma_2, V_grad = None, R_inv = R_inv)
+        #init with sigma_2
+        sigma_2 = settings.OBS_VARIANCE
+        R_inv = data.get("R_inv")
+        data["R_inv"] = None
+        J_1_sigma = DA.cost_function_J(w_1, data, settings)
+        data["R_inv"] = R_inv
+        settings.OBS_VARIANCE = None
+        J_1_R_inv = DA.cost_function_J(w_1, data, settings)
 
-        assert J_1_sigma == J_1_sigma
-        assert J_1_sigma == 5/2
+        assert np.isclose(J_1_sigma, J_1_sigma)
+        assert np.isclose(J_1_sigma, 5/2)
+
+        settings.OBS_VARIANCE = sigma_2
+
+        w_2  = np.array([1, 0])
+        J_2 = DA.cost_function_J(w_2, data, settings)
+        assert np.isclose(J_2, 1.5)
+
 
     def test_minimize_J_normalized(self, tmpdir):
         """Check that system is finding correct answer found by

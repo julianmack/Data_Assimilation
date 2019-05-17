@@ -24,10 +24,12 @@ class DAPipeline():
     def Var_DA_routine(self, settings = SETTINGS):
         """Runs the variational DA routine using settings from the passed config class
         (see config.py for example)"""
-        #initialize helper function class
-        X, n, M, hist_idx, hist_X, t_DA, u_c, V, u_0, \
-                        observations, obs_idx, nobs, H_0, d, std, mean = self.vda_setup(settings)
-        R_inv = None
+        data, hist_idx, obs_idx, nobs, std, mean = self.vda_setup(settings)
+
+        V = data.get("V")
+        u_0 = data.get("u_0")
+        u_c = data.get("u_c")
+
 
         if settings.COMPRESSION_METHOD == "SVD":
             V_trunc, U, s, W = self.trunc_SVD(V, settings.NUMBER_MODES)
@@ -53,16 +55,13 @@ class DAPipeline():
 
             #Now access explicit gradient calculation
             try:
-                V_grad = settings.AE_MODEL_TYPE(**kwargs).jac_explicit
+                data["V_grad"] = settings.AE_MODEL_TYPE(**kwargs).jac_explicit
             except:
                 V_grad = None
         else:
             raise ValueError("COMPRESSION_METHOD must be in {SVD, AE}")
 
-        #Define costJ and grad_J
-        args =  (d, H_0, V_trunc, settings.ALPHA,  settings.COMPRESSION_METHOD, settings.OBS_VARIANCE) # list of all args required for cost_function_J and grad_J
-        #args =  d, G, V, alpha,                     mode,           sigma_2 = None,     V_grad = None, R_inv = None
-        args = (d, H_0, V_trunc, settings.ALPHA, settings.COMPRESSION_METHOD, settings.OBS_VARIANCE, V_grad, R_inv)
+        args = (data, settings)
         res = minimize(self.cost_function_J, w_0, args = args, method='L-BFGS-B',
                 jac=self.grad_J, tol=settings.TOL)
 
@@ -129,6 +128,7 @@ class DAPipeline():
         #The X array should already be saved in settings.X_FP
         #but can be created from .vtu fps if required. see trunc_SVD.py for an example
 
+        data = {}
 
         X = np.load(settings.X_FP,  allow_pickle=True)
 
@@ -170,9 +170,12 @@ class DAPipeline():
         H_0 = self.create_H(obs_idx, n, nobs)
         d = observations - H_0 @ u_0 #'d' in literature
         #R_inv = self.create_R_inv(OBS_VARIANCE, nobs)
+        data = {"d": d, "G": H_0, "V": V,
+                "observations": observations,
+                "u_c": u_c, "u_0": u_0, "X": X, "hist_X": hist_X, "t_DA": t_DA}
 
-        return X, n, M, hist_idx, hist_X, t_DA, u_c, V, u_0, \
-                        observations, obs_idx, nobs, H_0, d, std, mean
+
+        return data, hist_idx, obs_idx, nobs, std, mean
 
     @staticmethod
     def get_sorted_fps_U(data_dir):
@@ -371,12 +374,23 @@ class DAPipeline():
         return R_inv
 
     @staticmethod
-    def cost_function_J(w, d, G, V, alpha, mode, sigma_2 = None, V_grad = None, R_inv = None):
+    def cost_function_J(w, data, settings):
         """Computes VarDA cost function.
         NOTE: eventually - implement this by hand as grad_J and J share quantity Q"""
 
+        d = data.get("d")
+        G = data.get("G")
+        V = data.get("V")
+        V_grad = data.get("V_grad")
+        R_inv = data.get("R_inv")
+
+        sigma_2 = settings.OBS_VARIANCE
+        mode = settings.COMPRESSION_METHOD
+        alpha = settings.ALPHA
+
         if mode == "SVD":
             Q = (G @ V @ w - d)
+
         elif mode == "AE":
             assert callable(V), "V must be a function if mode=AE is used"
             w_tensor = torch.Tensor(w)
@@ -386,17 +400,19 @@ class DAPipeline():
         else:
             raise ValueError("Invalid mode")
 
-        if not R_inv and sigma_2:
+        if sigma_2 and not R_inv:
             #When R is proportional to identity
             J_o = 0.5 / sigma_2 * np.dot(Q, Q)
         elif R_inv:
             J_o = 0.5 * Q.T @ R_inv @ Q
         else:
-            raise ValueError("Either R_inv or sigma must be non-zero")
+            raise ValueError("Either R_inv or sigma must be provided")
 
         J_b = 0.5 * alpha * np.dot(w, w)
         J = J_b + J_o
-        print("J_b = {:.2f}, J_o = {:.2f}".format(J_b, J_o))
+
+        if settings.DEBUG:
+            print("J_b = {:.2f}, J_o = {:.2f}".format(J_b, J_o))
         return J
 
 
@@ -408,7 +424,16 @@ class DAPipeline():
         #     assert d.shape == (nobs,)
 
     @staticmethod
-    def grad_J(w, d, G, V, alpha, mode, sigma_2 = None, V_grad = None, R_inv = None):
+    def grad_J(w, data, settings):
+        d = data.get("d")
+        G = data.get("G")
+        V = data.get("V")
+        V_grad = data.get("V_grad")
+        R_inv = data.get("R_inv")
+
+        sigma_2 = settings.OBS_VARIANCE
+        mode = settings.COMPRESSION_METHOD
+        alpha = settings.ALPHA
 
         if mode == "SVD":
             Q = (G @ V @ w - d)
