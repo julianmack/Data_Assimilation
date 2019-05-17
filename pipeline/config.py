@@ -37,7 +37,7 @@ class Config:
     OBS_VARIANCE = 0.01 #TODO - CHECK this is specific to the sensors (in this case - the error in model predictions)
 
     COMPRESSION_METHOD = "SVD" # "SVD"/"AE"
-    NUMBER_MODES = None #Number of modes to retain.
+    NUMBER_MODES = 2 #Number of modes to retain.
         # If NUMBER_MODES = None (and COMPRESSION_METHOD = "SVD"), we use
         # the Rossella et al. method for selection of truncation parameter
 
@@ -58,10 +58,10 @@ class ConfigAE(Config):
 
 
 class ToyAEConfig(ConfigAE):
-    NORMALIZE = False
+    NORMALIZE = True
     UNDO_NORMALIZE  = NORMALIZE
-    NUMBER_MODES = 100
-    HIDDEN = 300
+    NUMBER_MODES = 2
+    HIDDEN = 32
     AE_MODEL_FP = "models/AE_toy_{}_{}_{}.pth".format(NUMBER_MODES, HIDDEN, ConfigAE().FIELD_NAME)
     AE_MODEL_TYPE = ToyNet
     kwargs = {"inn":NUMBER_MODES, "hid":HIDDEN, "out": Config().n}

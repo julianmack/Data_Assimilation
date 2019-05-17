@@ -21,7 +21,7 @@ class TrainAE():
         err_msg = """settings must be an AE configuration class"""
         assert self.settings.COMPRESSION_METHOD == "AE", err_msg
 
-    def train(self, num_epoch = 100, learning_rate = 0.003):
+    def train(self, num_epoch = 100, learning_rate = 0.001):
         settings = self.settings
 
         #data
@@ -71,7 +71,7 @@ class TrainAE():
                                 num_epoch, device, print_every=1, test_every=5)
 
         torch.save(model.state_dict(), model_fp)
-        
+
         with open(results_fp_train, 'wb') as fp:
             pickle.dump(train_losses, fp)
         with open(results_fp_test, 'wb') as fp:
