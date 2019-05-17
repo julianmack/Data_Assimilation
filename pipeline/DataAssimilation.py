@@ -124,7 +124,7 @@ class DAPipeline():
             self.save_vtu_file(da_MAE, "DA_MAE", out_fp_DA, sample_fp)
         return w_opt
 
-        
+
     def vda_setup(self, settings):
         #The X array should already be saved in settings.X_FP
         #but can be created from .vtu fps if required. see trunc_SVD.py for an example
@@ -371,7 +371,7 @@ class DAPipeline():
         return R_inv
 
     @staticmethod
-    def cost_function_J(w, d, G, V, alpha, sigma = None, V_grad = None, R_inv = None,
+    def cost_function_J(w, d, G, V, alpha, sigma_2 = None, V_grad = None, R_inv = None,
                             mode=SETTINGS.COMPRESSION_METHOD):
         """Computes VarDA cost function.
         NOTE: eventually - implement this by hand as grad_J and J share quantity Q"""
@@ -386,9 +386,9 @@ class DAPipeline():
         else:
             raise ValueError("Invalid mode")
 
-        if not R_inv and sigma:
+        if not R_inv and sigma_2:
             #When R is proportional to identity
-            J_o = 0.5 / sigma ** 2 * np.dot(Q, Q)
+            J_o = 0.5 / sigma_2 * np.dot(Q, Q)
         elif R_inv:
             J_o = 0.5 * Q.T @ R_inv @ Q
         else:
@@ -407,7 +407,7 @@ class DAPipeline():
         #     assert  R_inv.shape[0] == nobs
         #     assert d.shape == (nobs,)
     @staticmethod
-    def grad_J(w, d, G, V, alpha, sigma = None, V_grad = None, R_inv = None, mode=SETTINGS.COMPRESSION_METHOD):
+    def grad_J(w, d, G, V, alpha, sigma_2 = None, V_grad = None, R_inv = None, mode=SETTINGS.COMPRESSION_METHOD):
 
         if mode == "SVD":
             Q = (G @ V @ w - d)
@@ -422,11 +422,11 @@ class DAPipeline():
 
             Q = (G @ V_w - d)
             P = V_grad_w.T @ G.T
-        if not R_inv and sigma:
+        if not R_inv and sigma_2:
             #When R is proportional to identity
-            grad_o = 0.5 / sigma ** 2 * np.dot(P, Q)
+            grad_o = (1.0 / sigma_2 ) * np.dot(P, Q)
         elif R_inv:
-            J_o = 0.5 * P @ R_inv @ Q
+            J_o = 1.0 * P @ R_inv @ Q
         else:
             raise ValueError("Either R_inv or sigma must be non-zero")
 

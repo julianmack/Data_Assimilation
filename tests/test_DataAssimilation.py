@@ -48,6 +48,7 @@ class Test_Setup():
         assert H.shape == (1, 3)
         assert np.array_equal(H, np.array([[0, 0, 1]]))
 
+
     def test_vda_setup_notnormalized(self, tmpdir):
         """End-to-end setup test"""
         X = np.zeros((3, 4))
@@ -173,6 +174,7 @@ class TestminimizeJ():
                             observations, obs_idx, nobs, H_0, d,\
                             std, mean = DA.vda_setup(settings)
 
+            self.u_0 = u_0
             self.V = V
             self.H_0 = H_0
             self.d = d
@@ -180,6 +182,21 @@ class TestminimizeJ():
             self.nobs = nobs
             self.settings = settings
             return settings
+
+    def test_cost_fn_J(self, tmpdir):
+        #Now check for normalized system
+        normalize = False
+        settings = self.__settings(tmpdir, normalize, force_init=True)
+        d = self.d
+        H = self.H_0
+        V = self.V
+        alpha = settings.ALPHA
+        R_inv = self.R_inv
+        sigma_2 = settings.OBS_VARIANCE
+
+        #attempt with sigma
+        w_1 = np.array([0, 0])
+        J_1_sigma = DA.cost_function_J(w_1, d, H, V, alpha, sigma_2 = sigma_2, V_grad = None, R_inv = None,)
 
 
     def test_minimize_J_normalized(self, tmpdir):
@@ -200,6 +217,7 @@ class TestminimizeJ():
 
         assert np.allclose(LHS, RHS)
 
+
     def test_minimize_J_unnormalized(self, tmpdir):
         #Now check for normalized system
         normalize = False
@@ -207,6 +225,7 @@ class TestminimizeJ():
 
         alpha = settings.ALPHA
         w_opt_ret = DA.Var_DA_routine(settings)
+        #w_opt_ret = 0.25 * np.array([-1, 1]) #This is value we want
 
         prefix = self.V.T @ self.H_0.T @ self.R_inv
 
@@ -214,31 +233,23 @@ class TestminimizeJ():
         RHS_ = prefix @ self.H_0 @ self.V + alpha * np.eye(w_opt_ret.shape[0])
         RHS = RHS_ @ w_opt_ret
 
-        print("----------")
-        print("V", self.V)
-        print("RHS_", RHS_)
-        print("w_opt", w_opt_ret)
-        print("RHS_ @ w_opt_ret", RHS_ @ w_opt_ret)
-        print("prefix", prefix)
-        print("d",  self.d)
-        print("LHS", LHS)
-        print("LHS.shape", LHS.shape)
-        print("RHS", RHS)
-        print("RHS.shape", RHS.shape)
+        # print("prefix @ self.H_0 @ self.V\n", prefix @ self.H_0 @ self.V)
+        # print("RHS_", RHS_)
+        # print("LHS", LHS)
+        # print("----------")
+        # print("V", self.V)
+        # print("RHS_", RHS_)
+        # print("w_opt", w_opt_ret)
+        # print("RHS_ @ w_opt_ret", RHS_ @ w_opt_ret)
+        # print("prefix", prefix)
+        # print("d",  self.d)
+        # print("LHS", LHS)
+        # print("LHS.shape", LHS.shape)
+        # print("RHS", RHS)
+        # print("RHS.shape", RHS.shape)
 
         assert np.allclose(LHS, RHS)
 
-
-
-
-
-
-    def test_cost_fn_J(self):
-        # w, d, G,
-        # V, alpha, sigma = None
-        # V_grad = None, R_inv = None
-        # mode=SETTINGS.COMPRESSION_METHOD
-        pass
 
 
 if __name__ == "__main__":
