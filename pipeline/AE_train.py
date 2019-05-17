@@ -70,12 +70,13 @@ class TrainAE():
                                 loss_fn, train_loader, test_loader,
                                 num_epoch, device, print_every=1, test_every=5)
 
-
+        torch.save(model.state_dict(), model_fp)
+        
         with open(results_fp_train, 'wb') as fp:
             pickle.dump(train_losses, fp)
         with open(results_fp_test, 'wb') as fp:
             pickle.dump(test_losses, fp)
-        torch.save(model.state_dict(), model_fp)
+
 
         return model
 

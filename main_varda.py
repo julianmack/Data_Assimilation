@@ -1,4 +1,4 @@
-"""File to run elements of pipeline module from"""
+s"""File to run elements of pipeline module from"""
 from pipeline import DataAssimilation, config
 
 def main():
