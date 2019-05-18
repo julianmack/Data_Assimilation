@@ -1,5 +1,5 @@
 ##New TODO:
-
+There is a bug for the AE varDA path when NUMBER_MODES = 1
 ###ALL COMPLETE:
 Update NUMBER_MODES to LATENT_DIM for AE
 Make grad_J and cost_function_J take settings as params
