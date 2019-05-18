@@ -20,7 +20,7 @@ class DAPipeline():
         if settings:
             self.settings = settings
 
-    def Var_DA_routine(self, settings):
+    def Var_DA_routine(self, settings, return_stats=False):
         """Runs the variational DA routine using settings from the passed config class
         (see config.py for example)"""
 
@@ -125,6 +125,12 @@ class DAPipeline():
 
             self.save_vtu_file(ref_MAE, "ref_MAE", out_fp_ref, sample_fp)
             self.save_vtu_file(da_MAE, "DA_MAE", out_fp_DA, sample_fp)
+        if return_stats:
+            stats = {}
+            stats["Percent_improvement"] = 100*(ref_MAE_mean - da_MAE_mean)/ref_MAE_mean
+            stats["ref_MAE_mean"] = ref_MAE_mean
+            stats["da_MAE_mean"] = da_MAE_mean
+            return w_opt, stats
         return w_opt
 
 
