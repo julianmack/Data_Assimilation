@@ -5,11 +5,12 @@ in order to create new combinations of config options. Alternatively, individual
 options can be altered one at a time on an ad-hoc basis."""
 
 from pipeline.AutoEncoders import VanillaAE, ToyNet
-
 class Config:
     #filepaths
-    DATA_FP = "data/small3DLSBU/"
-    INTERMEDIATE_FP = "data/small3D_intermediate/"
+    HOME_DIR = "/home/jfm1118/"
+    RESULTS_FP = HOME_DIR + "results/"
+    DATA_FP = HOME_DIR + "data/small3DLSBU/"
+    INTERMEDIATE_FP = HOME_DIR + "data/small3D_intermediate/"
     FIELD_NAME = "Pressure"
     X_FP = INTERMEDIATE_FP + "X_small3D_{}.npy".format(FIELD_NAME)
     n = 100040
@@ -52,17 +53,16 @@ class ConfigAE(Config):
     NORMALIZE = True
     COMPRESSION_METHOD = "AE"
     NUMBER_MODES = 4 #this must match model above
-    AE_MODEL_FP = "models/AE_dim{}_epoch120.pth".format(NUMBER_MODES) #AE_dim40_epoch120.pth"
+    AE_MODEL_FP = Config().HOME_DIR + "models/AE_dim{}_epoch120.pth".format(NUMBER_MODES) #AE_dim40_epoch120.pth"
     AE_MODEL_TYPE = VanillaAE #this must match
     kwargs = {"input_size": Config().n, "latent_size": NUMBER_MODES,"hid_layers":[1000, 200]}
-
 
 class ToyAEConfig(ConfigAE):
     NORMALIZE = True
     UNDO_NORMALIZE  = NORMALIZE
     NUMBER_MODES = 2
     HIDDEN = 32
-    AE_MODEL_FP = "models/AE_toy_{}_{}_{}.pth".format(NUMBER_MODES, HIDDEN, ConfigAE().FIELD_NAME)
+    AE_MODEL_FP = Config().HOME_DIR + "models/AE_toy_{}_{}_{}.pth".format(NUMBER_MODES, HIDDEN, ConfigAE().FIELD_NAME)
     AE_MODEL_TYPE = ToyNet
     kwargs = {"inn":NUMBER_MODES, "hid":HIDDEN, "out": Config().n}
 

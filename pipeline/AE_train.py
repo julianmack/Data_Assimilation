@@ -11,7 +11,7 @@ import pipeline.config as config
 from pipeline import utils
 
 
-RESULTS_FP = "results/"
+
 BATCH = 256
 
 class TrainAE():
@@ -23,7 +23,6 @@ class TrainAE():
 
     def train(self, num_epoch = 100, learning_rate = 0.001):
         settings = self.settings
-
         #data
         X = np.load(settings.X_FP)
         n, M = X.shape
@@ -54,8 +53,8 @@ class TrainAE():
         device = utils.ML_utils.get_device()
 
         model_fp = settings.AE_MODEL_FP
-        results_fp_train = "{}toy_train.txt".format(RESULTS_FP)
-        results_fp_test = "{}toy_test.txt".format(RESULTS_FP)
+        results_fp_train = settings.RESULTS_FP + "toy_train_mode{}_hid{}.txt".format(settings.NUMBER_MODES, settings.HIDDEN)
+        results_fp_test = settings.RESULTS_FP + "toy_test_mode{}_hid{}.txt".format(settings.NUMBER_MODES, settings.HIDDEN)
 
         loss_fn = torch.nn.L1Loss(reduction='sum')
         model = settings.AE_MODEL_TYPE(**settings.kwargs)
