@@ -11,7 +11,6 @@ import pipeline.config as config
 from pipeline import utils
 
 
- 
 BATCH = 256
 
 class TrainAE():
