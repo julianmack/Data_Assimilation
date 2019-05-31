@@ -4,7 +4,7 @@ from pipeline import DataAssimilation, config
 def main():
     DA = DataAssimilation.DAPipeline()
     settings = config.ToyAEConfig()
-    settings = config.Config()
+    #settings = config.Config()
     print(settings.COMPRESSION_METHOD)
     DA.Var_DA_routine(settings)
 
