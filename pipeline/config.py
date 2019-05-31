@@ -30,7 +30,7 @@ class Config:
                         #not known by config file)
     OBS_MODE = "rand" #Observation mode: "single_max" or "rand" - i.e. use a single
                      # observation or a random subset
-    OBS_FRAC = 0.1 # (with OBS_MODE=rand). fraction of state used as "observations".
+    OBS_FRAC = 0.5 # (with OBS_MODE=rand). fraction of state used as "observations".
                     # This is ignored when OBS_MODE = single_max
 
     #VarDA hyperparams
