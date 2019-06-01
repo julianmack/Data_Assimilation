@@ -23,7 +23,7 @@ class Config:
 
     #config options to divide up data between "History", "observation" and "control_state"
     #User is responsible for checking that these regions do not overlap
-    HIST_FRAC = 2.0 / 3.0 #fraction of data used as "history" 
+    HIST_FRAC = 2.0 / 3.0 #fraction of data used as "history"
     TDA_IDX_FROM_END = 2 #timestep index of u_c (control state from which
                         #observations are selcted). Value given as integer offset
                         #from final timestep (since number of historical timesteps M is
@@ -31,7 +31,7 @@ class Config:
     OBS_MODE = "rand" #Observation mode: "single_max" or "rand" - i.e. use a single
                      # observation or a random subset
     OBS_FRAC = 0.5 # (with OBS_MODE=rand). fraction of state used as "observations".
-                    # This is ignored when OBS_MODE = single_max
+                    # This is ignored when OBS_MODE = single_max 
 
     #VarDA hyperparams
     ALPHA = 1.0
