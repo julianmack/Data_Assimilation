@@ -17,10 +17,12 @@ arr=numpy.array
 
 class vtu:
   """Unstructured grid object to deal with VTK unstructured grids."""
-  def __init__(self, filename = None):
+  def __init__(self, filename = None, ugrid=None):
     """Creates a vtu object by reading the specified file."""
-    if filename is None:
+    if filename is None and ugrid is None:
       self.ugrid = vtk.vtkUnstructuredGrid()
+    elif filename is None and ugrid is not None:
+      self.ugrid = ugrid
     else:
       self.gridreader = None
       if filename[-4:] == ".vtu":

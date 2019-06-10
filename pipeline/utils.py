@@ -24,11 +24,34 @@ class FluidityUtils():
         pass
 
     @staticmethod
-    def get_3D_grid(fp, torch=False):
+    def get_3D_grid(fp, field, torch=False):
         """Returns numpy array or torch tensor of the vtu file input"""
         ug = vtktools.vtu(fp)
-        nx = 100 # =ny = nz
-        res = ug.StructuredPointProbe(nx, nx, nx)
+        nx = 100 # =ny
+        nz = 50
+
+
+
+        res = ug.StructuredPointProbe(nx, nx, nz)
+        pointdata=res.GetPointData()
+
+        vtkdata=pointdata.GetScalars(field)
+
+        for val in dir(pointdata):
+            print(val)
+
+
+        res = pointdata.GetTensors(field)
+        locs = pointdata.GetTCoords(field)
+        for loc in locs:
+            loc.GetTuple1(1)
+            break
+        exit()
+
+        ug2 = vtktools.vtu(ugrid=res)
+        res = ug2.GetScalarField(field)
+
+
         return res
 
 class ML_utils():
