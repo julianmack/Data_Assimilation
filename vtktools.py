@@ -469,8 +469,8 @@ class vtu:
   def StructuredPointProbe(self, nx, ny, nz, bounding_box=None):
     """ Probe the unstructured grid dataset using a structured points dataset. """
 
-    probe = vtk.vtkProbeFilter ()
-    probe.SetSource (self.ugrid)
+    probe = vtk.vtkProbeFilter()
+    probe.SetSource(self.ugrid)
 
     sgrid = vtk.vtkStructuredPoints()
 
