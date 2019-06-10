@@ -10,13 +10,15 @@ class Config:
     # Determine which machine this is running on. This is a short-term hack
     # which uses ip address
     ip_lst = socket.gethostbyname(socket.gethostname()).split('.')
-    if int(ip_lst[0]) == 129:
+    if int(ip_lst[0]) in [129, 192]:
         HOME_DIR = ""
     elif int(ip_lst[0]) == 146:
         #filepaths
         HOME_DIR = "/home/jfm1118/"
     else:
-        raise ValueError("IP address must start with 129 or 146. Update config.py")
+        raise ValueError(("IP address must start with 129 or 146. "
+                        "Current IP is {}\n"
+                        "Update config.py".format(socket.gethostbyname(socket.gethostname()))))
 
     RESULTS_FP = HOME_DIR + "results/"
     DATA_FP = HOME_DIR + "data/small3DLSBU/"

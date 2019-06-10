@@ -2,6 +2,7 @@
 import torch
 import numpy as np
 import random
+import vtktools
 import pipeline.config
 SETTINGS = pipeline.config.Config
 
@@ -18,10 +19,22 @@ def set_seeds(seed = SETTINGS.SEED):
 
 class FluidityUtils():
     """Class to hold Fluidity helper functions"""
+
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def get_3D_grid(fp, torch=False):
+        """Returns numpy array or torch tensor of the vtu file input"""
+        ug = vtktools.vtu(fp)
+        nx = 0.1 # =ny = nz
+        res = ug.StructuredPointProbe(nx, nx, nx)
+        return res
+
 class ML_utils():
     """Class to hold ML helper functions"""
 
-    def __init__():
+    def __init__(self):
         pass
 
     @staticmethod
