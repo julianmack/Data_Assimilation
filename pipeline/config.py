@@ -5,9 +5,19 @@ in order to create new combinations of config options. Alternatively, individual
 options can be altered one at a time on an ad-hoc basis."""
 
 from pipeline.AutoEncoders import VanillaAE, ToyNet
+import socket
 class Config:
-    #filepaths
-    HOME_DIR = "/home/jfm1118/"
+    # Determine which machine this is running on. This is a short-term hack
+    # which uses ip address
+    ip_lst = socket.gethostbyname(socket.gethostname()).split('.')
+    if int(ip_lst[0]) == 129:
+        HOME_DIR = ""
+    elif int(ip_lst[0]) == 146:
+        #filepaths
+        HOME_DIR = "/home/jfm1118/"
+    else:
+        raise ValueError("IP address must start with 129 or 146. Update config.py")
+
     RESULTS_FP = HOME_DIR + "results/"
     DATA_FP = HOME_DIR + "data/small3DLSBU/"
     INTERMEDIATE_FP = HOME_DIR + "data/small3D_intermediate/"
@@ -31,7 +41,7 @@ class Config:
     OBS_MODE = "rand" #Observation mode: "single_max" or "rand" - i.e. use a single
                      # observation or a random subset
     OBS_FRAC = 0.5 # (with OBS_MODE=rand). fraction of state used as "observations".
-                    # This is ignored when OBS_MODE = single_max 
+                    # This is ignored when OBS_MODE = single_max
 
     #VarDA hyperparams
     ALPHA = 1.0
