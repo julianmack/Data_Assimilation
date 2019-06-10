@@ -161,7 +161,7 @@ class DAPipeline():
                                 "t_DA = {} and hist_idx = {}".format(t_DA, hist_idx))
 
         hist_X = X[:, : hist_idx] #select training set data
-        
+
         if settings.NORMALIZE:
             #use only the training set to calculate mean and std
             mean = np.mean(hist_X, axis=1)
