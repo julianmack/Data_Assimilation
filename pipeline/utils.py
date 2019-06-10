@@ -16,7 +16,8 @@ def set_seeds(seed = SETTINGS.SEED):
     if torch.cuda.is_available():
         torch.backends.cudnn.deterministic = True
 
-
+class FluidityUtils():
+    """Class to hold Fluidity helper functions"""
 class ML_utils():
     """Class to hold ML helper functions"""
 
