@@ -3,6 +3,7 @@
 """This file is taken from the Fluidity master branch at the following location:
 https://github.com/FluidityProject/multifluids/blob/master/python/vtktools.py
 
+The file has been edited for python2 -> python3
 It was easier to import just this file than to have fluidity as a dependency
 for this project - since we don't need to run the software in this case"""
 
@@ -716,16 +717,16 @@ def VtuDiff(vtu1, vtu2, filename = None):
   return resultVtu
 
 def usage():
-  print 'Usage:'
-  print 'COMMAND LINE: vtktools.py [-h] [-p] [-e var1,var2, ...] INPUT_FILENAME'
-  print ''
-  print 'INPUT_FILENAME:'
-  print '           The input file name.'
-  print ''
-  print 'OPTIONS:'
-  print '   -h      Prints this usage message.'
-  print '   -p      Converts the coordinates from xyz to latitude and longitude.'
-  print '   -e      Extracts the data point from the variables provided.'
+  print ('Usage:')
+  print ('COMMAND LINE: vtktools.py [-h] [-p] [-e var1,var2, ...] INPUT_FILENAME')
+  print ('')
+  print ('INPUT_FILENAME:')
+  print ('           The input file name.')
+  print ('')
+  print ('OPTIONS:')
+  print ('   -h      Prints this usage message.')
+  print ('   -p      Converts the coordinates from xyz to latitude and longitude.')
+  print ('   -e      Extracts the data point from the variables provided.')
 
 if __name__ == "__main__":
   import vtktools
@@ -759,7 +760,7 @@ if __name__ == "__main__":
       line = "%lf "%x+"%lf "%y
       for scalar in scalars:
         line = line+" %lf"%v.ugrid.GetPointData().GetArray(scalar).GetTuple1(i)
-      print line
+      print (line)
 
 
 
