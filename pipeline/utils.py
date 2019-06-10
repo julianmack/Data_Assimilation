@@ -27,7 +27,7 @@ class FluidityUtils():
     def get_3D_grid(fp, torch=False):
         """Returns numpy array or torch tensor of the vtu file input"""
         ug = vtktools.vtu(fp)
-        nx = 0.1 # =ny = nz
+        nx = 100 # =ny = nz
         res = ug.StructuredPointProbe(nx, nx, nx)
         return res
 

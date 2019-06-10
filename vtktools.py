@@ -164,7 +164,7 @@ class vtu:
       gridwriter=vtk.vtkXMLUnstructuredGridWriter()
 
     gridwriter.SetFileName(filename)
-    gridwriter.SetInput(self.ugrid)
+    gridwriter.SetInputData(self.ugrid)
     gridwriter.Write()
 
   def AddScalarField(self, name, array):
@@ -284,8 +284,8 @@ class vtu:
     polydata = vtk.vtkPolyData()
     polydata.SetPoints(points)
     probe = vtk.vtkProbeFilter()
-    probe.SetInput(polydata)
-    probe.SetSource(self.ugrid)
+    probe.SetInputData(polydata)
+    probe.setSourceData(self.ugrid)
     probe.Update()
 
     # Generate a list invalidNodes, containing a map from invalid nodes in the
@@ -377,7 +377,7 @@ class vtu:
   def Crop(self, min_x, max_x, min_y, max_y, min_z, max_z):
     """Trim off the edges defined by a bounding box."""
     trimmer = vtk.vtkExtractUnstructuredGrid()
-    trimmer.SetInput(self.ugrid)
+    trimmer.SetInputData(self.ugrid)
     trimmer.SetExtent(min_x, max_x, min_y, max_y, min_z, max_z)
     trimmer.Update()
     trimmed_ug = trimmer.GetOutput()
@@ -470,7 +470,8 @@ class vtu:
     """ Probe the unstructured grid dataset using a structured points dataset. """
 
     probe = vtk.vtkProbeFilter()
-    probe.SetSource(self.ugrid)
+
+    probe.SetSourceData(self.ugrid)
 
     sgrid = vtk.vtkStructuredPoints()
 
@@ -491,7 +492,7 @@ class vtu:
 
     sgrid.SetSpacing(spacing)
 
-    probe.SetInput (sgrid)
+    probe.SetInputData (sgrid)
     probe.Update ()
 
     return probe.GetOutput()
@@ -590,7 +591,7 @@ class vtu:
     The returned array gives a cell-wise derivative.
     """
     cd=vtk.vtkCellDerivatives()
-    cd.SetInput(self.ugrid)
+    cd.SetInputData(self.ugrid)
     pointdata=self.ugrid.GetPointData()
     nc=pointdata.GetArray(name).GetNumberOfComponents()
     if nc==1:
@@ -615,7 +616,7 @@ class vtu:
     The returned array gives a cell-wise derivative.
     """
     cd=vtk.vtkCellDerivatives()
-    cd.SetInput(self.ugrid)
+    cd.SetInputData(self.ugrid)
     pointdata=self.ugrid.GetPointData()
     cd.SetVectorModeToComputeVorticity()
     cd.SetTensorModeToPassTensors()
@@ -630,7 +631,7 @@ class vtu:
     All existing fields will remain.
     """
     cdtpd=vtk.vtkCellDataToPointData()
-    cdtpd.SetInput(self.ugrid)
+    cdtpd.SetInputData(self.ugrid)
     cdtpd.PassCellDataOn()
     cdtpd.Update()
     self.ugrid=cdtpd.GetUnstructuredGridOutput()
