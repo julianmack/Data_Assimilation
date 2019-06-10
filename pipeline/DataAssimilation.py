@@ -156,11 +156,12 @@ class DAPipeline():
         # We will take initial condition u_0, as mean of historical data
         hist_idx = int(M * settings.HIST_FRAC)
         t_DA = M - settings.TDA_IDX_FROM_END - 1
-        assert t_DA > hist_idx, "Cannot select observation from historical data. \
-                    Reduce HIST_FRAC or reduce TDA_IDX_FROM_END to prevent overlap"
+        assert t_DA >= hist_idx, ("Cannot select observation from historical data."
+                                "Reduce HIST_FRAC or reduce TDA_IDX_FROM_END to prevent overlap.\n"
+                                "t_DA = {} and hist_idx = {}".format(t_DA, hist_idx))
 
         hist_X = X[:, : hist_idx] #select training set data
-
+        
         if settings.NORMALIZE:
             #use only the training set to calculate mean and std
             mean = np.mean(hist_X, axis=1)
