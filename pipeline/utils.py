@@ -84,25 +84,11 @@ class FluidityUtils():
     def save_structured_vtu(self, filename, struc_grid):
         from evtk.hl import pointsToVTK
 
-        #points = struc_grid.GetPointCells()
         xs, ys, zs = self.__get_grid_locations(struc_grid)
         data = self.__get_grid_data(struc_grid)
 
         pointsToVTK(filename, xs, ys, zs, data)
 
-        exit()
-        ###################
-
-
-
-
-        # gridwriter = vtk.vtkXMLStructuredGridWriter()
-        # gridwriter.SetFileName(filename)
-        # gridwriter.SetInputData(struc_grid)
-        # gridwriter.SetInputConnection(0)
-        #
-        # print(gridwriter)
-        # gridwriter.Write()
 
     @staticmethod
     def save_vtu_file(arr, name, filename, sample_fp=None):
