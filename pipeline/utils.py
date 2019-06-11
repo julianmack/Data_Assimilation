@@ -21,46 +21,37 @@ def set_seeds(seed = SETTINGS.SEED):
         torch.backends.cudnn.deterministic = True
 
 class FluidityUtils():
-    """Class to hold Fluidity helper functions"""
+    """Class to hold Fluidity helper functions.
+    In theory this should be part of
+    vtktools.py but I have kept it seperate to avoid confusion  
+    as to which is my work """
 
     def __init__(self):
         pass
 
     @staticmethod
-    def get_3D_grid(fp, field, torch=False):
+    def get_3D_grid(fp, field_name, ret_torch=False):
         """Returns numpy array or torch tensor of the vtu file input"""
         ug = vtktools.vtu(fp)
         nx = 100 # =ny
+        ny = nx
         nz = 50
 
-
+        newshape = (nx, ny, nz)
 
         res = ug.StructuredPointProbe(nx, nx, nz)
+
         pointdata=res.GetPointData()
 
-        vtkdata=pointdata.GetScalars(field)
+        vtkdata = pointdata.GetScalars(field_name)
+        np_data = nps.vtk_to_numpy(vtkdata)
 
-        np = nps.vtk_to_numpy(vtkdata)
-        print(np[0])
-        print(np.shape)
-        exit()
-        for val in dir(pointdata):
-            print(val)
+        #Fortran order reshape (i.e first index changes fastest):
+        result = np.reshape(np_data, newshape, order='F')
+        if ret_torch:
+            result = torch.Tensor(result)
 
-
-        res = pointdata.GetTensors(field)
-        locs = pointdata.GetTCoords(field)
-        for loc in locs:
-            loc.GetTuple1(1)
-            break
-
-        exit()
-
-        ug2 = vtktools.vtu(ugrid=res)
-        res = ug2.GetScalarField(field)
-
-
-        return res
+        return result
 
 class ML_utils():
     """Class to hold ML helper functions"""
