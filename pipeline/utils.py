@@ -30,8 +30,8 @@ class FluidityUtils():
     def __init__(self):
         pass
 
-    @staticmethod
-    def get_3D_grid(fp, field_name, newshape = None, npoints=None, ret_torch=False):
+
+    def get_3D_grid(self, fp, field_name, newshape = None, npoints=None, ret_torch=False):
         """Returns numpy array or torch tensor of the vtu file input
         Accepts:
             :fp - str. filepath to .vtu file
@@ -75,14 +75,14 @@ class FluidityUtils():
 
 
         #########################
-        filename_out = "data/" + "interpolate.vtu"
+        filename_out = "data/" + "interpolate"
 
         print(type(ug.ugrid))
         print(type(res))
 
 
 
-        FluidityUtils.save_structured_vtu(filename_out, res)
+        self.save_structured_vtu(filename_out, res)
 
         return
         vtk_fl = nps.numpy_to_vtk(np_data)
@@ -104,32 +104,28 @@ class FluidityUtils():
 
         return result
 
-    @staticmethod
-    def save_structured_vtu(filename, struc_grid):
-        gridwriter = vtk.vtkXMLStructuredGridWriter()
-        gridwriter.SetFileName(filename)
-        gridwriter.SetInputData(struc_grid)
-        gridwriter.SetInputConnection(0)
+    def save_structured_vtu(self, filename, struc_grid):
+        from evtk.hl import pointsToVTK
 
-        print(gridwriter)
-        gridwriter.Write()
-        print("here")
-        # algorithm = vtk.vtkStructuredGridAlgorithm()
-        # algorithm.SetInputData(struc_grid)
-        # algorithm.SetOutput(struc_grid)
-        #
+        #points = struc_grid.GetPointCells()
+        xs, ys, zs = self.__get_grid_locations(struc_grid)
+        data = self.__get_grid_data(struc_grid)
+
+        pointsToVTK(filename, xs, ys, zs, data)
+
+        exit()
+        ###################
+
+
+
+
         # gridwriter = vtk.vtkXMLStructuredGridWriter()
         # gridwriter.SetFileName(filename)
-        #
-        # gridwriter.SetInputConnection(algorithm.GetOutputPort())
-        # print(111)
         # gridwriter.SetInputData(struc_grid)
-        # # gridwriter.GetInput()
-        # print(222)
+        # gridwriter.SetInputConnection(0)
+        #
+        # print(gridwriter)
         # gridwriter.Write()
-        # print(333)
-        import time
-        time.sleep(10)
 
     @staticmethod
     def save_vtu_file(arr, name, filename, sample_fp=None):
@@ -141,6 +137,40 @@ class FluidityUtils():
 
         ug.AddScalarField('name', arr)
         ug.Write(filename)
+
+    @staticmethod
+    def __get_grid_locations(grid):
+        npoints = grid.GetNumberOfPoints()
+        xs = np.zeros(npoints)
+        ys = np.zeros(npoints)
+        zs = np.zeros(npoints)
+
+        for i in range(npoints):
+            loc = grid.GetPoint(i)
+            xs[i], ys[i], zs[i] = loc
+        return xs, ys, zs
+
+    def __get_grid_data(self, grid):
+        """Gets data and returns as dictionary (i.e. in form necessary for EVTK) """
+        npoints = grid.GetNumberOfPoints()
+        pointdata=grid.GetPointData()
+
+        data = {}
+        for name in self.__get_field_names(grid):
+            vtkdata = pointdata.GetScalars(name)
+            np_arr = nps.vtk_to_numpy(vtkdata)
+            if len(np_arr.shape) == 1:
+                data[name] = np_arr
+                print(data[name].shape, name)
+
+        return data
+
+    @staticmethod
+    def __get_field_names(grid):
+        vtkdata=grid.GetPointData()
+        return [vtkdata.GetArrayName(i) for i in range(vtkdata.GetNumberOfArrays())]
+
+
 
 class ML_utils():
     """Class to hold ML helper functions"""
