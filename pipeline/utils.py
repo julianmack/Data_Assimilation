@@ -23,7 +23,7 @@ def set_seeds(seed = SETTINGS.SEED):
 class FluidityUtils():
     """Class to hold Fluidity helper functions.
     In theory this should be part of
-    vtktools.py but I have kept it seperate to avoid confusion  
+    vtktools.py but I have kept it seperate to avoid confusion
     as to which is my work """
 
     def __init__(self):
