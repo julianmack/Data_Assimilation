@@ -239,7 +239,7 @@ class vtu:
       new_x = eval (projection_x)
       new_y = eval (projection_y)
       new_z = eval (projection_z)
-      self.ugrid.GetPoints ().SetPoint (i, new_x, new_y, new_z)
+      self.ugrid.GetPoints().SetPoint (i, new_x, new_y, new_z)
 
   def ApplyCoordinateTransformation(self,f):
     """Applys a coordinate transformation to the grid coordinates. This overwrites the existing values."""

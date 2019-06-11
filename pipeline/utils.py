@@ -6,6 +6,7 @@ import vtktools
 import pipeline.config
 
 import vtk.util.numpy_support as nps
+import vtk
 
 SETTINGS = pipeline.config.Config
 
@@ -65,11 +66,36 @@ class FluidityUtils():
 
 
         res = ug.StructuredPointProbe(nx, ny, nz)
+        #sg = vtktools.vtu(None, res) #structured grid
 
         pointdata=res.GetPointData()
 
         vtkdata = pointdata.GetScalars(field_name)
         np_data = nps.vtk_to_numpy(vtkdata)
+
+
+        #########################
+        filename_out = "data/" + "interpolate.vtu"
+
+        print(type(ug.ugrid))
+        print(type(res))
+
+
+
+        FluidityUtils.save_structured_vtu(filename_out, res)
+
+        return
+        vtk_fl = nps.numpy_to_vtk(np_data)
+        vtk_fl.SetName("Interpolated Pressure")
+
+        writer.AddArray(vtk_fl)
+        print(type(pd))
+        writer.Write()
+        print(type(vtk_fl))
+        print(type(vtkdata))
+        ############################
+
+
 
         #Fortran order reshape (i.e first index changes fastest):
         result = np.reshape(np_data, newshape, order='F')
@@ -79,8 +105,35 @@ class FluidityUtils():
         return result
 
     @staticmethod
+    def save_structured_vtu(filename, struc_grid):
+        gridwriter = vtk.vtkXMLStructuredGridWriter()
+        gridwriter.SetFileName(filename)
+        gridwriter.SetInputData(struc_grid)
+        gridwriter.SetInputConnection(0)
+
+        print(gridwriter)
+        gridwriter.Write()
+        print("here")
+        # algorithm = vtk.vtkStructuredGridAlgorithm()
+        # algorithm.SetInputData(struc_grid)
+        # algorithm.SetOutput(struc_grid)
+        #
+        # gridwriter = vtk.vtkXMLStructuredGridWriter()
+        # gridwriter.SetFileName(filename)
+        #
+        # gridwriter.SetInputConnection(algorithm.GetOutputPort())
+        # print(111)
+        # gridwriter.SetInputData(struc_grid)
+        # # gridwriter.GetInput()
+        # print(222)
+        # gridwriter.Write()
+        # print(333)
+        import time
+        time.sleep(10)
+
+    @staticmethod
     def save_vtu_file(arr, name, filename, sample_fp=None):
-        """Saves a VTU file - NOTE TODO - should be using deep copy method in vtktools.py -> VtuDiff()"""
+        """Saves an unstructured VTU file - NOTE TODO - should be using deep copy method in vtktools.py -> VtuDiff()"""
         if sample_fp == None:
             sample_fp = vda.get_sorted_fps_U(self.settings.DATA_FP)[0]
 
