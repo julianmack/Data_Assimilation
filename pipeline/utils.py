@@ -31,7 +31,7 @@ class FluidityUtils():
         pass
 
 
-    def get_3D_grid(self, fp, field_name, newshape = None, npoints=None, ret_torch=False):
+    def get_3D_grid(self, fp, field_name, save_newgrid_fp = None, newshape = None, npoints=None, ret_torch=False):
         """Returns numpy array or torch tensor of the vtu file input
         Accepts:
             :fp - str. filepath to .vtu file
@@ -65,37 +65,14 @@ class FluidityUtils():
             (nx, ny, nz) = newshape
 
 
-        res = ug.StructuredPointProbe(nx, ny, nz)
-        #sg = vtktools.vtu(None, res) #structured grid
+        struct_grid = ug.StructuredPointProbe(nx, ny, nz)
 
-        pointdata=res.GetPointData()
+        if save_newgrid_fp:
+            self.save_structured_vtu(save_newgrid_fp, struct_grid)
 
+        pointdata = struct_grid.GetPointData()
         vtkdata = pointdata.GetScalars(field_name)
         np_data = nps.vtk_to_numpy(vtkdata)
-
-
-        #########################
-        filename_out = "data/" + "interpolate"
-
-        print(type(ug.ugrid))
-        print(type(res))
-
-
-
-        self.save_structured_vtu(filename_out, res)
-
-        return
-        vtk_fl = nps.numpy_to_vtk(np_data)
-        vtk_fl.SetName("Interpolated Pressure")
-
-        writer.AddArray(vtk_fl)
-        print(type(pd))
-        writer.Write()
-        print(type(vtk_fl))
-        print(type(vtkdata))
-        ############################
-
-
 
         #Fortran order reshape (i.e first index changes fastest):
         result = np.reshape(np_data, newshape, order='F')
