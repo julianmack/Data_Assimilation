@@ -31,14 +31,19 @@ class FluidityUtils():
         pass
 
 
-    def get_3D_grid(self, fp, field_name, save_newgrid_fp = None, newshape = None, npoints=None, ret_torch=False):
+    def get_3D_grid(self, fp, field_name, npoints=None, factor_inc=2.0,
+                newshape = None, save_newgrid_fp = None, ret_torch=False):
         """Returns numpy array or torch tensor of the vtu file input
         Accepts:
             :fp - str. filepath to .vtu file
             :field_name - str. name of field to extract. e.g. "pressure"
-            :newshape - tuple of 3 ints (or None). New shape of output
-            :npoints - Total number of points in output. If none, the number
-                is (approximately) the same as the input
+            :npoints - when newshape=None, this is the total number of points in output.
+                If None, the number is (approximately) the (input number * factor_inc)
+            :factor_inc - Factor by which to increase (or decrease) the number of points (when newshape=None)
+            :newshape - tuple of 3 ints which gives new shape of output. Overides npoints and factor_inc
+            :save_newgrid_fp - str. if not None, the restructured vtu grid will be
+                saved at this location relative to the working directory
+
             :ret_torch - if True, returns a torch tensor. Otherwise returns a numpy array."""
         ug = vtktools.vtu(fp)
 
