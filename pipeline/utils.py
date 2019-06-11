@@ -62,7 +62,7 @@ class FluidityUtils():
             newshape = (nx, ny, nz)
         else:
             (nx, ny, nz) = newshape
-        
+
 
         res = ug.StructuredPointProbe(nx, ny, nz)
 
@@ -77,6 +77,17 @@ class FluidityUtils():
             result = torch.Tensor(result)
 
         return result
+
+    @staticmethod
+    def save_vtu_file(arr, name, filename, sample_fp=None):
+        """Saves a VTU file - NOTE TODO - should be using deep copy method in vtktools.py -> VtuDiff()"""
+        if sample_fp == None:
+            sample_fp = vda.get_sorted_fps_U(self.settings.DATA_FP)[0]
+
+        ug = vtktools.vtu(sample_fp) #use sample fp to initialize positions on grid
+
+        ug.AddScalarField('name', arr)
+        ug.Write(filename)
 
 class ML_utils():
     """Class to hold ML helper functions"""

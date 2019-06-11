@@ -123,8 +123,8 @@ class DAPipeline():
             out_fp_ref = settings.INTERMEDIATE_FP + "ref_MAE.vtu"
             out_fp_DA =  settings.INTERMEDIATE_FP + "DA_MAE.vtu"
 
-            self.save_vtu_file(ref_MAE, "ref_MAE", out_fp_ref, sample_fp)
-            self.save_vtu_file(da_MAE, "DA_MAE", out_fp_DA, sample_fp)
+            utils.FluidityUtils.save_vtu_file(ref_MAE, "ref_MAE", out_fp_ref, sample_fp)
+            utils.FluidityUtils.save_vtu_file(da_MAE, "DA_MAE", out_fp_DA, sample_fp)
         if return_stats:
             stats = {}
             stats["Percent_improvement"] = 100*(ref_MAE_mean - da_MAE_mean)/ref_MAE_mean
@@ -473,16 +473,6 @@ class DAPipeline():
 
         return grad_J
 
-    @staticmethod
-    def save_vtu_file(arr, name, filename, sample_fp=None):
-        """Saves a VTU file - NOTE TODO - should be using deep copy method in vtktools.py -> VtuDiff()"""
-        if sample_fp == None:
-            sample_fp = vda.get_sorted_fps_U(self.settings.DATA_FP)[0]
-
-        ug = vtktools.vtu(sample_fp) #use sample fp to initialize positions on grid
-
-        ug.AddScalarField('name', arr)
-        ug.Write(filename)
 
 if __name__ == "__main__":
 
