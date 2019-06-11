@@ -4,6 +4,9 @@ import numpy as np
 import random
 import vtktools
 import pipeline.config
+
+import vtk.util.numpy_support as nps
+
 SETTINGS = pipeline.config.Config
 
 
@@ -37,6 +40,10 @@ class FluidityUtils():
 
         vtkdata=pointdata.GetScalars(field)
 
+        np = nps.vtk_to_numpy(vtkdata)
+        print(np[0])
+        print(np.shape)
+        exit()
         for val in dir(pointdata):
             print(val)
 
@@ -46,6 +53,7 @@ class FluidityUtils():
         for loc in locs:
             loc.GetTuple1(1)
             break
+
         exit()
 
         ug2 = vtktools.vtu(ugrid=res)
