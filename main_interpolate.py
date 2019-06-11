@@ -1,4 +1,6 @@
 from pipeline import DataAssimilation, config, utils
+import numpy as np
+import vtk.util.numpy_support as ns
 
 def main():
     fluidity = utils.FluidityUtils()
