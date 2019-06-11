@@ -30,16 +30,41 @@ class FluidityUtils():
         pass
 
     @staticmethod
-    def get_3D_grid(fp, field_name, ret_torch=False):
-        """Returns numpy array or torch tensor of the vtu file input"""
+    def get_3D_grid(fp, field_name, newshape = None, npoints=None, ret_torch=False):
+        """Returns numpy array or torch tensor of the vtu file input
+        Accepts:
+            :fp - str. filepath to .vtu file
+            :field_name - str. name of field to extract. e.g. "pressure"
+            :newshape - tuple of 3 ints (or None). New shape of output
+            :npoints - Total number of points in output. If none, the number
+                is (approximately) the same as the input
+            :ret_torch - if True, returns a torch tensor. Otherwise returns a numpy array."""
         ug = vtktools.vtu(fp)
-        nx = 100 # =ny
-        ny = nx
-        nz = 50
 
-        newshape = (nx, ny, nz)
+        if newshape == None:
+            points = ug.ugrid.GetPoints()
 
-        res = ug.StructuredPointProbe(nx, nx, nz)
+            if npoints == None:
+                npoints = points.GetNumberOfPoints()
+
+            bounds = points.GetBounds()
+            ax, bx, ay, by, az, bz = bounds
+
+            #ranges
+            x_ran, y_ran, z_ran = bx - ax, by - ay, bz - az
+
+            spacing = (x_ran * y_ran * z_ran / npoints)**(1.0 / 3.0)
+
+            nx = int(round(x_ran / spacing))
+            ny = int(round(y_ran / spacing))
+            nz = int(round(z_ran / spacing))
+
+            newshape = (nx, ny, nz)
+        else:
+            (nx, ny, nz) = newshape
+        
+
+        res = ug.StructuredPointProbe(nx, ny, nz)
 
         pointdata=res.GetPointData()
 
