@@ -84,6 +84,7 @@ class FluidityUtils():
     def save_structured_vtu(self, filename, struc_grid):
         from evtk.hl import pointsToVTK
 
+        filename = filename.replace(".vtu", "")
         xs, ys, zs = self.__get_grid_locations(struc_grid)
         data = self.__get_grid_data(struc_grid)
 
@@ -122,9 +123,8 @@ class FluidityUtils():
         for name in self.__get_field_names(grid):
             vtkdata = pointdata.GetScalars(name)
             np_arr = nps.vtk_to_numpy(vtkdata)
-            if len(np_arr.shape) == 1:
+            if len(np_arr.shape) == 1: #i.e. exclude vector fields
                 data[name] = np_arr
-                print(data[name].shape, name)
 
         return data
 
