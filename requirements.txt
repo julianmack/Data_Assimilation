@@ -1,2 +1,4 @@
 pyevtk
 torch
+numpy
+vtk
