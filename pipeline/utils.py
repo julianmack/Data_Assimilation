@@ -31,7 +31,7 @@ class FluidityUtils():
         pass
 
 
-    def get_3D_grid(self, fp, field_name, npoints=None, factor_inc=2.0,
+    def get_3D_grid(self, fp, field_name, npoints=None, factor_inc=2.5,
                 newshape = None, save_newgrid_fp = None, ret_torch=False):
         """Returns numpy array or torch tensor of the vtu file input
         Accepts:
@@ -51,7 +51,7 @@ class FluidityUtils():
             points = ug.ugrid.GetPoints()
 
             if npoints == None:
-                npoints = points.GetNumberOfPoints()
+                npoints = factor_inc * points.GetNumberOfPoints()
 
             bounds = points.GetBounds()
             ax, bx, ay, by, az, bz = bounds
