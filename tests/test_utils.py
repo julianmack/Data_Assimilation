@@ -17,7 +17,7 @@ class TestSeed():
 
     def test_set_seeds_raiseNameError(self):
         env = os.environ
-        if env["SEED"]:
+        if env.get("SEED"):
             del env["SEED"]
         with pytest.raises(NameError):
             utils.set_seeds()
