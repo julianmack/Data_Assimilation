@@ -49,12 +49,14 @@ class Config():
 
         self.TOL = 1e-3 #Tolerance in VarDA minimization routine
 
+        self.env_vars = {"SEED": self.SEED}
         self.__export_env_vars()
 
 
     def __export_env_vars(self):
         env = os.environ
-        env["SEED"] = str(self.SEED)
+        for k, v in enumerate(self.env_vars):
+            env[k] = str(v)
 
     def __get_home_dir(self):
         wd = os.getcwd()
