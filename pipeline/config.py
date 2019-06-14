@@ -6,20 +6,16 @@ options can be altered one at a time on an ad-hoc basis."""
 
 from pipeline.AutoEncoders import VanillaAE, ToyNet
 import socket
+import os
+
 class Config:
     # Determine which machine this is running on. This is a short-term hack
     # which uses ip address
-    ip_lst = socket.gethostbyname(socket.gethostname()).split('.')
-    if int(ip_lst[0]) in [129, 192]:
-        HOME_DIR = ""
-    elif int(ip_lst[0]) == 146:
-        #filepaths
-        HOME_DIR = "/home/jfm1118/"
-    else:
-        raise ValueError(("IP address must start with 129 or 146. "
-                        "Current IP is {}\n"
-                        "Update config.py".format(socket.gethostbyname(socket.gethostname()))))
+    def __init__(self):
+        self.__export_env_vars()
+        self.HOME_DIR = self.__get_home_dir(self)
 
+    cls.__init__()
     RESULTS_FP = HOME_DIR + "results/"
     DATA_FP = HOME_DIR + "data/small3DLSBU/"
     INTERMEDIATE_FP = HOME_DIR + "data/small3D_intermediate/"
@@ -56,6 +52,27 @@ class Config:
         # the Rossella et al. method for selection of truncation parameter
 
     TOL = 1e-3 #Tolerance in VarDA minimization routine
+
+
+    def __export_env_vars(self):
+        env = os.environ
+
+        env["SEED"] = str(self.SEED)
+
+    def __get_home_dir(self):
+        return os.getcwd()
+
+        # """Hacky way to get home directory using IP address"""
+        # ip_lst = socket.gethostbyname(socket.gethostname()).split('.')
+        # if int(ip_lst[0]) in [129, 192]:
+        #     home_dir = ""
+        # elif int(ip_lst[0]) == 146:
+        #     home_dir = "/home/jfm1118/"
+        # else:
+        #     raise ValueError(("IP address must start with 129 or 146. "
+        #                     "Current IP is {}\n"
+        #                     "Update config.py".format(socket.gethostbyname(socket.gethostname()))))
+        # return home_dir
 
 class ConfigExample(Config):
     """Override and add relevant configuration options."""
