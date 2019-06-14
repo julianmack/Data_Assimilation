@@ -7,12 +7,16 @@ import pipeline.config
 
 import vtk.util.numpy_support as nps
 import vtk
-
+import os
 SETTINGS = pipeline.config.Config
 
 
-def set_seeds(seed = SETTINGS.SEED):
+def set_seeds(seed = None):
     "Fix all seeds"
+    if seed == None:
+        seed = os.environ.get("SEED")
+        if seed == None:
+            raise NameError("SEED environment variable not set. Do this manually or initialize a Config class")
 
     torch.manual_seed(seed)
     np.random.seed(seed)
