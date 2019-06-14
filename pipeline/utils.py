@@ -8,8 +8,6 @@ import pipeline.config
 import vtk.util.numpy_support as nps
 import vtk
 import os
-SETTINGS = pipeline.config.Config
-
 
 def set_seeds(seed = None):
     "Fix all seeds"
