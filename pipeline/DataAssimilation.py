@@ -48,7 +48,7 @@ class DAPipeline():
             # w_0 = w_0_v2
 
         elif settings.COMPRESSION_METHOD == "AE":
-            kwargs = settings.kwargs
+            kwargs = settings.get_kwargs()
 
             encoder, decoder = utils.ML_utils.load_AE(settings.AE_MODEL_TYPE, settings.AE_MODEL_FP, **kwargs)
 

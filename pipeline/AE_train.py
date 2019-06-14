@@ -56,7 +56,7 @@ class TrainAE():
         results_fp_test = settings.RESULTS_FP + "toy_test_mode{}_hid{}.txt".format(settings.NUMBER_MODES, settings.HIDDEN)
 
         loss_fn = torch.nn.L1Loss(reduction='sum')
-        model = settings.AE_MODEL_TYPE(**settings.kwargs)
+        model = settings.AE_MODEL_TYPE(**settings.get_kwargs())
         self.model = model
 
         optimizer = optim.Adam(model.parameters(), learning_rate)
