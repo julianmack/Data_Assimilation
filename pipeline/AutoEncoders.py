@@ -128,7 +128,7 @@ class ToyNet(nn.Module):
         b_b = self.fc2.bias
 
         z_1 = (x @ W_a.t()) + b_a
-        
+
         #A = torch.sign(z_1).unsqueeze(2)
         # In order to handle both batched and non-batched input:
         batch = False
@@ -151,4 +151,3 @@ class ToyNet(nn.Module):
 
         return jac
 
-import torch
