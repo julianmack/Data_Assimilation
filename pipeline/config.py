@@ -49,14 +49,14 @@ class Config():
 
         self.TOL = 1e-3 #Tolerance in VarDA minimization routine
 
+        self.export_env_vars()
+
+    def export_env_vars(self):
         self.env_vars = {"SEED": self.SEED}
-        self.__export_env_vars()
 
-
-    def __export_env_vars(self):
         env = os.environ
-        for k, v in enumerate(self.env_vars):
-            env[k] = str(v)
+        for k, v in self.env_vars.items():
+            env[str(k)] = str(v)
 
     def __get_home_dir(self):
         wd = os.getcwd()
@@ -73,37 +73,41 @@ class Config():
 class ConfigExample(Config):
     """Override and add relevant configuration options."""
     def __init__(self):
-        super(ConfigExample, self).__init__(self)
-        self.super
+        super(ConfigExample, self).__init__()
         self.ALPHA = 2.0 #override
         self.NEW_OPTION = "FLAG" #Add new
 
 class ConfigAE(Config):
     def __init__(self):
-        super(ConfigAE, self).__init__(self)
+        super(ConfigAE, self).__init__()
         self.NORMALIZE = True
         self.COMPRESSION_METHOD = "AE"
         self.NUMBER_MODES = 4 #this must match model above
         self.AE_MODEL_FP = self.HOME_DIR + "models/AE_dim{}_epoch120.pth".format(self.NUMBER_MODES) #AE_dim40_epoch120.pth"
         self.AE_MODEL_TYPE = VanillaAE #this must match
-        self.kwargs = {"input_size": self.n, "latent_size": NUMBER_MODES,"hid_layers":[1000, 200]}
+        #define getter for __kwargs since they may change after initialization
+    def get_kwargs(self):
+        return  {"input_size": self.n, "latent_size": self.NUMBER_MODES,"hid_layers":[1000, 200]}
 
 class ToyAEConfig(ConfigAE):
     def __init__(self):
-        super(ToyAEConfig, self).__init__(self)
+        super(ToyAEConfig, self).__init__()
         self.NORMALIZE = True
         self.UNDO_NORMALIZE  = self.NORMALIZE
         self.NUMBER_MODES = 2
         self.HIDDEN = 32
         self.AE_MODEL_FP = self.HOME_DIR + "models/AE_toy_{}_{}_{}.pth".format(self.NUMBER_MODES, self.HIDDEN, self.FIELD_NAME)
         self.AE_MODEL_TYPE = ToyNet
-        self.kwargs = {"inn":self.NUMBER_MODES, "hid":self.HIDDEN, "out": self.n}
+        self.DEBUG = True
 
-        DEBUG = True
+    def get_kwargs(self):
+        return {"inn":self.NUMBER_MODES, "hid":self.HIDDEN, "out": self.n}
+
+
 
 class SmallTestDomain(Config):
     def __init__(self):
-        super(SmallTestDomain, self).__init__(self)
+        super(SmallTestDomain, self).__init__()
         self.SAVE = False
         self.DEBUG = True
         self.NORMALIZE = True
