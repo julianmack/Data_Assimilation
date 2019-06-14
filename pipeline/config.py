@@ -4,7 +4,7 @@ User can create new classes that inherit from class Config and override class va
 in order to create new combinations of config options. Alternatively, individual config
 options can be altered one at a time on an ad-hoc basis."""
 
-from pipeline.AutoEncoders import VanillaAE, ToyNet
+from pipeline.AutoEncoders import VanillaAE, ToyAE
 import socket
 import os, sys
 
@@ -80,9 +80,8 @@ class ConfigExample(Config):
 class ConfigAE(Config):
     def __init__(self):
         super(ConfigAE, self).__init__()
-        self.NORMALIZE = True
         self.COMPRESSION_METHOD = "AE"
-        self.NUMBER_MODES = 4 #this must match model above
+        self.NUMBER_MODES = 4
         self.AE_MODEL_FP = self.HOME_DIR + "models/AE_dim{}_epoch120.pth".format(self.NUMBER_MODES) #AE_dim40_epoch120.pth"
         self.AE_MODEL_TYPE = VanillaAE #this must match
         #define getter for __kwargs since they may change after initialization
@@ -92,18 +91,25 @@ class ConfigAE(Config):
 class ToyAEConfig(ConfigAE):
     def __init__(self):
         super(ToyAEConfig, self).__init__()
-        self.NORMALIZE = True
-        self.UNDO_NORMALIZE  = self.NORMALIZE
         self.NUMBER_MODES = 2
         self.HIDDEN = 32
         self.AE_MODEL_FP = self.HOME_DIR + "models/AE_toy_{}_{}_{}.pth".format(self.NUMBER_MODES, self.HIDDEN, self.FIELD_NAME)
-        self.AE_MODEL_TYPE = ToyNet
         self.DEBUG = True
+        self.AE_MODEL_TYPE = ToyAE
 
     def get_kwargs(self):
         return {"inn":self.NUMBER_MODES, "hid":self.HIDDEN, "out": self.n}
 
-
+class ToyCAEConfig(ToyAEConfig):
+    def __init__(self):
+        super(ToyCAEConfig, self).__init__()
+        self.NUMBER_MODES = 4 #this must match model above
+        self.AE_MODEL_FP = self.HOME_DIR + "models/CAE_toy_{}_{}_{}.pth".format(self.NUMBER_MODES, self.HIDDEN, self.FIELD_NAME)
+        self.AE_MODEL_TYPE = ToyCAE
+        self.HIDDEN = [128, 256, 256]
+        #define getter for __kwargs since they may change after initialization
+    def get_kwargs(self):
+        return {"inn":self.NUMBER_MODES, "hid":self.HIDDEN, "out": self.n}
 
 class SmallTestDomain(Config):
     def __init__(self):

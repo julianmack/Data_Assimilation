@@ -70,12 +70,12 @@ class VanillaAE(nn.Module):
         x = decode_fc[-1](x) #no activation function for output
         return x
 
-class ToyNet(nn.Module):
+class ToyAE(nn.Module):
     """Creates simple toy network with one fc hidden layer.
     I have worked out the explicit differential for this newtork.
     """
     def __init__(self, inn, hid, out):
-        super(ToyNet, self).__init__()
+        super(ToyAE, self).__init__()
         #encoder
         self.fc00 = nn.Linear(out, hid, bias = True)
         self.fc01 = nn.Linear(hid, inn, bias = True)
@@ -150,4 +150,32 @@ class ToyNet(nn.Module):
 
 
         return jac
+
+class ToyCAE(nn.Module):
+    """Creates a simple CAE for which
+    I have worked out the explicit differential
+    """
+    def __init__(self, inn, hid, out):
+        super(ToyCAE, self).__init__()
+
+
+    def decode(self, x):
+
+        raise NotImpelemtedError()
+    def encode(self, x):
+
+        raise NotImpelemtedError()
+
+    def forward(self, x):
+        x = self.encode(x)
+        x = self.decode(x)
+        return x
+
+
+    def jac_explicit(self, x):
+        """Generate explicit gradient for decoder
+        (from hand calculated expression)"""
+
+
+        raise NotImpelemtedError()
 
