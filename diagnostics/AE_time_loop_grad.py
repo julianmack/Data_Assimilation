@@ -1,14 +1,10 @@
-import torch.nn as nn
-import torch.nn.functional as F
-
 import torch
-import numpy as np
-from utils import ML_utils as ML
-import utils
+from pipeline.utils import ML_utils as ML
+from pipeline.AutoEncoders import ToyAE
+from pipeline import utils
 
 import time
 import matplotlib.pyplot as plt
-from AutoEncoders import ToyAE
 
 def plot_time_w_output(outputs, inn, hidden, batch_sz, loop=True, no_batch=False):
 
