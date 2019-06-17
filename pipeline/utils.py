@@ -23,8 +23,11 @@ def set_seeds(seed = None):
     if torch.cuda.is_available():
         torch.backends.cudnn.deterministic = True
 
-class DataLoading():
+class DataLoader():
     """Class to load data from files in preparation for Data Assimilation or AE training"""
+    def __init__(self):
+        pass
+
     def get_X(self, settings):
         if settings.FORCE_GEN_X or not os.path.exists(settings.X_FP):
             fps = self.get_sorted_fps_U(settings.DATA_FP)

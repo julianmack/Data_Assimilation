@@ -138,8 +138,8 @@ class DAPipeline():
         #but can be created from .vtu fps if required. see trunc_SVD.py for an example
 
         data = {}
-
-        X = utils.DataLoader.get_X(settings)
+        loader = utils.DataLoader()
+        X = loader.get_X(settings)
 
         n, M = X.shape
 
@@ -420,6 +420,7 @@ if __name__ == "__main__":
     exit()
 
     #create X:
-    X = utils.DataLoader.get_X(settings)
+    loader = utils.DataLoader()
+    X = loader.get_X(settings)
     np.save(settings.X_FP, X)
     exit()
