@@ -10,4 +10,4 @@ class AE_TruncSVD():
     def compare(self):
         DA = pipeline.DAPipeline()
 
-        w_opt
+        
