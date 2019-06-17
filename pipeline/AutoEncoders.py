@@ -10,26 +10,26 @@ class VanillaAE(nn.Module):
     """Variable size AE - using only fully connected layers.
     Arguments (for initialization):
         :input_size - int. size of input (and output)
-        :latent_size - int. size of latent representation
-        :layers - int list. size of hidden layers"""
+        :latent_dim - int. size of latent representation
+        :hidden - int list. size of hidden layers"""
 
-    def __init__(self, input_size, latent_size, hid_layers=None):
+    def __init__(self, input_size, latent_dim, hidden=None):
         super(VanillaAE, self).__init__()
-        assert hid_layers == None or type(hid_layers) == list
+        assert hidden == None or type(hidden) == list, "hidden must be a list or None"
 
         #create a list of all dimension sizes (including input/output)
 
-        if not hid_layers:
-            layers = [input_size, latent_size, input_size]
+        if not hidden:
+            layers = [input_size, latent_dim, input_size]
         else:
             layers = [input_size]
             #encoder:
-            for size in hid_layers:
+            for size in hidden:
                 layers.append(size)
             #latent representation:
-            layers.append(latent_size)
+            layers.append(latent_dim)
             #decoder:
-            for size in hid_layers[::-1]: #reversed list
+            for size in hidden[::-1]: #reversed list
                 layers.append(size)
             layers.append(input_size)
 
@@ -42,7 +42,7 @@ class VanillaAE(nn.Module):
 
         self.lrelu = nn.LeakyReLU(negative_slope = 0.05, inplace=False)
 
-        self.num_encode = len(hid_layers) + 1
+        self.num_encode = len(hidden) + 1
         self.num_decode = self.num_encode
 
     def forward(self, x):
@@ -76,6 +76,8 @@ class ToyAE(nn.Module):
     """
     def __init__(self, input_size, hidden, latent_dim):
         super(ToyAE, self).__init__()
+        assert type(hidden) == int or type(hidden) == list
+
         #encoder
         self.fc00 = nn.Linear(input_size, hidden, bias = True)
         self.fc01 = nn.Linear(hidden, latent_dim, bias = True)
@@ -89,7 +91,7 @@ class ToyAE(nn.Module):
         h = F.relu(self.fc1(x))
         h = self.fc2(h)
         return h
-        
+
     def encode(self, x):
         h = F.relu(self.fc00(x))
         h = self.fc01(h)
