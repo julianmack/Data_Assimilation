@@ -1,4 +1,3 @@
-from pipeline import utils
 from pipeline import config
 import os
 import pytest
