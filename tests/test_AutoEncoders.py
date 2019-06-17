@@ -9,10 +9,26 @@ class TestAEInit():
         settings = config.ToyAEConfig()
         try:
             model = settings.AE_MODEL_TYPE(**settings.get_kwargs())
-        except:
+        except Exception as e:
+            print(e)
             pytest.fail("Unable to init model")
+
     def test_VanillaAE_init_base_config(self):
         settings = config.ConfigAE()
+        try:
+            model = settings.AE_MODEL_TYPE(**settings.get_kwargs())
+        except:
+            pytest.fail("Unable to init model")
+
+    def test_VanillaAE_init_hidden(self):
+        settings = config.ConfigAE()
+        settings.HIDDEN = 4
+        try:
+            model = settings.AE_MODEL_TYPE(**settings.get_kwargs())
+        except:
+            pytest.fail("Unable to init model")
+
+        settings.HIDDEN = None
         try:
             model = settings.AE_MODEL_TYPE(**settings.get_kwargs())
         except:
