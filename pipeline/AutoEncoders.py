@@ -149,32 +149,53 @@ class ToyAE(VanillaAE):
     def jac_explicit(self, x):
         """Generate explicit gradient for decoder
         (from hand calculated expression)"""
+
+        self.eval() #Edit this if you add dropout
+
         decode_layers = self.fclayers[self.num_decode:]
 
-        for layer in decode_layers[:-1]:
+        z_i = x
+        jac_running = None
+        for idx, layer in enumerate(decode_layers[:-1]):
+            jac_par, z_i = self.__jac_single_fc_layer(z_i, layer)
+            if idx == 0:
+                jac_running = jac_par
+            else:
+                jac_running = jac_par @ jac_running
+            print("\n", idx, "partial size:", jac_par.shape)
+            print(idx, "running_jac size:", jac_running.shape, "\n")
 
-        z_1 = (x @ W_a.t()) + b_a
-        #A = torch.sign(z_1).unsqueeze(2)
-        # In order to handle both batched and non-batched input:
-        batch = False
-        if len(z_1.shape) > len(b_a.shape):
-            batch = True
-            A = (z_1 > 0).unsqueeze(2).type(torch.FloatTensor)
-            B = W_b.t().expand((z_1.shape[0], -1, -1))
+        W_i = decode_layers[-1].weight
+        print("final layer")
+        print(decode_layers[-1])
+        return
+        if type(jac_running) != torch.Tensor:
+            jac = W_i #should this be expanded along the batch dimension?
         else:
-            A = (z_1 > 0).unsqueeze(1).type(torch.FloatTensor)
-            B = W_b.t().expand((z_1.shape[0], -1))
-
-
-        first = torch.mul(A, B)
-        if batch:
-            first = torch.transpose(first, 1, 2)
-        else:
-            first = torch.transpose(first, 0, 1)
-        jac = first @ W_a
-
-
+            jac = jac_running @ W_i.t()
         return jac
+
+    def __jac_single_fc_layer(self, x, layer):
+        if self.activation != "relu":
+            raise NotImpelemtedError()
+
+        W_i = layer.weight
+        b_i = layer.bias
+        a_i = (x @ W_i.t()) + b_i
+
+        # In order to handle both batched and non-batched input:
+        if len(a_i.shape) > len(b_i.shape): #batched
+            A = (a_i > 0).unsqueeze(2).type(torch.FloatTensor)
+            A = torch.transpose(A, 1, 2)
+            self.batch = True
+        else: #non-batched
+            A = (a_i > 0).unsqueeze(1).type(torch.FloatTensor)
+            A = torch.transpose(A, 0, 1)
+            self.batch = False
+
+        jac_partial = A @ W_i
+        z_i = self.act_fn(a_i)
+        return jac_partial, z_i
 
     def jac_explicit_old(self, x):
         """Generate explicit gradient for decoder
@@ -208,8 +229,8 @@ class ToyAE(VanillaAE):
 
 
         return jac
-    def __jac_single_fc_layer(self, layer):
-        a_i = (x @ W_a.t()) + b_a
+
+
 class ToyCAE(nn.Module):
     """Creates a simple CAE for which
     I have worked out the explicit differential

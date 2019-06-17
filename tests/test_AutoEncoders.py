@@ -92,10 +92,10 @@ class TestAEForward():
 
 class TestJacExplicit():
     def test_jac_one_hid(self):
-        input_size = 2
-        hidden = 2
+        input_size = 3
+        hidden = 5
         latent_dim = 2
-        Batch_sz = 3
+        Batch_sz = 4
         activation = "relu"
 
         decoder_input = torch.rand((Batch_sz, latent_dim), requires_grad=True)
@@ -104,6 +104,14 @@ class TestJacExplicit():
 
         jac_true = ML.jacobian_slow_torch(decoder_input, decoder_output)
         jac_expl = model.jac_explicit(decoder_input)
+
+        print("\n\n\n")
+        print(jac_true)
+        print(jac_true.shape)
+        print("\n\n\n")
+        print(jac_expl)
+        print(jac_expl.shape)
+        print("\n\n\n")
 
         assert torch.allclose(jac_true, jac_expl, rtol=1e-02), "Two jacobians are not equal"
 
