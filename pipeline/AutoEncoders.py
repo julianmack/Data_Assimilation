@@ -74,16 +74,16 @@ class ToyAE(nn.Module):
     """Creates simple toy network with one fc hidden layer.
     I have worked out the explicit differential for this newtork.
     """
-    def __init__(self, inn, hid, out):
+    def __init__(self, input_size, hidden, latent_dim):
         super(ToyAE, self).__init__()
         #encoder
-        self.fc00 = nn.Linear(out, hid, bias = True)
-        self.fc01 = nn.Linear(hid, inn, bias = True)
+        self.fc00 = nn.Linear(input_size, hidden, bias = True)
+        self.fc01 = nn.Linear(hidden, latent_dim, bias = True)
 
         #decoder
-        self.fc1 = nn.Linear(inn, hid, bias = True)
-        self.fc2 = nn.Linear(hid, out, bias = True)
-        self.sizes = [inn, hid, out]
+        self.fc1 = nn.Linear(latent_dim, hidden, bias = True)
+        self.fc2 = nn.Linear(hidden, input_size, bias = True)
+        self.sizes = [latent_dim, hidden, input_size]
 
     def decode(self, x):
         h = F.relu(self.fc1(x))
@@ -99,23 +99,23 @@ class ToyAE(nn.Module):
         x = self.decode(x)
         return x
 
-    def gen_rand_weights(self):
-        """Generates random weights for simple two layer fc decoder network.
-        """
-        [inn, hid, out] = self.sizes
-        #weights
-        W_a = torch.rand((hid, inn), requires_grad=True) - 0.5
-        W_b = torch.rand((out, hid), requires_grad=True) - 0.5
-
-        #biases
-        b_a = torch.rand((hid,), requires_grad=True)
-        b_b = torch.rand((out,), requires_grad=True)
-
-        #assign
-        self.fc1.weight = nn.Parameter(W_a)
-        self.fc2.weight = nn.Parameter(W_b)
-        self.fc1.bias = nn.Parameter(b_a)
-        self.fc2.bias = nn.Parameter(b_b)
+    # def gen_rand_weights(self):
+    #     """Generates random weights for simple two layer fc decoder network.
+    #     """
+    #     [latent_dim, hidden, input_size] = self.sizes
+    #     #weights
+    #     W_a = torch.rand((hidden, latent_dim), requires_grad=True) - 0.5
+    #     W_b = torch.rand((input_size, hidden), requires_grad=True) - 0.5
+    #
+    #     #biases
+    #     b_a = torch.rand((hidden,), requires_grad=True)
+    #     b_b = torch.rand((input_size,), requires_grad=True)
+    #
+    #     #assign
+    #     self.fc1.weight = nn.Parameter(W_a)
+    #     self.fc2.weight = nn.Parameter(W_b)
+    #     self.fc1.bias = nn.Parameter(b_a)
+    #     self.fc2.bias = nn.Parameter(b_b)
 
     def jac_explicit(self, x):
         """Generate explicit gradient for decoder
@@ -155,7 +155,7 @@ class ToyCAE(nn.Module):
     """Creates a simple CAE for which
     I have worked out the explicit differential
     """
-    def __init__(self, inn, hid, out):
+    def __init__(self, latent_dim, hidden, input_size):
         super(ToyCAE, self).__init__()
 
 

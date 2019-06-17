@@ -98,7 +98,7 @@ class ToyAEConfig(ConfigAE):
         self.AE_MODEL_TYPE = ToyAE
 
     def get_kwargs(self):
-        return {"inn":self.NUMBER_MODES, "hid":self.HIDDEN, "out": self.n}
+        return {"input_size":self.n, "hidden":self.HIDDEN, "latent_dim": self.NUMBER_MODES}
 
 class ToyCAEConfig(ToyAEConfig):
     def __init__(self):
