@@ -23,7 +23,8 @@ class TrainAE():
     def train(self, num_epoch = 100, learning_rate = 0.001):
         settings = self.settings
         #data
-        X = np.load(settings.X_FP)
+        X = utils.get_X(settings)
+        
         n, M = X.shape
         hist_idx = int(M * settings.HIST_FRAC)
         hist_X = X[:, : hist_idx]

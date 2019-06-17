@@ -141,7 +141,7 @@ class DAPipeline():
         data = {}
 
         X = self.get_X(settings)
-        
+
         n, M = X.shape
 
 
@@ -187,6 +187,17 @@ class DAPipeline():
 
 
         return data, hist_idx, obs_idx, nobs, std, mean
+
+    def get_X(self, settings):
+        if settings.FORCE_GEN_X or not os.path.exists(settings.X_FP):
+            fps = self.get_sorted_fps_U(settings.DATA_FP)
+            X = self.create_X_from_fps(fps, settings.FIELD_NAME)
+            if settings.SAVE:
+                np.save(settings.X_FP, X, allow_pickle=True)
+        else:
+            X = np.load(settings.X_FP,  allow_pickle=True)
+
+        return X
 
     @staticmethod
     def get_sorted_fps_U(data_dir):
@@ -478,7 +489,6 @@ if __name__ == "__main__":
     exit()
 
     #create X:
-    fps = DA.get_sorted_fps_U(DA.settings.DATA_FP)
-    X = DA.create_X_from_fps(fps, DA.settings.FIELD_NAME, field_type  = "scalar")
+    X = DA.get_X(settings)
     np.save(settings.X_FP, X)
     exit()

@@ -19,7 +19,7 @@ class Config():
         self.X_FP = self.INTERMEDIATE_FP + "X_small3D_{}.npy".format(self.FIELD_NAME)
         self.FORCE_GEN_X = False
         self.n = 100040
-        self.SAVE = False
+        self.SAVE = True
         self.DEBUG = True
 
         self.SEED = 42
