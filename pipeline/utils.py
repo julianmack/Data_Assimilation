@@ -15,7 +15,7 @@ def set_seeds(seed = None):
         seed = os.environ.get("SEED")
         if seed == None:
             raise NameError("SEED environment variable not set. Do this manually or initialize a Config class")
-
+    seed = int(seed)
     torch.manual_seed(seed)
     np.random.seed(seed)
     random.seed(seed)
