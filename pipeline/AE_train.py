@@ -25,7 +25,7 @@ class TrainAE():
         #data
         loader = utils.DataLoader()
         X = loader.get_X(settings)
-        
+
         n, M = X.shape
         hist_idx = int(M * settings.HIST_FRAC)
         hist_X = X[:, : hist_idx]
