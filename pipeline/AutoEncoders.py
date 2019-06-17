@@ -23,6 +23,9 @@ class VanillaAE(nn.Module):
         self.activation = activation
         self.__init_multilayer_AE()
 
+        decode_fc = self.fclayers[self.num_decode:]
+        
+
     def __init_multilayer_AE(self):
         input_size = self.input_size
         hidden = self.hidden
@@ -79,6 +82,7 @@ class VanillaAE(nn.Module):
 
     def decode(self, x):
         decode_fc = self.fclayers[self.num_decode:]
+
         assert len(decode_fc) == self.num_decode
 
         for fc in decode_fc[:-1]:
@@ -99,7 +103,6 @@ class ToyAE(VanillaAE):
             raise NotImpelemtedError("Leaky ReLU not implemented for ToyAE")
 
         super(ToyAE, self).__init__(input_size, latent_dim, activation, hidden)
-
 
         #encoder
         self.fc00 = nn.Linear(input_size, hidden, bias = True)
@@ -146,7 +149,6 @@ class ToyAE(VanillaAE):
     def jac_explicit(self, x):
         """Generate explicit gradient for decoder
         (from hand calculated expression)"""
-
 
         W_a = self.fc1.weight
         W_b = self.fc2.weight

@@ -37,10 +37,10 @@ class TestAEInit():
 class TestAEForward():
     def test_ToyAE_forward_single_hid(self):
         settings = config.ToyAEConfig()
-        settings.n = 128
-        settings.HIDDEN = 64
-        settings.NUMBER_MODES = 4
-        Batch_sz = 16
+        settings.n = 3
+        settings.HIDDEN = 4
+        settings.NUMBER_MODES = 2
+        Batch_sz = 3
         x = torch.rand((Batch_sz, settings.n), requires_grad=True)
 
         model = ToyAE(**settings.get_kwargs())
