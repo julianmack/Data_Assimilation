@@ -3,13 +3,7 @@ import os
 import pytest
 import numpy as np
 
-def test_ToyAE_init():
-    settings = config.ToyAEConfig()
-    try:
-        model = settings.AE_MODEL_TYPE(**settings.get_kwargs())
-    except:
-        pytest.fail("Unable to init model")
-        
+
 class TestConfigEnvVariables():
     """Check environmental variables are properly set"""
     def test_env_set(self):

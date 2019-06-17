@@ -25,7 +25,7 @@ def test_jac_explicit_correct_mult_hid_layer():
     hidden = [128, 128, 64]
     latent_dim = 4
     Batch_sz = 64
-    decoder_input = torch.rand((Batch_sz, input_size), requires_grad=True)
+    decoder_input = torch.rand((Batch_sz, latent_dim), requires_grad=True)
     model = ToyAE(input_size, hidden, latent_dim)
 
     output = model.decode(decoder_input)

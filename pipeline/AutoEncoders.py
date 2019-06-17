@@ -13,12 +13,26 @@ class VanillaAE(nn.Module):
         :latent_dim - int. size of latent representation
         :hidden - int list. size of hidden layers"""
 
-    def __init__(self, input_size, latent_dim, hidden=None):
+    def __init__(self, input_size, latent_dim, activation = "relu", hidden=None):
         super(VanillaAE, self).__init__()
-        assert hidden == None or type(hidden) == list, "hidden must be a list or None"
+        assert hidden == None or type(hidden) == list or type(hidden) == int, "hidden must be a list an int or None"
+        assert activation in ["relu", "lrelu"]
+        self.input_size = input_size
+        self.hidden = hidden
+        self.latent_dim = latent_dim
+        self.activation = activation
+        self.__init_multilayer_AE()
+
+    def __init_multilayer_AE(self):
+        input_size = self.input_size
+        hidden = self.hidden
+        latent_dim = self.latent_dim
+        activation = self.activation
+
+        if type(hidden) == int:
+            hidden = [hidden]
 
         #create a list of all dimension sizes (including input/output)
-
         if not hidden:
             layers = [input_size, latent_dim, input_size]
         else:
@@ -40,10 +54,14 @@ class VanillaAE(nn.Module):
             nn.init.xavier_uniform_(fc.weight)
             self.fclayers.append(fc)
 
-        self.lrelu = nn.LeakyReLU(negative_slope = 0.05, inplace=False)
+        if activation == "lrelu":
+            self.act_fn = nn.LeakyReLU(negative_slope = 0.05, inplace=False)
+        elif activation == "relu":
+            self.act_fn = F.relu
 
         self.num_encode = len(hidden) + 1
         self.num_decode = self.num_encode
+
 
     def forward(self, x):
         x = self.encode(x)
@@ -54,7 +72,7 @@ class VanillaAE(nn.Module):
         encode_fc = self.fclayers[:self.num_encode]
         assert len(encode_fc) == self.num_encode
         for fc in encode_fc[:-1]:
-            x = self.lrelu(fc(x))
+            x = self.act_fn(fc(x))
 
         x = encode_fc[-1](x) #no activation function for latent space
 
@@ -65,7 +83,7 @@ class VanillaAE(nn.Module):
         assert len(decode_fc) == self.num_decode
 
         for fc in decode_fc[:-1]:
-            x = self.lrelu(fc(x))
+            x = self.act_fn(fc(x))
 
         x = decode_fc[-1](x) #no activation function for output
         return x
@@ -74,7 +92,7 @@ class ToyAE(nn.Module):
     """Creates simple toy network with one fc hidden layer.
     I have worked out the explicit differential for this newtork.
     """
-    def __init__(self, input_size, hidden, latent_dim):
+    def __init__(self, input_size, hidden, latent_dim, activation = "relu"):
         super(ToyAE, self).__init__()
         assert type(hidden) == int or type(hidden) == list
 
