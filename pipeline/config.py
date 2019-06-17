@@ -85,9 +85,10 @@ class ConfigAE(Config):
         self.AE_MODEL_FP = self.HOME_DIR + "models/AE_dim{}_epoch120.pth".format(self.NUMBER_MODES) #AE_dim40_epoch120.pth"
         self.AE_MODEL_TYPE = VanillaAE #this must match
         self.HIDDEN = [1000, 200]
+        self.ACTIVATION = "lrelu"
         #define getter for __kwargs since they may change after initialization
     def get_kwargs(self):
-        return  {"input_size": self.n, "latent_dim": self.NUMBER_MODES, "hidden":self.HIDDEN}
+        return  {"input_size": self.n, "latent_dim": self.NUMBER_MODES, "hidden":self.HIDDEN, "activation": self.ACTIVATION}
 
 class ToyAEConfig(ConfigAE):
     def __init__(self):
@@ -97,6 +98,7 @@ class ToyAEConfig(ConfigAE):
         self.AE_MODEL_FP = self.HOME_DIR + "models/AE_toy_{}_{}_{}.pth".format(self.NUMBER_MODES, self.HIDDEN, self.FIELD_NAME)
         self.DEBUG = True
         self.AE_MODEL_TYPE = ToyAE
+        self.ACTIVATION = "relu"
 
 class ToyCAEConfig(ToyAEConfig):
     def __init__(self):

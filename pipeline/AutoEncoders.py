@@ -31,21 +31,20 @@ class VanillaAE(nn.Module):
 
         if type(hidden) == int:
             hidden = [hidden]
+        elif not hidden:
+            hidden = []
 
         #create a list of all dimension sizes (including input/output)
-        if not hidden:
-            layers = [input_size, latent_dim, input_size]
-        else:
-            layers = [input_size]
-            #encoder:
-            for size in hidden:
-                layers.append(size)
-            #latent representation:
-            layers.append(latent_dim)
-            #decoder:
-            for size in hidden[::-1]: #reversed list
-                layers.append(size)
-            layers.append(input_size)
+        layers = [input_size]
+        #encoder:
+        for size in hidden:
+            layers.append(size)
+        #latent representation:
+        layers.append(latent_dim)
+        #decoder:
+        for size in hidden[::-1]: #reversed list
+            layers.append(size)
+        layers.append(input_size)
 
         #now create the fc layers and store in nn.module list
         self.fclayers = nn.ModuleList([])
@@ -88,13 +87,19 @@ class VanillaAE(nn.Module):
         x = decode_fc[-1](x) #no activation function for output
         return x
 
-class ToyAE(nn.Module):
+class ToyAE(VanillaAE):
     """Creates simple toy network with one fc hidden layer.
     I have worked out the explicit differential for this newtork.
+
+    The .forward, .encode and .decode methods are inherited from VanillaAE
     """
-    def __init__(self, input_size, hidden, latent_dim, activation = "relu"):
-        super(ToyAE, self).__init__()
-        assert type(hidden) == int or type(hidden) == list
+    def __init__(self, input_size, latent_dim, activation = "relu", hidden = 128):
+
+        if activation == "lrelu":
+            raise NotImpelemtedError("Leaky ReLU not implemented for ToyAE")
+
+        super(ToyAE, self).__init__(input_size, latent_dim, activation, hidden)
+
 
         #encoder
         self.fc00 = nn.Linear(input_size, hidden, bias = True)
