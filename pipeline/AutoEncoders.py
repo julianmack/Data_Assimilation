@@ -24,7 +24,7 @@ class VanillaAE(nn.Module):
         self.__init_multilayer_AE()
 
         decode_fc = self.fclayers[self.num_decode:]
-        
+
 
     def __init_multilayer_AE(self):
         input_size = self.input_size
@@ -104,49 +104,79 @@ class ToyAE(VanillaAE):
 
         super(ToyAE, self).__init__(input_size, latent_dim, activation, hidden)
 
-        #encoder
-        self.fc00 = nn.Linear(input_size, hidden, bias = True)
-        self.fc01 = nn.Linear(hidden, latent_dim, bias = True)
-
-        #decoder
-        self.fc1 = nn.Linear(latent_dim, hidden, bias = True)
-        self.fc2 = nn.Linear(hidden, input_size, bias = True)
-        self.sizes = [latent_dim, hidden, input_size]
-
-    def decode(self, x):
-        h = F.relu(self.fc1(x))
-        h = self.fc2(h)
-        return h
-
-    def encode(self, x):
-        h = F.relu(self.fc00(x))
-        h = self.fc01(h)
-        return h
-
-    def forward(self, x):
-        x = self.encode(x)
-        x = self.decode(x)
-        return x
-
-    # def gen_rand_weights(self):
-    #     """Generates random weights for simple two layer fc decoder network.
-    #     """
-    #     [latent_dim, hidden, input_size] = self.sizes
-    #     #weights
-    #     W_a = torch.rand((hidden, latent_dim), requires_grad=True) - 0.5
-    #     W_b = torch.rand((input_size, hidden), requires_grad=True) - 0.5
+    #     # #encoder
+    #     self.fc00 = nn.Linear(input_size, hidden, bias = True)
+    #     self.fc01 = nn.Linear(hidden, latent_dim, bias = True)
     #
-    #     #biases
-    #     b_a = torch.rand((hidden,), requires_grad=True)
-    #     b_b = torch.rand((input_size,), requires_grad=True)
+    #     #decoder
+    #     self.fc1 = nn.Linear(latent_dim, hidden, bias = True)
+    #     self.fc2 = nn.Linear(hidden, input_size, bias = True)
+    #     self.sizes = [latent_dim, hidden, input_size]
     #
-    #     #assign
-    #     self.fc1.weight = nn.Parameter(W_a)
-    #     self.fc2.weight = nn.Parameter(W_b)
-    #     self.fc1.bias = nn.Parameter(b_a)
-    #     self.fc2.bias = nn.Parameter(b_b)
+    # def decode(self, x):
+    #     h = F.relu(self.fc1(x))
+    #     h = self.fc2(h)
+    #     return h
+    #
+    # def encode(self, x):
+    #     h = F.relu(self.fc00(x))
+    #     h = self.fc01(h)
+    #     return h
+    #
+    # def forward(self, x):
+    #     x = self.encode(x)
+    #     x = self.decode(x)
+    #     return x
+
+    def gen_rand_weights(self):
+        """Generates random weights for simple two layer fc decoder network.
+        """
+        [latent_dim, hidden, input_size] = self.sizes
+        #weights
+        W_a = torch.rand((hidden, latent_dim), requires_grad=True) - 0.5
+        W_b = torch.rand((input_size, hidden), requires_grad=True) - 0.5
+
+        #biases
+        b_a = torch.rand((hidden,), requires_grad=True)
+        b_b = torch.rand((input_size,), requires_grad=True)
+
+        #assign
+        self.fc1.weight = nn.Parameter(W_a)
+        self.fc2.weight = nn.Parameter(W_b)
+        self.fc1.bias = nn.Parameter(b_a)
+        self.fc2.bias = nn.Parameter(b_b)
 
     def jac_explicit(self, x):
+        """Generate explicit gradient for decoder
+        (from hand calculated expression)"""
+        decode_layers = self.fclayers[self.num_decode:]
+
+        for layer in decode_layers[:-1]:
+
+        z_1 = (x @ W_a.t()) + b_a
+        #A = torch.sign(z_1).unsqueeze(2)
+        # In order to handle both batched and non-batched input:
+        batch = False
+        if len(z_1.shape) > len(b_a.shape):
+            batch = True
+            A = (z_1 > 0).unsqueeze(2).type(torch.FloatTensor)
+            B = W_b.t().expand((z_1.shape[0], -1, -1))
+        else:
+            A = (z_1 > 0).unsqueeze(1).type(torch.FloatTensor)
+            B = W_b.t().expand((z_1.shape[0], -1))
+
+
+        first = torch.mul(A, B)
+        if batch:
+            first = torch.transpose(first, 1, 2)
+        else:
+            first = torch.transpose(first, 0, 1)
+        jac = first @ W_a
+
+
+        return jac
+
+    def jac_explicit_old(self, x):
         """Generate explicit gradient for decoder
         (from hand calculated expression)"""
 
@@ -178,7 +208,8 @@ class ToyAE(VanillaAE):
 
 
         return jac
-
+    def __jac_single_fc_layer(self, layer):
+        a_i = (x @ W_a.t()) + b_a
 class ToyCAE(nn.Module):
     """Creates a simple CAE for which
     I have worked out the explicit differential
