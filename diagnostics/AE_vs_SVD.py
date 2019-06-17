@@ -1,3 +1,5 @@
+sys.path.append(os.getcwd()) #to import pipeline
+
 import pipeline
 from pipeline import DAPipeline
 class AE_TruncSVD():
