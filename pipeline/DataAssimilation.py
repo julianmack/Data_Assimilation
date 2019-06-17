@@ -139,7 +139,7 @@ class DAPipeline():
 
         data = {}
 
-        X = self.get_X(settings)
+        X = utils.DataLoader.get_X(settings)
 
         n, M = X.shape
 
