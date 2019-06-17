@@ -1,34 +1,36 @@
 import torch
 from pipeline.utils import ML_utils as ML
-
+from pipeline import config
 from pipeline.AutoEncoders import ToyAE
 
+
 def test_jac_explicit_correct_single_hid_layer():
-    INPUT = 32
-    OUT = 4
-    HIDDEN = 128
+    input_size = 128
+    hidden = 8
+    latent_dim = 4
     Batch_sz = 64
-    input = torch.rand((Batch_sz, INPUT), requires_grad=True)
-    model = ToyAE(INPUT, HIDDEN, OUT)
 
-    output = model.decode(input)
+    decoder_input = torch.rand((Batch_sz, latent_dim), requires_grad=True)
+    model = ToyAE(input_size, hidden, latent_dim)
 
-    jac_true = ML.jacobian_slow_torch(input, output)
-    jac_expl = model.jac_explicit(input)
+    decoder_output = model.decode(decoder_input)
+
+    jac_true = ML.jacobian_slow_torch(decoder_input, decoder_output)
+    jac_expl = model.jac_explicit(decoder_input)
 
     assert torch.allclose(jac_true, jac_expl, rtol=1e-02), "Two jacobians are not equal"
 
 def test_jac_explicit_correct_mult_hid_layer():
-    INPUT = 32
-    OUT = 4
-    HIDDEN = [128, 128, 64]
+    input_size = 128
+    hidden = [128, 128, 64]
+    latent_dim = 4
     Batch_sz = 64
-    input = torch.rand((Batch_sz, INPUT), requires_grad=True)
-    model = ToyAE(INPUT, HIDDEN, OUT)
+    decoder_input = torch.rand((Batch_sz, input_size), requires_grad=True)
+    model = ToyAE(input_size, hidden, latent_dim)
 
-    output = model.decode(input)
+    output = model.decode(decoder_input)
 
-    jac_true = ML.jacobian_slow_torch(input, output)
-    jac_expl = model.jac_explicit(input)
+    jac_true = ML.jacobian_slow_torch(decoder_input, output)
+    jac_expl = model.jac_explicit(decoder_input)
 
     assert torch.allclose(jac_true, jac_expl, rtol=1e-02), "Two jacobians are not equal"

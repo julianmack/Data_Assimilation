@@ -89,6 +89,7 @@ class ToyAE(nn.Module):
         h = F.relu(self.fc1(x))
         h = self.fc2(h)
         return h
+        
     def encode(self, x):
         h = F.relu(self.fc00(x))
         h = self.fc01(h)
