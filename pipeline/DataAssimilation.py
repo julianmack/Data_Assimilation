@@ -140,13 +140,8 @@ class DAPipeline():
 
         data = {}
 
-        if settings.FORCE_GEN_X or not os.path.exists(settings.X_FP):
-            fps = self.get_sorted_fps_U(settings.DATA_FP)
-            X = self.create_X_from_fps(fps, settings.FIELD_NAME)
-            np.save(settings.X_FP, X, allow_pickle=True)
-        else:
-            X = np.load(settings.X_FP,  allow_pickle=True)
-
+        X = self.get_X(settings)
+        
         n, M = X.shape
 
 
