@@ -118,7 +118,7 @@ class DAPipeline():
 
         if settings.SAVE:
             #Save .vtu files so that I can look @ in paraview
-            sample_fp = self.get_sorted_fps_U(settings.DATA_FP)[0]
+            sample_fp = utils.DataLoader.get_sorted_fps_U(settings.DATA_FP)[0]
             out_fp_ref = settings.INTERMEDIATE_FP + "ref_MAE.vtu"
             out_fp_DA =  settings.INTERMEDIATE_FP + "DA_MAE.vtu"
 
