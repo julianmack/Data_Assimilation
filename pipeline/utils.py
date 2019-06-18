@@ -282,10 +282,14 @@ class ML_utils():
         else:
             device = torch.device("cpu")
         return device
+        
     @staticmethod
     def jacobian_slow_torch( inputs, outputs):
         """Computes a jacobian of two torch tensor.
-        Uses a loop so linear time-complexity in dimension of output"""
+        Uses a loop so linear time-complexity in dimension of output.
+
+        This (slow) function is used to test the much faster .jac_explicit()
+        functions in AutoEncoders.py"""
         dims = len(inputs.shape)
 
         if dims > 1:
@@ -305,4 +309,4 @@ class ML_utils():
         X = torch.stack(X, dim=-1)
         return X.t()
 
-        
+
