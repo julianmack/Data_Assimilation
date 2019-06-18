@@ -310,4 +310,38 @@ class ML_utils():
         X = torch.stack(X, dim=-1)
         return X.t()
 
+    @staticmethod
+    def conv_formula(inp, stride, pad, kernel):
+        x = (inp + 2 * pad - kernel)
+        if x < 0:
+            raise ValueError("Cannot have (input + 2* padding) < kernel")
+        return x  // stride + 1
 
+    @staticmethod
+    def conv_scheduler1D(inp, kernel = 3):
+        res = []
+        while inp > 4:
+            raise NotImpelemtedError()
+            pad = 0
+            stride = 2
+            kernel = 3
+            if inp % 2 == 0: #input is even
+                stride = 2
+            out = conv_formula(inp, stride, pad, kernel)
+            if out % 2 == 0:
+                pad = 1
+                out = conv_formula(inp, stride, pad, kernel)
+
+            if out == 4:
+                stride = 2
+                kernel = 2
+                pad = 0
+                out = conv_formula(inp, stride, pad, kernel)
+            if out == 5:
+                stride = 2
+                kernel = 3
+                pad = 1
+                out = conv_formula(inp, stride, pad, kernel)
+
+            res.append({"in": inp, "out": out, "stride": stride, "pad": pad, "kernel": kernel})
+            inp = out
