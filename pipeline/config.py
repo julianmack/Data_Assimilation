@@ -108,8 +108,6 @@ class ToyCAEConfig(ToyAEConfig):
         self.AE_MODEL_TYPE = ToyCAE
         self.HIDDEN = [128, 256, 256]
         #define getter for __kwargs since they may change after initialization
-    def get_kwargs(self):
-        return {"inn":self.NUMBER_MODES, "hid":self.HIDDEN, "out": self.n}
 
 class SmallTestDomain(Config):
     def __init__(self):
