@@ -125,3 +125,35 @@ class TestJacExplicit():
         jac_expl = model.jac_explicit(decoder_input)
 
         assert torch.allclose(jac_true, jac_expl, rtol=1e-02), "Two jacobians are not equal"
+
+    def test_jac_no_batch_one_hid(self):
+        input_size = 3
+        hidden = 5
+        latent_dim = 2
+        activation = "relu"
+
+        decoder_input = torch.rand((latent_dim,), requires_grad=True)
+        model = ToyAE(input_size, latent_dim, activation, hidden)
+        decoder_output = model.decode(decoder_input)
+
+        jac_true = ML.jacobian_slow_torch(decoder_input, decoder_output)
+        jac_expl = model.jac_explicit(decoder_input)
+
+
+        assert torch.allclose(jac_true, jac_expl, rtol=1e-02), "Two jacobians are not equal"
+
+    def test_jac_no_batch_mult_hid(self):
+        input_size = 3
+        hidden = [5, 6, 7]
+        latent_dim = 2
+        activation = "relu"
+
+        decoder_input = torch.rand((latent_dim,), requires_grad=True)
+        model = ToyAE(input_size, latent_dim, activation, hidden)
+        decoder_output = model.decode(decoder_input)
+
+        jac_true = ML.jacobian_slow_torch(decoder_input, decoder_output)
+        jac_expl = model.jac_explicit(decoder_input)
+
+
+        assert torch.allclose(jac_true, jac_expl, rtol=1e-02), "Two jacobians are not equal"
