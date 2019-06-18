@@ -4,7 +4,7 @@ User can create new classes that inherit from class Config and override class va
 in order to create new combinations of config options. Alternatively, individual config
 options can be altered one at a time on an ad-hoc basis."""
 
-from pipeline.AutoEncoders import VanillaAE, ToyAE
+from pipeline.AutoEncoders import VanillaAE, ToyAE, ToyCAE
 import socket
 import os, sys
 
@@ -103,7 +103,7 @@ class ToyAEConfig(ConfigAE):
 class ToyCAEConfig(ToyAEConfig):
     def __init__(self):
         super(ToyCAEConfig, self).__init__()
-        self.NUMBER_MODES = 4 #this must match model above
+        self.NUMBER_MODES = 4
         self.AE_MODEL_FP = self.HOME_DIR + "models/CAE_toy_{}_{}_{}.pth".format(self.NUMBER_MODES, self.HIDDEN, self.FIELD_NAME)
         self.AE_MODEL_TYPE = ToyCAE
         self.HIDDEN = [128, 256, 256]
