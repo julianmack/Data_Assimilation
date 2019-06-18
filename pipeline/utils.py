@@ -269,7 +269,7 @@ class ML_utils():
         """Loads an encoder and decoder"""
         model = ModelClass(**kwargs)
         model.load_state_dict(torch.load(path))
-        model.eval()
+        #model.eval()
         encoder = model.encode
         decoder = model.decode
 
