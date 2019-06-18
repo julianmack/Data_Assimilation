@@ -1,14 +1,14 @@
-import torch.nn as nn
-import torch.nn.functional as F
-
 import torch
-import numpy as np
-from utils import ML_utils as ML
-import utils
+import sys, os
+
+sys.path.append(os.getcwd()) #to import pipeline
+
+from pipeline.utils import ML_utils as ML
+from pipeline.AutoEncoders import ToyAE
+from pipeline import utils
 
 import time
 import matplotlib.pyplot as plt
-from AutoEncoders import ToyAE
 
 def plot_time_w_output(outputs, inn, hidden, batch_sz, loop=True, no_batch=False):
 
@@ -16,7 +16,7 @@ def plot_time_w_output(outputs, inn, hidden, batch_sz, loop=True, no_batch=False
     T_1s = []
     factors = []
 
-    utils.set_seeds()
+    utils.set_seeds(42)
     input = torch.rand((Batch_sz, inn), requires_grad=True)
     if no_batch:
         input = input[0]
@@ -58,36 +58,5 @@ if __name__ == "__main__":
     HIDDEN = 128
     Batch_sz = 64
     outputs = [2**x for x in range(8)]
-    outputs = [19]
     plot_time_w_output(outputs, INPUT, HIDDEN, Batch_sz, loop=True, no_batch=False)
 
-    exit()
-    utils.set_seeds()
-
-    model = ToyAE(INPUT, HIDDEN, OUT)
-    model.gen_rand_weights()
-
-    input = torch.rand((Batch_sz, INPUT), requires_grad=True)
-    output = model.decode(input)
-
-    t0 = time.time()
-    jac_true = ML.jacobian_slow_torch(input, output)
-    t1 = time.time()
-    jac_expl = model.jac_explicit(input)
-    t2 = time.time()
-
-    # print("True jac shape", jac_true.shape)
-    # print("jac explicit shape", jac_expl.shape)
-    #
-    # print(jac_true)
-    # print(jac_expl)
-
-
-    T_1 = t1-t0
-    T_2 = t2-t1
-    print("Time for loop method: {:.4f}s".format(T_1))
-    print("Time for explicit method: {:.4f}s".format(T_2))
-
-    print("Explicit x{:.1f} faster than loop method".format(T_1 / T_2))
-    assert torch.allclose(jac_true, jac_expl, rtol=1e-02), "Two jacobians are not equal"
-    print("SUCCESS")

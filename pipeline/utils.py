@@ -15,13 +15,87 @@ def set_seeds(seed = None):
         seed = os.environ.get("SEED")
         if seed == None:
             raise NameError("SEED environment variable not set. Do this manually or initialize a Config class")
-
+    seed = int(seed)
     torch.manual_seed(seed)
     np.random.seed(seed)
     random.seed(seed)
     torch.cuda.manual_seed(seed)
     if torch.cuda.is_available():
         torch.backends.cudnn.deterministic = True
+
+class DataLoader():
+    """Class to load data from files in preparation for Data Assimilation or AE training"""
+    def __init__(self):
+        pass
+
+    def get_X(self, settings):
+        if settings.FORCE_GEN_X or not os.path.exists(settings.X_FP):
+            fps = self.get_sorted_fps_U(settings.DATA_FP)
+            X = self.create_X_from_fps(fps, settings.FIELD_NAME)
+            if settings.SAVE:
+                np.save(settings.X_FP, X, allow_pickle=True)
+        else:
+            X = np.load(settings.X_FP,  allow_pickle=True)
+
+        return X
+
+    @staticmethod
+    def get_sorted_fps_U(data_dir):
+        """Creates and returns list of .vtu filepaths sorted according
+        to timestamp in name.
+        Input files in data_dir must be of the
+        form <XXXX>LSBU_<TIMESTEP INDEX>.vtu"""
+
+        fps = os.listdir(data_dir)
+
+        #extract index of timestep from file name
+        idx_fps = []
+        for fp in fps:
+            _, file_number = fp.split("LSBU_")
+            #file_number is of form '<IDX>.vtu'
+            idx = int(file_number.replace(".vtu", ""))
+            idx_fps.append(idx)
+
+        #sort by timestep
+        assert len(idx_fps) == len(fps)
+        zipped_pairs = zip(idx_fps, fps)
+        fps_sorted = [x for _, x in sorted(zipped_pairs)]
+
+        #add absolute path
+        fps_sorted = [data_dir + x for x in fps_sorted]
+
+        return fps_sorted
+
+    @staticmethod
+    def create_X_from_fps(fps, field_name, field_type  = "scalar"):
+        """Creates a numpy array of values of scalar field_name
+        Input list must be sorted"""
+        M = len(fps) #number timesteps
+
+        for idx, fp in enumerate(fps):
+            # create array of tracer
+            ug = vtktools.vtu(fp)
+            if field_type == "scalar":
+                vector = ug.GetScalarField(field_name)
+            elif field_type == "vector":
+                vector = ug.GetVectorField(field_name)
+            else:
+                raise ValueError("field_name must be in {\'scalar\', \'vector\'}")
+            #print("Length of vector:", vector.shape)
+
+            vec_len, = vector.shape
+            if idx == 0:
+                #fix length of vectors and initialize the output array:
+                n = vec_len
+                output = np.zeros((M, n))
+            else:
+                #enforce all vectors are of the same length
+                assert vec_len == n, "All input .vtu files must be of the same length."
+
+
+            output[idx] = vector
+
+        return output.T #return (n x M)
 
 class FluidityUtils():
     """Class to hold Fluidity helper functions.
@@ -208,12 +282,31 @@ class ML_utils():
         else:
             device = torch.device("cpu")
         return device
-
+        
     @staticmethod
-    def jacobian_slow_torch(inputs, outputs):
+    def jacobian_slow_torch( inputs, outputs):
         """Computes a jacobian of two torch tensor.
-        Uses a loop so linear complexity in dimension of output"""
+        Uses a loop so linear time-complexity in dimension of output.
+
+        This (slow) function is used to test the much faster .jac_explicit()
+        functions in AutoEncoders.py"""
+        dims = len(inputs.shape)
+
+        if dims > 1:
+            return ML_utils.__batched_jacobian_slow(inputs, outputs)
+        else:
+            return ML_utils.__no_batch_jacobian_slow(inputs, outputs)
+    @staticmethod
+    def __batched_jacobian_slow(inputs, outputs):
         dims = len(inputs.shape)
         return torch.transpose(torch.stack([torch.autograd.grad([outputs[:, i].sum()], inputs, retain_graph=True, create_graph=True)[0]
                             for i in range(outputs.size(1))], dim=-1), \
                             dims - 1, dims)
+    @staticmethod
+    def __no_batch_jacobian_slow(inputs, outputs):
+        X = [torch.autograd.grad([outputs[i].sum()], inputs, retain_graph=True, create_graph=True)[0]
+                            for i in range(outputs.size(0))]
+        X = torch.stack(X, dim=-1)
+        return X.t()
+
+

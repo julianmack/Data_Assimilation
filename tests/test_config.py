@@ -1,8 +1,8 @@
-from pipeline import utils
 from pipeline import config
 import os
 import pytest
 import numpy as np
+
 
 class TestConfigEnvVariables():
     """Check environmental variables are properly set"""

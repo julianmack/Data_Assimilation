@@ -1,3 +1,5 @@
+sys.path.append(os.getcwd()) #to import pipeline
+
 import pipeline
 from pipeline import DAPipeline
 class AE_TruncSVD():
@@ -8,4 +10,4 @@ class AE_TruncSVD():
     def compare(self):
         DA = pipeline.DAPipeline()
 
-        w_opt
+        

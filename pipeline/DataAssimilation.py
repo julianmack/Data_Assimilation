@@ -8,8 +8,7 @@ from scipy.optimize import minimize
 import vtktools
 
 
-import pipeline.config as config
-import pipeline.utils as utils
+from pipeline import config, utils
 
 
 class DAPipeline():
@@ -62,7 +61,7 @@ class DAPipeline():
             try:
                 data["V_grad"] = settings.AE_MODEL_TYPE(**kwargs).jac_explicit
             except:
-                pass
+                raise NotImpelemtedError("This model type does not have a gradient available")
         else:
             raise ValueError("COMPRESSION_METHOD must be in {SVD, AE}")
 
@@ -139,13 +138,8 @@ class DAPipeline():
         #but can be created from .vtu fps if required. see trunc_SVD.py for an example
 
         data = {}
-
-        if settings.FORCE_GEN_X or not os.path.exists(settings.X_FP):
-            fps = self.get_sorted_fps_U(settings.DATA_FP)
-            X = self.create_X_from_fps(fps, settings.FIELD_NAME)
-            np.save(settings.X_FP, X, allow_pickle=True)
-        else:
-            X = np.load(settings.X_FP,  allow_pickle=True)
+        loader = utils.DataLoader()
+        X = loader.get_X(settings)
 
         n, M = X.shape
 
@@ -193,63 +187,6 @@ class DAPipeline():
 
         return data, hist_idx, obs_idx, nobs, std, mean
 
-    @staticmethod
-    def get_sorted_fps_U(data_dir):
-        """Creates and returns list of .vtu filepaths sorted according
-        to timestamp in name.
-        Input files in data_dir must be of the
-        form <XXXX>LSBU_<TIMESTEP INDEX>.vtu"""
-
-        fps = os.listdir(data_dir)
-
-        #extract index of timestep from file name
-        idx_fps = []
-        for fp in fps:
-            _, file_number = fp.split("LSBU_")
-            #file_number is of form '<IDX>.vtu'
-            idx = int(file_number.replace(".vtu", ""))
-            idx_fps.append(idx)
-
-        #sort by timestep
-        assert len(idx_fps) == len(fps)
-        zipped_pairs = zip(idx_fps, fps)
-        fps_sorted = [x for _, x in sorted(zipped_pairs)]
-
-        #add absolute path
-        fps_sorted = [data_dir + x for x in fps_sorted]
-
-        return fps_sorted
-
-    @staticmethod
-    def create_X_from_fps(fps, field_name, field_type  = "scalar"):
-        """Creates a numpy array of values of scalar field_name
-        Input list must be sorted"""
-        M = len(fps) #number timesteps
-
-        for idx, fp in enumerate(fps):
-            # create array of tracer
-            ug = vtktools.vtu(fp)
-            if field_type == "scalar":
-                vector = ug.GetScalarField(field_name)
-            elif field_type == "vector":
-                vector = ug.GetVectorField(field_name)
-            else:
-                raise ValueError("field_name must be in {\'scalar\', \'vector\'}")
-            #print("Length of vector:", vector.shape)
-
-            vec_len, = vector.shape
-            if idx == 0:
-                #fix length of vectors and initialize the output array:
-                n = vec_len
-                output = np.zeros((M, n))
-            else:
-                #enforce all vectors are of the same length
-                assert vec_len == n, "All input .vtu files must be of the same length."
-
-
-            output[idx] = vector
-
-        return output.T #return (n x M)
 
     @staticmethod
     def create_V_from_X(X_fp, return_mean = False):
@@ -483,7 +420,7 @@ if __name__ == "__main__":
     exit()
 
     #create X:
-    fps = DA.get_sorted_fps_U(DA.settings.DATA_FP)
-    X = DA.create_X_from_fps(fps, DA.settings.FIELD_NAME, field_type  = "scalar")
+    loader = utils.DataLoader()
+    X = loader.get_X(settings)
     np.save(settings.X_FP, X)
     exit()
