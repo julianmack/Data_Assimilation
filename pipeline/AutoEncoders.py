@@ -166,9 +166,9 @@ class ToyAE(VanillaAE):
                     jac_running = jac_running.unsqueeze(2)
                     jac_running = (jac_running @ jac_par).squeeze(2)
                 else:
-                    raise NotImpelemtedError("Non-batch not implemented")
+                    jac_running = jac_par @ jac_running
         W_i = decode_layers[-1].weight
-        
+
         if self.batch:
             W_i = W_i.t().expand((x.shape[0], -1, -1))
 
