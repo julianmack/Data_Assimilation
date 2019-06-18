@@ -6,7 +6,35 @@ import torch.nn as nn
 import torch
 import torch.nn.functional as F
 
-class VanillaAE(nn.Module):
+
+class BaseAE(nn.Module):
+    """Base AE class which all should inherit from
+    The following instance variables must be initialized:
+        self.layers_encode - an nn.ModuleList of all encoding layers in the network
+        self.layers_decode - an nn.ModuleList of all decoding layers in the network"""
+    def forward(self, x):
+        x = self.encode(x)
+        x = self.decode(x)
+        return x
+
+    def encode(self, x):
+        layers = self.layers_encode
+        for layer in layers[:-1]:
+            x = self.act_fn(layer(x))
+
+        x = layers[-1](x) #no activation function for latent space
+
+        return x
+
+    def decode(self, x):
+        layers = self.layers_decode
+        for layer in layers[:-1]:
+            x = self.act_fn(layer(x))
+
+        x = layers[-1](x) #no activation function for output
+        return x
+
+class VanillaAE(BaseAE):
     """Variable size AE - using only fully connected layers.
     Arguments (for initialization):
         :input_size - int. size of input (and output)
@@ -23,7 +51,7 @@ class VanillaAE(nn.Module):
         self.activation = activation
         self.__init_multilayer_AE()
 
-        decode_fc = self.fclayers[self.num_decode:]
+
 
 
     def __init_multilayer_AE(self):
@@ -50,46 +78,21 @@ class VanillaAE(nn.Module):
         layers.append(input_size)
 
         #now create the fc layers and store in nn.module list
-        self.fclayers = nn.ModuleList([])
+        self.layers = nn.ModuleList([])
         for idx, n_hidden in enumerate(layers[:-1]):
             fc = nn.Linear(n_hidden, layers[idx + 1])
             nn.init.xavier_uniform_(fc.weight)
-            self.fclayers.append(fc)
+            self.layers.append(fc)
 
         if activation == "lrelu":
             self.act_fn = nn.LeakyReLU(negative_slope = 0.05, inplace=False)
         elif activation == "relu":
             self.act_fn = F.relu
+        num_encode = len(hidden) + 1 #=num_decode
 
-        self.num_encode = len(hidden) + 1
-        self.num_decode = self.num_encode
+        self.layers_encode = self.layers[:num_encode]
+        self.layers_decode = self.layers[num_encode:]
 
-
-    def forward(self, x):
-        x = self.encode(x)
-        x = self.decode(x)
-        return x
-
-    def encode(self, x):
-        encode_fc = self.fclayers[:self.num_encode]
-        assert len(encode_fc) == self.num_encode
-        for fc in encode_fc[:-1]:
-            x = self.act_fn(fc(x))
-
-        x = encode_fc[-1](x) #no activation function for latent space
-
-        return x
-
-    def decode(self, x):
-        decode_fc = self.fclayers[self.num_decode:]
-
-        assert len(decode_fc) == self.num_decode
-
-        for fc in decode_fc[:-1]:
-            x = self.act_fn(fc(x))
-
-        x = decode_fc[-1](x) #no activation function for output
-        return x
 
 class ToyAE(VanillaAE):
     """Creates simple toy network with one fc hidden layer.
@@ -111,11 +114,9 @@ class ToyAE(VanillaAE):
 
         self.eval() #Edit this if you add dropout
 
-        decode_layers = self.fclayers[self.num_decode:]
-
         z_i = x
         jac_running = None
-        for idx, layer in enumerate(decode_layers[:-1]):
+        for idx, layer in enumerate(self.layers_decode[:-1]):
             jac_par, z_i = self.__jac_single_fc_layer(z_i, layer)
             if idx == 0:
                 jac_running = jac_par
@@ -126,7 +127,7 @@ class ToyAE(VanillaAE):
                     jac_running = (jac_running @ jac_par).squeeze(2)
                 else:
                     jac_running = jac_par @ jac_running
-        W_i = decode_layers[-1].weight
+        W_i = self.layers_decode[-1].weight
 
         if self.batch:
             W_i = W_i.t().expand((x.shape[0], -1, -1))
@@ -167,12 +168,15 @@ class ToyAE(VanillaAE):
         return jac_partial, z_i
 
 
-class ToyCAE(nn.Module):
+class ToyCAE(BaseAE):
     """Creates a simple CAE for which
     I have worked out the explicit differential
     """
-    def __init__(self, latent_dim, hidden, input_size):
+    def __init__(self, input_size, latent_dim, activation, hidden):
+        if activation == "lrelu":
+            raise NotImpelemtedError("Leaky ReLU not implemented for ToyAE")
         super(ToyCAE, self).__init__()
+
 
 
     def decode(self, x):
