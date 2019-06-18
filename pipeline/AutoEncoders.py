@@ -13,8 +13,7 @@ class BaseAE(nn.Module):
         self.layers_encode - an nn.ModuleList of all encoding layers in the network
         self.layers_decode - an nn.ModuleList of all decoding layers in the network"""
     def forward(self, x):
-        assert self.get(layers_decode) != None and self.get(layers_encode) != None
-
+        self.__check_instance_vars()
         x = self.encode(x)
         x = self.decode(x)
         return x
@@ -35,6 +34,15 @@ class BaseAE(nn.Module):
 
         x = layers[-1](x) #no activation function for output
         return x
+    def __check_instance_vars(self):
+        try:
+            x = self.layers_decode
+            y = self.layers_encode
+        except:
+            raise ValueError("Must init model with instance variables layers_decode and layers_encode")
+
+        assert isinstance(x, nn.ModuleList), "model.layers_decode must be of type nn.ModuleList"
+        assert isinstance(y, nn.ModuleList), "model.layers_encode must be of type nn.ModuleList"
 
 class VanillaAE(BaseAE):
     """Variable size AE - using only fully connected layers.
