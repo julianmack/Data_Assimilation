@@ -136,9 +136,10 @@ class TestJacExplicit():
         model = ToyAE(input_size, latent_dim, activation, hidden)
         decoder_output = model.decode(decoder_input)
 
-        jac_true = ML.jacobian_slow_torch(decoder_input, decoder_output)
         jac_expl = model.jac_explicit(decoder_input)
+        print("JAC EXPL SHAPE", jac_expl.shape)
 
+        jac_true = ML.jacobian_slow_torch(decoder_input, decoder_output)
 
         assert torch.allclose(jac_true, jac_expl, rtol=1e-02), "Two jacobians are not equal"
 
@@ -152,8 +153,8 @@ class TestJacExplicit():
         model = ToyAE(input_size, latent_dim, activation, hidden)
         decoder_output = model.decode(decoder_input)
 
-        jac_true = ML.jacobian_slow_torch(decoder_input, decoder_output)
         jac_expl = model.jac_explicit(decoder_input)
+        jac_true = ML.jacobian_slow_torch(decoder_input, decoder_output)
 
 
         assert torch.allclose(jac_true, jac_expl, rtol=1e-02), "Two jacobians are not equal"

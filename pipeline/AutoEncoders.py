@@ -167,17 +167,20 @@ class ToyAE(VanillaAE):
                     jac_running = (jac_running @ jac_par).squeeze(2)
                 else:
                     raise NotImpelemtedError("Non-batch not implemented")
-
-        W_i = decode_layers[-1].weight.t()
+        W_i = decode_layers[-1].weight
+        
         if self.batch:
-            W_i = W_i.expand((x.shape[0], -1, -1))
+            W_i = W_i.t().expand((x.shape[0], -1, -1))
 
         if type(jac_running) != torch.Tensor:
             jac = W_i
         else:
-            W_i = W_i.unsqueeze(1)
-            jac_running = jac_running.unsqueeze(2)
-            jac = (jac_running @ W_i).squeeze(2).transpose(2, 1)
+            if self.batch:
+                W_i = W_i.unsqueeze(1)
+                jac_running = jac_running.unsqueeze(2)
+                jac = (jac_running @ W_i).squeeze(2).transpose(2, 1)
+            else:
+                jac = W_i @ jac_running
         return jac
 
     def __jac_single_fc_layer(self, x, layer):
@@ -196,8 +199,7 @@ class ToyAE(VanillaAE):
             self.batch = True
         else: #non-batched
             A = (a_i > 0).unsqueeze(1).type(torch.FloatTensor)
-            A = torch.transpose(A, 0, 1)
-            B = W_i.t().expand((a_i.shape[0], -1))
+            B = W_i
             self.batch = False
 
         jac_partial = torch.mul(A, B)
