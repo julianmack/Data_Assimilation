@@ -13,6 +13,8 @@ class BaseAE(nn.Module):
         self.layers_encode - an nn.ModuleList of all encoding layers in the network
         self.layers_decode - an nn.ModuleList of all decoding layers in the network"""
     def forward(self, x):
+        assert self.get(layers_decode) != None and self.get(layers_encode) != None
+
         x = self.encode(x)
         x = self.decode(x)
         return x
@@ -50,8 +52,6 @@ class VanillaAE(BaseAE):
         self.latent_dim = latent_dim
         self.activation = activation
         self.__init_multilayer_AE()
-
-
 
 
     def __init_multilayer_AE(self):
@@ -177,6 +177,7 @@ class ToyCAE(BaseAE):
             raise NotImpelemtedError("Leaky ReLU not implemented for ToyAE")
         super(ToyCAE, self).__init__()
 
+        #Now initialize
 
 
     def decode(self, x):
