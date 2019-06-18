@@ -269,6 +269,7 @@ class ML_utils():
         """Loads an encoder and decoder"""
         model = ModelClass(**kwargs)
         model.load_state_dict(torch.load(path))
+        model.eval()
         encoder = model.encode
         decoder = model.decode
 
@@ -282,7 +283,7 @@ class ML_utils():
         else:
             device = torch.device("cpu")
         return device
-        
+
     @staticmethod
     def jacobian_slow_torch( inputs, outputs):
         """Computes a jacobian of two torch tensor.
