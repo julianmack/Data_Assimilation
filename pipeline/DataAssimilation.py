@@ -61,7 +61,7 @@ class DAPipeline():
             try:
                 data["V_grad"] = settings.AE_MODEL_TYPE(**kwargs).jac_explicit
             except:
-                pass
+                raise NotImpelemtedError("This model type does not have a gradient available")
         else:
             raise ValueError("COMPRESSION_METHOD must be in {SVD, AE}")
 
