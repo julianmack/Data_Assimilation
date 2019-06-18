@@ -282,12 +282,27 @@ class ML_utils():
         else:
             device = torch.device("cpu")
         return device
-
     @staticmethod
-    def jacobian_slow_torch(inputs, outputs):
+    def jacobian_slow_torch( inputs, outputs):
         """Computes a jacobian of two torch tensor.
-        Uses a loop so linear complexity in dimension of output"""
+        Uses a loop so linear time-complexity in dimension of output"""
+        dims = len(inputs.shape)
+
+        if dims > 1:
+            return ML_utils.__batched_jacobian_slow(inputs, outputs)
+        else:
+            return ML_utils.__no_batch_jacobian_slow(inputs, outputs)
+    @staticmethod
+    def __batched_jacobian_slow(inputs, outputs):
         dims = len(inputs.shape)
         return torch.transpose(torch.stack([torch.autograd.grad([outputs[:, i].sum()], inputs, retain_graph=True, create_graph=True)[0]
                             for i in range(outputs.size(1))], dim=-1), \
                             dims - 1, dims)
+    @staticmethod
+    def __no_batch_jacobian_slow(inputs, outputs):
+        X = [torch.autograd.grad([outputs[i].sum()], inputs, retain_graph=True, create_graph=True)[0]
+                            for i in range(outputs.size(0))]
+        X = torch.stack(X, dim=-1)
+        return X.t()
+
+        
