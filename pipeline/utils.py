@@ -327,10 +327,12 @@ class ML_utils():
             kernel = 3
             if inp % 2 == 0: #input is even
                 stride = 2
-            out = conv_formula(inp, stride, pad, kernel)
-            if out % 2 == 0:
-                pad = 1
+                kernel = 2
+            else: #input is odd
                 out = conv_formula(inp, stride, pad, kernel)
+                if out % 2 == 0:  #input is and out is even
+                    pad = 1
+                    out = conv_formula(inp, stride, pad, kernel)
 
             if out == 4:
                 stride = 2
