@@ -158,13 +158,13 @@ class TestJacExplicit():
 
         assert torch.allclose(jac_true, jac_expl, rtol=1e-02), "Two jacobians are not equal"
 
-class TestToyCAE():
+class TestCAE_3D():
     """These tests are the ToyAE equivalents of the above but are all placed here
     (rather than in respective classes such as TestAEInit and TestAEForward
     so that they can be run w/o the standard AE tests)"""
 
     def test_ToyCAE_init_base_config(self):
-        settings = config.ToyCAEConfig()
+        settings = config.CAEConfig()
         try:
             model = settings.AE_MODEL_TYPE(**settings.get_kwargs())
         except Exception as e:
