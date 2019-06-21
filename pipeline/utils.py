@@ -318,13 +318,32 @@ class ML_utils():
         return x  // stride + 1
 
     @staticmethod
+    def conv_scheduler1D(inp, changeover_out, lowest_out=1):
+        """Desired schedule which combines stride=1 layers initially with
+        later stride=2 for downsampling
+        ::changeover_out - output size at which the schedule changes from stride=1 to stride=2
+
+        """
+
+        assert lowest_out >= 1, "lowest_out must be >= 1"
+        assert changeover_out > lowest_out, "changeover_out must be > lowest_out"
+        res = []
+        res_s1 = conv_scheduler1D_stride1(inp, changeover_out)
+        if len(res_s1) > 0:
+            inp = res_s1[-1]["in"]
+        res_s2 = conv_scheduler1D_stride2(inp, lowest_out)
+
+        return res_s1.extend(res_s2)
+
+
+    @staticmethod
     def conv_scheduler1D_stride1(inp, lowest_out = 1):
         assert lowest_out >= 1, "lowest_out must be >= 1"
         res = []
         stride = 1
         pad = 0
         kernel = 3
-        while inp >= lowest_out:
+        while inp >= lowest_out and (inp + 2*pad) >= kernel:
             out = ML_utils.conv_formula(inp, stride, pad, kernel)
             res.append({"in": inp, "out": out, "stride": stride, "pad": pad, "kernel": kernel})
             inp = out

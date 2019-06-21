@@ -17,13 +17,11 @@ def main():
 
     #vtk_file = ns.numpy_to_vtk(in_3d, 1)
 
-    exit()
-    res = utils.ML_utils().conv_scheduler1D_stride2(86, 1)
     n = (91, 85, 32)
     #inx, iny, inz = (91, 85, 32)
     results = []
     for n_i in n:
-        res_i = utils.ML_utils.conv_scheduler1D_stride2(n_i, 1)
+        res_i = utils.ML_utils.conv_scheduler1D_stride1(n_i, 1)
         results.append(res_i)
     min_len = min([len(i) for i in results])
     for layer in range(min_len):
