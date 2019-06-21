@@ -18,9 +18,10 @@ class Config():
         self.DATA_FP = self.HOME_DIR + "data/small3DLSBU/"
         self.INTERMEDIATE_FP = self.HOME_DIR + "data/small3D_intermediate/"
         self.FIELD_NAME = "Pressure"
-        self.X_FP = self.INTERMEDIATE_FP + "X_small3D_{}.npy".format(self.FIELD_NAME)
+        self.X_FP = self.INTERMEDIATE_FP + "X_1D_{}.npy".format(self.FIELD_NAME)
         self.FORCE_GEN_X = False
         self.n = 100040
+        self.THREE_DIM = False # i.e. is representation in 3D tensor or 1D array
         self.SAVE = True
         self.DEBUG = True
 
@@ -105,12 +106,15 @@ class ToyAEConfig(ConfigAE):
 class CAEConfig(ConfigAE):
     def __init__(self):
         super(CAEConfig, self).__init__()
-        self.NUMBER_MODES = 4
         self.AE_MODEL_FP = self.HOME_DIR + "models/CAE_toy_{}_{}_{}.pth".format(self.NUMBER_MODES, self.HIDDEN, self.FIELD_NAME)
         self.AE_MODEL_TYPE = CAE_3D
         self.FACTOR_INCREASE = 2.43 #interpolation ratio of oridinal # points to final
         self.n = self.get_n_3D()
         self.CHANNELS = None
+        self.NUMBER_MODES = self.calc_modes()
+        self.THREE_DIM = True
+        self.X_FP = self.INTERMEDIATE_FP + "X_3D_{}.npy".format(self.FIELD_NAME)
+
         #define getter for __kwargs since they may change after initialization
 
     def get_kwargs(self):
