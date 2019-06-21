@@ -107,7 +107,7 @@ class FluidityUtils():
         pass
 
 
-    def get_3D_grid(self, fp, field_name, npoints=None, factor_inc=2.5,
+    def get_3D_grid(self, fp, field_name, npoints=None, factor_inc=2.43,
                 newshape = None, save_newgrid_fp = None, ret_torch=False):
         """Returns numpy array or torch tensor of the vtu file input
         Accepts:
