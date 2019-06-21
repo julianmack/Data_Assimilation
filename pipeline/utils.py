@@ -67,7 +67,7 @@ class DataLoader():
         return fps_sorted
 
     @staticmethod
-    def create_X_from_fps(fps, field_name, field_type  = "scalar"):
+    def create_X_from_fps(fps, field_name, field_type  = "scalar", three_dim = False):
         """Creates a numpy array of values of scalar field_name
         Input list must be sorted"""
         M = len(fps) #number timesteps
@@ -75,27 +75,34 @@ class DataLoader():
         for idx, fp in enumerate(fps):
             # create array of tracer
             ug = vtktools.vtu(fp)
-            if field_type == "scalar":
-                vector = ug.GetScalarField(field_name)
-            elif field_type == "vector":
-                vector = ug.GetVectorField(field_name)
+            if not three_dim:
+                if field_type == "scalar":
+                    matrix = ug.GetScalarField(field_name)
+                elif field_type == "vector":
+                    matrix = ug.GetVectorField(field_name)
+                else:
+                    raise ValueError("field_name must be in {\'scalar\', \'vector\'}")
+            elif three_dim == True:
+                matrix = FluidityUtils.get_3D_grid(ug, field_name, npoints=None, factor_inc=2.43,
+                            newshape = None, save_newgrid_fp = None, ret_torch=False)
             else:
-                raise ValueError("field_name must be in {\'scalar\', \'vector\'}")
-            #print("Length of vector:", vector.shape)
+                raise ValueError("three_dim must be True or eval to False")
 
-            vec_len, = vector.shape
             if idx == 0:
                 #fix length of vectors and initialize the output array:
-                n = vec_len
-                output = np.zeros((M, n))
+                n = matrix.shape
+                size = (M,) + n
+                output = np.zeros(size)
             else:
                 #enforce all vectors are of the same length
                 assert vec_len == n, "All input .vtu files must be of the same length."
+            output[idx] = matrix
 
-
-            output[idx] = vector
-
-        return output.T #return (n x M)
+        if three_dim:
+            raise NotImplemtedError("Decide output dims")
+        else:
+            output = output.T #return (n x M)
+        return output
 
 class FluidityUtils():
     """Class to hold Fluidity helper functions.
@@ -106,12 +113,11 @@ class FluidityUtils():
     def __init__(self):
         pass
 
-
-    def get_3D_grid(self, fp, field_name, npoints=None, factor_inc=2.43,
+    def get_3D_grid(self, ug, field_name, npoints=None, factor_inc=2.43,
                 newshape = None, save_newgrid_fp = None, ret_torch=False):
         """Returns numpy array or torch tensor of the vtu file input
         Accepts:
-            :fp - str. filepath to .vtu file
+            :ug - .vtu object
             :field_name - str. name of field to extract. e.g. "pressure"
             :npoints - when newshape=None, this is the total number of points in output.
                 If None, the number is (approximately) the (input number * factor_inc)
@@ -121,7 +127,28 @@ class FluidityUtils():
                 saved at this location relative to the working directory
 
             :ret_torch - if True, returns a torch tensor. Otherwise returns a numpy array."""
-        ug = vtktools.vtu(fp)
+
+        newshape = self.get_newshape_3D(ug, newshape, npoints, factor_inc, )
+
+        (nx, ny, nz) = newshape
+
+        struct_grid = ug.StructuredPointProbe(nx, ny, nz)
+
+        if save_newgrid_fp:
+            self.save_structured_vtu(save_newgrid_fp, struct_grid)
+
+        pointdata = struct_grid.GetPointData()
+        vtkdata = pointdata.GetScalars(field_name)
+        np_data = nps.vtk_to_numpy(vtkdata)
+
+        #Fortran order reshape (i.e first index changes fastest):
+        result = np.reshape(np_data, newshape, order='F')
+        if ret_torch:
+            result = torch.Tensor(result)
+
+        return result
+
+    def get_newshape_3D(self, ug, newshape, npoints, factor_inc, ):
 
         if newshape == None:
             points = ug.ugrid.GetPoints()
@@ -145,22 +172,9 @@ class FluidityUtils():
         else:
             (nx, ny, nz) = newshape
 
+        return newshape
 
-        struct_grid = ug.StructuredPointProbe(nx, ny, nz)
 
-        if save_newgrid_fp:
-            self.save_structured_vtu(save_newgrid_fp, struct_grid)
-
-        pointdata = struct_grid.GetPointData()
-        vtkdata = pointdata.GetScalars(field_name)
-        np_data = nps.vtk_to_numpy(vtkdata)
-
-        #Fortran order reshape (i.e first index changes fastest):
-        result = np.reshape(np_data, newshape, order='F')
-        if ret_torch:
-            result = torch.Tensor(result)
-
-        return result
 
     def save_structured_vtu(self, filename, struc_grid):
         from evtk.hl import pointsToVTK

@@ -4,7 +4,7 @@ from pipeline import TrainAE
 
 def main():
 
-    settings = config.ToyAEConfig()
+    settings = config.CAEConfig()
     trainer = TrainAE(settings)
     model = trainer.train()
 
