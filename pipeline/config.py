@@ -112,6 +112,7 @@ class CAEConfig(ConfigAE):
         self.n = self.get_n_3D()
         self.CHANNELS = None
         #define getter for __kwargs since they may change after initialization
+
     def get_kwargs(self):
         conv_data = self.get_conv_schedule()
         init_data = utils.ML_utils.get_init_data_from_schedule(conv_data)
