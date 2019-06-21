@@ -101,9 +101,9 @@ class ToyAEConfig(ConfigAE):
         self.AE_MODEL_TYPE = ToyAE
         self.ACTIVATION = "relu"
 
-class ToyCAEConfig(ToyAEConfig):
+class CAEConfig(ToyAEConfig):
     def __init__(self):
-        super(ToyCAEConfig, self).__init__()
+        super(CAEConfig, self).__init__()
         self.NUMBER_MODES = 4
         self.AE_MODEL_FP = self.HOME_DIR + "models/CAE_toy_{}_{}_{}.pth".format(self.NUMBER_MODES, self.HIDDEN, self.FIELD_NAME)
         self.AE_MODEL_TYPE = ToyCAE
