@@ -176,9 +176,12 @@ class TestCAE_3D():
         batch_sz = 1
         Cin = settings.get_channels()[0]
         size = (batch_sz, Cin) + settings.n
-        x = torch.rand(size, requires_grad=True)
+        device = ML.get_device()
+        x = torch.rand(size, requires_grad=True, device = device)
 
         model = CAE_3D(**settings.get_kwargs())
+
+        model.to(device)
         try:
 
             y = model(x)

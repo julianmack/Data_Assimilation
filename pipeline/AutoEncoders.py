@@ -21,11 +21,8 @@ class BaseAE(nn.Module):
     def encode(self, x):
         layers = self.layers_encode
         for layer in layers[:-1]:
-            print(layer)
-            print("started", x.shape)
             x = self.act_fn(layer(x))
         x = layers[-1](x) #no activation function for latent space
-
         return x
 
     def decode(self, x):
