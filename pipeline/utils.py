@@ -318,32 +318,53 @@ class ML_utils():
         return x  // stride + 1
 
     @staticmethod
-    def conv_scheduler1D(inp, kernel = 3):
+    def conv_scheduler1D_stride2(inp, lowest_out = 1):
+        """Fn to find convolutional schedule that attampts to avoid:
+            a) Lots of padding @ latter stages (as this may introduce artefacts)
+            b) Any rounding errors in the floor operation (which are particularly
+            difficult to reconstruct in the deoder of an AE)
+
+        NOTE: lowest_out is a soft limit - a value may be accepted as part of
+        the scheudle if it is slightly lower than this value"""
         res = []
-        while inp > 4:
-            raise NotImpelemtedError()
+        out = inp
+        while inp > 3:
             pad = 0
             stride = 2
             kernel = 3
             if inp % 2 == 0: #input is even
-                stride = 2
                 kernel = 2
+                out = ML_utils.conv_formula(inp, stride, pad, kernel)
+                if out % 2 == 0: #input even and output even
+                    pad = 1
+                    out = ML_utils.conv_formula(inp, stride, pad, kernel)
             else: #input is odd
-                out = conv_formula(inp, stride, pad, kernel)
+                out = ML_utils.conv_formula(inp, stride, pad, kernel)
                 if out % 2 == 0:  #input is and out is even
                     pad = 1
-                    out = conv_formula(inp, stride, pad, kernel)
-
-            if out == 4:
-                stride = 2
-                kernel = 2
-                pad = 0
-                out = conv_formula(inp, stride, pad, kernel)
-            if out == 5:
-                stride = 2
-                kernel = 3
-                pad = 1
-                out = conv_formula(inp, stride, pad, kernel)
+                    out = ML_utils.conv_formula(inp, stride, pad, kernel)
 
             res.append({"in": inp, "out": out, "stride": stride, "pad": pad, "kernel": kernel})
             inp = out
+            if out <= lowest_out:
+                #break
+                return res
+        if out <= lowest_out:
+            return res
+
+        if inp == 3:
+            pad = 0
+            stride = 1
+            kernel = 2
+            out = ML_utils.conv_formula(inp, stride, pad, kernel)
+            res.append({"in": inp, "out": out, "stride": stride, "pad": pad, "kernel": kernel})
+            inp = out
+        if out <= lowest_out:
+            return res
+        if inp == 2:
+            pad = 0
+            stride = 1
+            kernel = 2
+            out = ML_utils.conv_formula(inp, stride, pad, kernel)
+            res.append({"in": inp, "out": out, "stride": stride, "pad": pad, "kernel": kernel})
+        return res
