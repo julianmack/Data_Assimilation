@@ -1,6 +1,7 @@
-from pipeline import config, utils
+from pipeline import config, utils, AutoEncoders
 import numpy as np
 import vtk.util.numpy_support as ns
+
 
 def main():
     fluidity = utils.FluidityUtils()
@@ -19,7 +20,11 @@ def main():
     n = (91, 85, 32)
     changes = ()
     #inx, iny, inz = (91, 85, 32)
-    results = utils.ML_utils.conv_scheduler3D(n, None, 1, True)
+    conv_data = utils.ML_utils.conv_scheduler3D(n, None, 1, True)
+    init_data = utils.ML_utils.get_init_data_from_schedule(conv_data)
+    print(init_data)
+    exit()
+    cae = Autoencoders.CAE_3D(init_data, channels)
 
 
 if __name__ == "__main__":

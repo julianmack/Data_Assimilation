@@ -183,14 +183,27 @@ class ToyAE(VanillaAE):
         z_i = self.act_fn(a_i)
         return jac_partial, z_i
 
-class CAE_3D(nn.Module):
-    def __init__(nn.Module, layers, channels):
+class CAE_3D(BaseAE):
+    def __init__(nn.Module, layer_data, channels):
         super(CAE_3D, self).__init__()
-        assert len(layers) == len(channels)
+        assert len(layer_data) + 1 == len(channels)
 
         self.layers = nn.ModuleList([])
 
-        layers = self.__get_list_AE_layers(input_size, latent_dim, hidden)
+        channels = self.__get_list_AE_layers(channels[0], channels[-1], channels[1:-1])
+
+        layer_data_list = layer_data + layer_data[::-1]
+        num_encode = len(layer_data)
+
+        assert len(channels) + 1 == len(layer_data_list)
+
+        for idx, data in enumerate(layer_data_list):
+            data = layer_data_list[idx]
+            if idx + 1 < num_encode:
+                conv = nn.Conv3D(channels[idx], channels[idx + 1], **data)
+            else:
+                conv = nn.ConvTranspose3d(channels[idx], channels[idx + 1], **data)
+            in_channels, out_channels, kernel_size, stride=1, padding=0
 
 class BaselineCAE(nn.Module):
     def __init__(self, channels):
