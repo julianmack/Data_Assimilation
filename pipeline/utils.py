@@ -350,6 +350,18 @@ class ML_utils():
             for idx, _ in enumerate(intermediate[0]):
                 for dim in range(3):
                     print(intermediate[dim][idx]["in"], end=", ")
+                print("stride=(", end="")
+                for dim in range(3):
+                    print(intermediate[dim][idx]["stride"], end=", ")
+                print(")  ", end="")
+                print("kernel_size=(", end="")
+                for dim in range(3):
+                    print(intermediate[dim][idx]["kernel"], end=", ")
+                print(")  ", end="")
+                print("padding=(", end="")
+                for dim in range(3):
+                    print(intermediate[dim][idx]["pad"], end=", ")
+                print(")  ", end="")
                 print()
             #final out
             for dim in range(3):
@@ -393,7 +405,7 @@ class ML_utils():
         res = []
         res_s1 = ML_utils.conv_scheduler1D_stride1(inp, changeover_out)
         if len(res_s1) > 0:
-            inp = res_s1[-1]["in"]
+            inp = res_s1[-1]["out"]
         res_s2 = ML_utils.conv_scheduler1D_stride2(inp, lowest_out)
         res_s1.extend(res_s2)
         return res_s1
