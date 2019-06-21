@@ -127,7 +127,7 @@ class CAEConfig(ConfigAE):
         #TODO add self.lowest_out != None
         #TODO add self.MAX_Layers
         #TODO - give ability to set bespoke schedule
-        return utils.ML_utils.conv_scheduler3D(self.n, None, 1, True)
+        return utils.ML_utils.conv_scheduler3D(self.n, None, 1, False)
 
     def get_channels(self):
         if self.CHANNELS != None:
