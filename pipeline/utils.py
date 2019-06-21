@@ -318,6 +318,15 @@ class ML_utils():
         return x  // stride + 1
 
     @staticmethod
+    def conv_scheduler1D_stride1(inp, lowest_out = 1):
+        assert lowest_out >= 1, "lowest_out must be >= 1"
+        res = []
+        while inp <= lowest_out:
+            out = ML_utils.conv_formula(inp, stride, pad, kernel)
+            res.append({"in": inp, "out": out, "stride": stride, "pad": pad, "kernel": kernel})
+            inp = out
+        return res
+    @staticmethod
     def conv_scheduler1D_stride2(inp, lowest_out = 1):
         """Fn to find convolutional schedule that attampts to avoid:
             a) Lots of padding @ latter stages (as this may introduce artefacts)
