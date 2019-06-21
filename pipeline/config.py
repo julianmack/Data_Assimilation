@@ -4,7 +4,7 @@ User can create new classes that inherit from class Config and override class va
 in order to create new combinations of config options. Alternatively, individual config
 options can be altered one at a time on an ad-hoc basis."""
 
-from pipeline.AutoEncoders import VanillaAE, ToyAE, BaseAE
+from pipeline.AutoEncoders import VanillaAE, ToyAE, CAE_3D
 
 import socket
 import os, sys
@@ -101,14 +101,31 @@ class ToyAEConfig(ConfigAE):
         self.AE_MODEL_TYPE = ToyAE
         self.ACTIVATION = "relu"
 
-class CAEConfig(ToyAEConfig):
+class CAEConfig(ConfigAE):
     def __init__(self):
         super(CAEConfig, self).__init__()
         self.NUMBER_MODES = 4
         self.AE_MODEL_FP = self.HOME_DIR + "models/CAE_toy_{}_{}_{}.pth".format(self.NUMBER_MODES, self.HIDDEN, self.FIELD_NAME)
-        self.AE_MODEL_TYPE = ToyCAE
+        self.AE_MODEL_TYPE = CAE_3D
         self.HIDDEN = [128, 256, 256]
+        self.FACTOR_INCREASE = 2.43 #interpolation ratio of oridinal # points to final
+        self.n = self.get_n_3D()
+
         #define getter for __kwargs since they may change after initialization
+    def get_kwargs(self):
+        conv_data = self.get_conv_schedule()
+        init_data = utils.ML_utils.get_init_data_from_schedule(conv_data)
+
+        return  {"layer_data": init_data, "channels": self.CHANNELS, "activation": self.ACTIVATION}
+
+    def get_n_3D(self):
+        return (91, 85, 32) #TODO - use self.FACTOR_INCREASE
+
+    def get_conv_schedule(self):
+        #TODO add self.CROSSOVER != None
+        #TODO add self.lowest_out != None
+        #TODO add self.MAX_Layers
+        return utils.ML_utils.conv_scheduler3D(self.n, None, 1, False)
 
 class SmallTestDomain(Config):
     def __init__(self):
