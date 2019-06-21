@@ -10,7 +10,8 @@ class BaseAE(nn.Module):
     """Base AE class which all should inherit from
     The following instance variables must be initialized:
         self.layers_encode - an nn.ModuleList of all encoding layers in the network
-        self.layers_decode - an nn.ModuleList of all decoding layers in the network"""
+        self.layers_decode - an nn.ModuleList of all decoding layers in the network
+        self.act_fn - the activation function to use in between layers"""
     def forward(self, x):
         self.__check_instance_vars()
         x = self.encode(x)
@@ -34,7 +35,7 @@ class BaseAE(nn.Module):
         x = layers[-1](x) #no activation function for output
         return x
 
-    def __get_list_AE_layers(self, input_size, latent_dim, hidden):
+    def get_list_AE_layers(self, input_size, latent_dim, hidden):
         """Helper function to get a list of the number of fc nodes or conv
         channels in an autoencoder"""
         #create a list of all dimension sizes (including input/output)
@@ -91,7 +92,7 @@ class VanillaAE(BaseAE):
             hidden = []
 
 
-        layers = self.__get_list_AE_layers(input_size, latent_dim, hidden)
+        layers = self.get_list_AE_layers(input_size, latent_dim, hidden)
 
         #now create the fc layers and store in nn.module list
         self.layers = nn.ModuleList([])
@@ -184,26 +185,38 @@ class ToyAE(VanillaAE):
         return jac_partial, z_i
 
 class CAE_3D(BaseAE):
-    def __init__(nn.Module, layer_data, channels):
+    def __init__(self, layer_data, channels, activation = "relu"):
         super(CAE_3D, self).__init__()
         assert len(layer_data) + 1 == len(channels)
 
         self.layers = nn.ModuleList([])
 
-        channels = self.__get_list_AE_layers(channels[0], channels[-1], channels[1:-1])
+        channels = self.get_list_AE_layers(channels[0], channels[-1], channels[1:-1])
 
         layer_data_list = layer_data + layer_data[::-1]
         num_encode = len(layer_data)
 
-        assert len(channels) + 1 == len(layer_data_list)
+        assert len(channels) == len(layer_data_list) + 1
 
         for idx, data in enumerate(layer_data_list):
             data = layer_data_list[idx]
-            if idx + 1 < num_encode:
-                conv = nn.Conv3D(channels[idx], channels[idx + 1], **data)
+
+            if idx  < num_encode:
+                conv = nn.Conv3d(channels[idx], channels[idx + 1], **data)
             else:
                 conv = nn.ConvTranspose3d(channels[idx], channels[idx + 1], **data)
-            in_channels, out_channels, kernel_size, stride=1, padding=0
+            self.layers.append(conv)
+
+        self.layers_encode = self.layers[:num_encode]
+        self.layers_decode = self.layers[num_encode:]
+
+        if activation == "lrelu":
+            self.act_fn = nn.LeakyReLU(negative_slope = 0.05, inplace=False)
+        elif activation == "relu":
+            self.act_fn = F.relu
+        else:
+            raise NotImplemtedError("Activation function must be in {'lrelu', 'relu'}")
+
 
 class BaselineCAE(nn.Module):
     def __init__(self, channels):
