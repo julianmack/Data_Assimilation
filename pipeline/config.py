@@ -118,7 +118,7 @@ class CAEConfig(ConfigAE):
         channels = self.get_channels()
         kwargs =   {"layer_data": init_data, "channels": channels, "activation": self.ACTIVATION}
         return kwargs
-        
+
     def get_n_3D(self):
         return (91, 85, 32) #TODO - use self.FACTOR_INCREASE
 
@@ -127,14 +127,15 @@ class CAEConfig(ConfigAE):
         #TODO add self.lowest_out != None
         #TODO add self.MAX_Layers
         #TODO - give ability to set bespoke schedule
-        return utils.ML_utils.conv_scheduler3D(self.n, None, 1, False)
+        return utils.ML_utils.conv_scheduler3D(self.n, None, 1, True)
 
     def get_channels(self):
         if self.CHANNELS != None:
             return self.CHANNELS
         else: #gen random channels
             n_layers_decode = len(self.get_conv_schedule()[0])
-            return list(range(1, n_layers_decode + 2))[::-1]
+            channels = [2] * (n_layers_decode + 1)
+            return channels
 
 class SmallTestDomain(Config):
     def __init__(self):

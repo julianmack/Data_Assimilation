@@ -21,8 +21,9 @@ class BaseAE(nn.Module):
     def encode(self, x):
         layers = self.layers_encode
         for layer in layers[:-1]:
+            print(layer)
+            print("started", x.shape)
             x = self.act_fn(layer(x))
-
         x = layers[-1](x) #no activation function for latent space
 
         return x
@@ -34,6 +35,15 @@ class BaseAE(nn.Module):
 
         x = layers[-1](x) #no activation function for output
         return x
+    def __check_instance_vars(self):
+        try:
+            x = self.layers_decode
+            y = self.layers_encode
+        except:
+            raise ValueError("Must init model with instance variables layers_decode and layers_encode")
+
+        assert isinstance(x, nn.ModuleList), "model.layers_decode must be of type nn.ModuleList"
+        assert isinstance(y, nn.ModuleList), "model.layers_encode must be of type nn.ModuleList"
 
     def get_list_AE_layers(self, input_size, latent_dim, hidden):
         """Helper function to get a list of the number of fc nodes or conv
@@ -52,15 +62,6 @@ class BaseAE(nn.Module):
 
         return layers
 
-    def __check_instance_vars(self):
-        try:
-            x = self.layers_decode
-            y = self.layers_encode
-        except:
-            raise ValueError("Must init model with instance variables layers_decode and layers_encode")
-
-        assert isinstance(x, nn.ModuleList), "model.layers_decode must be of type nn.ModuleList"
-        assert isinstance(y, nn.ModuleList), "model.layers_encode must be of type nn.ModuleList"
 
 class VanillaAE(BaseAE):
     """Variable size AE - using only fully connected layers.

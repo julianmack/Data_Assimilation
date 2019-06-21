@@ -18,13 +18,12 @@ def main():
 
     #vtk_file = ns.numpy_to_vtk(in_3d, 1)
     n = (91, 85, 32)
-    changes = ()
     #inx, iny, inz = (91, 85, 32)
     conv_data = utils.ML_utils.conv_scheduler3D(n, None, 1, True)
     init_data = utils.ML_utils.get_init_data_from_schedule(conv_data)
     print(init_data)
-    exit()
-    cae = Autoencoders.CAE_3D(init_data, channels)
+    channels = list(range(1, len(init_data) + 2))[::-1]
+    cae = AutoEncoders.CAE_3D(init_data, channels)
 
 
 if __name__ == "__main__":
