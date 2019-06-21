@@ -359,6 +359,27 @@ class ML_utils():
         return intermediate
 
     @staticmethod
+    def get_init_data_from_schedule(conv_data):
+        """Takes data returned from conv_scheduler3D and creates init data for CAE_3D"""
+        init_data = []
+        n_dims = len(conv_data)
+        n_layers = len(conv_data[0])
+
+        for layer_idx in range(n_layers):
+            layer_data = []
+            for dim in range(n_dims):
+                layer_data.append(conv_data[dim][layer_idx])
+            stride = (x["stride"] for x in layer_data)
+            padding = (x["pad"] for x in layer_data)
+            kernel = (x["kernel"] for x in layer_data)
+            init_layer = {"kernel_size": kernel,
+                         "padding": padding,
+                         "stride": stride}
+            init_data.append(init_layer)
+
+        return init_data
+
+    @staticmethod
     def conv_scheduler1D(inp, changeover_out=None, lowest_out=1):
         """Desired schedule which combines stride=1 layers initially with
         later stride=2 for downsampling
