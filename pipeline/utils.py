@@ -369,9 +369,9 @@ class ML_utils():
             layer_data = []
             for dim in range(n_dims):
                 layer_data.append(conv_data[dim][layer_idx])
-            stride = (x["stride"] for x in layer_data)
-            padding = (x["pad"] for x in layer_data)
-            kernel = (x["kernel"] for x in layer_data)
+            stride = tuple([x["stride"] for x in layer_data])
+            padding = tuple([x["pad"] for x in layer_data])
+            kernel = tuple([x["kernel"] for x in layer_data])
             init_layer = {"kernel_size": kernel,
                          "padding": padding,
                          "stride": stride}
