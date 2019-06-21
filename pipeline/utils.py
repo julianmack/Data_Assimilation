@@ -318,22 +318,64 @@ class ML_utils():
         return x  // stride + 1
 
     @staticmethod
-    def conv_scheduler1D(inp, changeover_out, lowest_out=1):
+    def conv_scheduler3D(inps, changeovers=None, lowest_outs=1, verbose = True):
+        """Convolutional Scheduler for 3D system"""
+
+        assert inps != None
+        arg_tuples = [inps, changeovers, lowest_outs]
+
+        args = []
+        for arg in arg_tuples:
+            if isinstance(arg, int) or arg == None:
+                argument = (arg, arg, arg)
+            else:
+                assert isinstance(arg, tuple)
+                assert len(arg) == 3
+                argument = arg
+            args.append(argument)
+
+        inps, changeovers, lowest_outs = args[0], args[1], args[2]
+
+        results = []
+        for idx, n_i in enumerate(inps):
+            res_i = ML_utils.conv_scheduler1D(n_i, changeovers[idx], lowest_outs[idx])
+            results.append(res_i)
+        min_len = min([len(i) for i in results])
+
+        intermediate = []
+        for dim_results in results:
+            intermediate.append(dim_results[: min_len])
+
+        if verbose:
+            for idx, _ in enumerate(intermediate[0]):
+                for dim in range(3):
+                    print(intermediate[dim][idx]["in"], end=", ")
+                print()
+            #final out
+            for dim in range(3):
+                print(results[dim][min_len - 1]["out"], end=", ")
+
+            print("\nNum layers is:", len(intermediate[0]))
+        return intermediate
+
+    @staticmethod
+    def conv_scheduler1D(inp, changeover_out=None, lowest_out=1):
         """Desired schedule which combines stride=1 layers initially with
         later stride=2 for downsampling
         ::changeover_out - output size at which the schedule changes from stride=1 to stride=2
 
         """
-
+        if changeover_out == None:
+            changeover_out = inp - 10 # This is a good heuristic if you are not sure
         assert lowest_out >= 1, "lowest_out must be >= 1"
         assert changeover_out > lowest_out, "changeover_out must be > lowest_out"
         res = []
-        res_s1 = conv_scheduler1D_stride1(inp, changeover_out)
+        res_s1 = ML_utils.conv_scheduler1D_stride1(inp, changeover_out)
         if len(res_s1) > 0:
             inp = res_s1[-1]["in"]
-        res_s2 = conv_scheduler1D_stride2(inp, lowest_out)
-
-        return res_s1.extend(res_s2)
+        res_s2 = ML_utils.conv_scheduler1D_stride2(inp, lowest_out)
+        res_s1.extend(res_s2)
+        return res_s1
 
 
     @staticmethod

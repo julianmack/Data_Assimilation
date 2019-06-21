@@ -16,32 +16,11 @@ def main():
     #                     ret_torch = False, factor_inc = 2.43)
 
     #vtk_file = ns.numpy_to_vtk(in_3d, 1)
-
     n = (91, 85, 32)
+    changes = ()
     #inx, iny, inz = (91, 85, 32)
-    results = []
-    for n_i in n:
-        res_i = utils.ML_utils.conv_scheduler1D_stride1(n_i, 1)
-        results.append(res_i)
-    min_len = min([len(i) for i in results])
-    for layer in range(min_len):
-        for dim in range(len(n)):
-            print(results[dim][layer]["in"], end=", ")
-        print()
+    results = utils.ML_utils.conv_scheduler3D(n, None, 1, True)
 
-    #final out
-    for dim in range(len(n)):
-        print(results[dim][min_len - 1]["out"], end=", ")
-    exit()
-    inx, iny, inz = (91, 85, 32)
-    stride = 1
-    pad = 0
-    kernel = (2, 2, 2)
-    while inx*iny*inz != 1 and inx > 0:
-        inx = utils.ML_utils.conv_formula(inx, stride, pad, kernel[0])
-        iny = utils.ML_utils.conv_formula(iny, stride, pad, kernel[1])
-        inz = utils.ML_utils.conv_formula(inz, stride, pad, kernel[2])
-        print(inx, iny, inz)
 
 if __name__ == "__main__":
     main()

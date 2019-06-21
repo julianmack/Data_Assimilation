@@ -33,6 +33,24 @@ class BaseAE(nn.Module):
 
         x = layers[-1](x) #no activation function for output
         return x
+
+    def __get_list_AE_layers(self, input_size, latent_dim, hidden):
+        """Helper function to get a list of the number of fc nodes or conv
+        channels in an autoencoder"""
+        #create a list of all dimension sizes (including input/output)
+        layers = [input_size]
+        #encoder:
+        for size in hidden:
+            layers.append(size)
+        #latent representation:
+        layers.append(latent_dim)
+        #decoder:
+        for size in hidden[::-1]: #reversed list
+            layers.append(size)
+        layers.append(input_size)
+
+        return layers
+
     def __check_instance_vars(self):
         try:
             x = self.layers_decode
@@ -72,17 +90,8 @@ class VanillaAE(BaseAE):
         elif not hidden:
             hidden = []
 
-        #create a list of all dimension sizes (including input/output)
-        layers = [input_size]
-        #encoder:
-        for size in hidden:
-            layers.append(size)
-        #latent representation:
-        layers.append(latent_dim)
-        #decoder:
-        for size in hidden[::-1]: #reversed list
-            layers.append(size)
-        layers.append(input_size)
+
+        layers = self.__get_list_AE_layers(input_size, latent_dim, hidden)
 
         #now create the fc layers and store in nn.module list
         self.layers = nn.ModuleList([])
@@ -174,6 +183,14 @@ class ToyAE(VanillaAE):
         z_i = self.act_fn(a_i)
         return jac_partial, z_i
 
+class CAE_3D(nn.Module):
+    def __init__(nn.Module, layers, channels):
+        super(CAE_3D, self).__init__()
+        assert len(layers) == len(channels)
+
+        self.layers = nn.ModuleList([])
+
+        layers = self.__get_list_AE_layers(input_size, latent_dim, hidden)
 
 class BaselineCAE(nn.Module):
     def __init__(self, channels):
