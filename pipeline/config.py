@@ -125,6 +125,7 @@ class CAEConfig(ConfigAE):
         return kwargs
 
     def get_n_3D(self):
+        
         return (91, 85, 32) #TODO - use self.FACTOR_INCREASE
 
     def get_conv_schedule(self):
