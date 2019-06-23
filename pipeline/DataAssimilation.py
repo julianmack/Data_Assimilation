@@ -134,7 +134,9 @@ class DAPipeline():
 
 
     def vda_setup(self, settings):
-
+        """Generates matrices for VarDA. All returned matrices are in the
+        (n X M) format (as typical in VarDA) although when
+        settings.THREE_DIM = True, some are 4-dimensional"""
         data = {}
         loader = utils.DataLoader()
         X = loader.get_X(settings)
@@ -144,6 +146,7 @@ class DAPipeline():
         V = self.create_V_from_X(train_X, settings)
 
         if settings.THREE_DIM:
+            #MUST return in ( nx x ny x nz x M) form 
             raise NotImplementedError("Must deal with 3d case")
         else:
             #Deal with dimensions:
@@ -177,7 +180,9 @@ class DAPipeline():
     @staticmethod
     def create_V_from_X(X_fp, settings):
         """Creates a mean centred matrix V from input matrix X.
-        X_FP can be a numpy matrix or a fp to X"""
+        X_FP can be a numpy matrix or a fp to X.
+        returns V in the  M x n format"""
+
         if type(X_fp) == str:
             X = np.load(X_fp)
         elif type(X_fp) == np.ndarray:
