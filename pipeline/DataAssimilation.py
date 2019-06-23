@@ -39,7 +39,7 @@ class DAPipeline():
             w_0 = np.zeros((W.shape[-1],)) #TODO - I'm not sure about this - can we assume is it 0?
 
             V_grad = None
-            #OR - Alternatively, use the following:
+            # OR - Alternatively, use the following:
             # V_plus_trunc = W.T * (1 / s) @  U.T
             # w_0_v2 = V_plus_trunc @ u_0 #i.e. this is the value given in Rossella et al (2019).
             #     #I'm not clear if there is any difference - we are minimizing so expect them to
@@ -134,16 +134,25 @@ class DAPipeline():
 
 
     def vda_setup(self, settings):
-        #The X array should already be saved in settings.X_FP
-        #but can be created from .vtu fps if required. see trunc_SVD.py for an example
 
         data = {}
         loader = utils.DataLoader()
         X = loader.get_X(settings)
 
-        train_X, test_X, u_c, mean, std = loader.test_train_DA_split_maybe_normalize(X, settings)
+        train_X, test_X, u_c, X, mean, std = loader.test_train_DA_split_maybe_normalize(X, settings)
 
-        V = self.create_V_from_X(train_X)
+        V = self.create_V_from_X(train_X, settings)
+
+        if settings.THREE_DIM:
+            raise NotImplementedError("Must deal with 3d case")
+        else:
+            #Deal with dimensions:
+            #currently dim are: (M x nx x ny x nz ) or (M x n )
+            X = X.T
+            train_X = train_X.T
+            test_X = test_X.T
+            V = V.T
+
 
         # We will take initial condition u_0, as mean of historical data
         if settings.NORMALIZE:
@@ -152,20 +161,21 @@ class DAPipeline():
             u_0 = mean
 
         observations, obs_idx, nobs = self.select_obs(settings.OBS_MODE, u_c, settings.OBS_FRAC) #options are specific for rand
+
         #Now define quantities required for 3D-VarDA - see Algorithm 1 in Rossella et al (2019)
         H_0 = self.create_H(obs_idx, settings.n, nobs)
         d = observations - H_0 @ u_0 #'d' in literature
         #R_inv = self.create_R_inv(OBS_VARIANCE, nobs)
         data = {"d": d, "G": H_0, "V": V,
                 "observations": observations,
-                "u_c": u_c, "u_0": u_0, "X": X, "train_X": train_X}
+                "u_c": u_c, "u_0": u_0, "X": X, "train_X": train_X, "test_X":test_X}
 
 
         return data, std, mean
 
 
     @staticmethod
-    def create_V_from_X(X_fp):
+    def create_V_from_X(X_fp, settings):
         """Creates a mean centred matrix V from input matrix X.
         X_FP can be a numpy matrix or a fp to X"""
         if type(X_fp) == str:
@@ -175,26 +185,38 @@ class DAPipeline():
         else:
             raise TypeError("X_fp must be a filpath or a numpy.ndarray")
 
-        n, M = X.shape
-        mean = np.mean(X, axis=1)
+        M, n = utils.DataLoader.get_dim_X(X, settings)
 
-        V = (X.T - mean).T
+        mean = np.mean(X, axis=0)
+
+        V = (X - mean)
 
         # V = (M - 1) ** (- 0.5) * V
 
         return V
 
+    def get_npoints_from_shape(self, n):
+        if type(n) == tuple:
+            npoints = 1
+            for val in n:
+                npoints *= val
+        elif type(n) == int:
+            npoints = n
+        else:
+            raise TypeError("Size n must be of type int or tuple")
+        return npoints
+
     def select_obs(self, mode, vec, frac=None):
         """Selects and return a subset of observations and their indexes
         from vec according to a user selected mode"""
-        n = vec.shape[0]
+        npoints = self.get_npoints_from_shape(vec.shape)
 
         if mode == "rand":
             # Define observations as a random subset of the control state.
-            nobs = int(frac * n) #number of observations
+            nobs = int(frac * npoints) #number of observations
 
             utils.set_seeds(seed = self.settings.SEED) #set seeds so that the selected subset is the same every time
-            obs_idx = random.sample(range(n), nobs) #select nobs integers w/o replacement
+            obs_idx = random.sample(range(npoints), nobs) #select nobs integers w/o replacement
             observations = np.take(vec, obs_idx)
         elif mode == "single_max":
             nobs = 1
@@ -213,6 +235,7 @@ class DAPipeline():
         returns
             :H - numpy array of size (nobs x n)
         """
+        #raise NotImplementedError("Haven't worked out what to do with 3D observation operator")
 
         H = np.zeros((nobs, n))
         H[range(nobs), obs_idxs] = 1

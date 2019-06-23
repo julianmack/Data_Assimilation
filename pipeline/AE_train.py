@@ -26,13 +26,13 @@ class TrainAE():
         loader = utils.DataLoader()
         X = loader.get_X(settings)
 
-        train_X, test_X, _,  mean, std = loader.test_train_DA_split_maybe_normalize(X, settings)
+        train_X, test_X, _, X_norm,  mean, std = loader.test_train_DA_split_maybe_normalize(X, settings)
 
         #Dataloaders
-        train_dataset = TensorDataset(torch.Tensor(train_X.T))
+        train_dataset = TensorDataset(torch.Tensor(train_X))
         train_loader = DataLoader(train_dataset, BATCH, shuffle=True)
-        test_dataset = TensorDataset(torch.Tensor(test_X.T))
-        test_loader = DataLoader(test_dataset, test_X.shape[1])
+        test_dataset = TensorDataset(torch.Tensor(test_X))
+        test_loader = DataLoader(test_dataset, test_X.shape[0])
 
         print("train_size = ", len(train_loader.dataset))
         print("test_size = ", len(test_loader.dataset))

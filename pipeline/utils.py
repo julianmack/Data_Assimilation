@@ -29,6 +29,8 @@ class DataLoader():
         pass
 
     def get_X(self, settings):
+        print(settings.FORCE_GEN_X, "settings.FORCE_GEN_X ")
+        print(not os.path.exists(settings.X_FP), "not os.path.exists(settings.X_FP)")
         if settings.FORCE_GEN_X or not os.path.exists(settings.X_FP):
             fps = self.get_sorted_fps_U(settings.DATA_FP)
             X = self.create_X_from_fps(fps, settings)
@@ -36,7 +38,7 @@ class DataLoader():
                 np.save(settings.X_FP, X, allow_pickle=True)
         else:
             X = np.load(settings.X_FP,  allow_pickle=True)
-
+            print("ELSE branch", X.shape)
         return X
 
     @staticmethod
@@ -94,34 +96,41 @@ class DataLoader():
                 assert mat_size == n, "All input .vtu files must be of the same size."
             output[idx] = matrix
 
-        if settings.THREE_DIM:
-            pass #return (M x nx x ny x nz)
-        else:
-            output = output.T #return (n x M)
+        #return (M x nx x ny x nz) or (M x n)
+
         return output
 
     @staticmethod
-    def test_train_DA_split_maybe_normalize(X, settings):
+    def get_dim_X(X, settings):
+
+        if settings.THREE_DIM:
+            M, nx, ny, nz = X.shape
+            n = (nx, ny, nz)
+        else:
+            M, n = X.shape
+        assert n == settings.n, "dimensions {} must = {}".format(n, settings.n)
+        return M, n
+
+    @staticmethod
+    def test_train_DA_split_maybe_normalize(X, settings ):
         """Returns non-overlapping train/test and DA control state data.
         This function also deals with normalization (to ensure than only the
         training data is used for normalization mean and std)"""
 
-        if settings.THREE_DIM:
-            M, _, _, _ = X.shape
-        else:
-            _, M = X.shape
+
+        M, n = DataLoader.get_dim_X(X, settings)
 
         hist_idx = int(M * settings.HIST_FRAC)
-        hist_X = X[:, : hist_idx] #select historical data (i.e. training set in ML terminology)
+        hist_X = X[: hist_idx] #select historical data (i.e. training set in ML terminology)
                                  # that will be used for normalize
 
         #use only the training set to calculate mean and std
-        mean = np.mean(hist_X, axis=1)
-        std = np.std(hist_X, axis=1)
+        mean = np.mean(hist_X, axis=0)
+        std = np.std(hist_X, axis=0)
 
         if settings.NORMALIZE:
-            X = (X.T - mean).T
-            X = (X.T / std).T
+            X = (X - mean)
+            X = (X / std)
 
         # Split X into historical and present data. We will
         # assimilate "observations" at a single timestep t_DA
@@ -134,11 +143,11 @@ class DataLoader():
                                 "t_DA = {} and hist_idx = {}".format(t_DA, hist_idx))
         assert t_DA > hist_idx, ("Test set cannot have zero size")
 
-        train_X = X[:, : hist_idx]
-        test_X = X[:, hist_idx : t_DA]
-        u_c = X[:, t_DA] #control state (for DA)
+        train_X = X[: hist_idx]
+        test_X = X[hist_idx : t_DA]
+        u_c = X[t_DA] #control state (for DA)
 
-        return train_X, test_X, u_c, mean, std
+        return train_X, test_X, u_c, X, mean, std
 
 class FluidityUtils():
     """Class to hold Fluidity helper functions.
