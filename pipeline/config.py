@@ -19,7 +19,7 @@ class Config():
         self.INTERMEDIATE_FP = self.HOME_DIR + "data/small3D_intermediate/"
         self.FIELD_NAME = "Pressure"
         self.X_FP = self.INTERMEDIATE_FP + "X_1D_{}.npy".format(self.FIELD_NAME)
-        self.FORCE_GEN_X = False
+        self.FORCE_GEN_X = True
         self.n = 100040
         self.THREE_DIM = False # i.e. is representation in 3D tensor or 1D array
         self.SAVE = True
@@ -108,8 +108,9 @@ class CAEConfig(ConfigAE):
         super(CAEConfig, self).__init__()
         self.AE_MODEL_FP = self.HOME_DIR + "models/CAE_toy_{}_{}_{}.pth".format(self.NUMBER_MODES, self.HIDDEN, self.FIELD_NAME)
         self.AE_MODEL_TYPE = CAE_3D
+        self.n3d = (91, 85, 32)
         self.FACTOR_INCREASE = 2.43 #interpolation ratio of oridinal # points to final
-        self.n = self.get_n_3D()
+        self.n = self.get_n_3D() #This overrides FACTOR_INCREASE
         self.CHANNELS = None
         self.NUMBER_MODES = self.calc_modes()
         self.THREE_DIM = True
@@ -125,8 +126,8 @@ class CAEConfig(ConfigAE):
         return kwargs
 
     def get_n_3D(self):
-        
-        return (91, 85, 32) #TODO - use self.FACTOR_INCREASE
+
+        return self.n3d
 
     def get_conv_schedule(self):
         #TODO add self.CROSSOVER != None
@@ -143,6 +144,11 @@ class CAEConfig(ConfigAE):
             channels = [2] * (n_layers_decode + 1)
             return channels
 
+    def calc_modes(self):
+        #lantent dim is Channels_latent * (x_size_latent ) x (y_size_latent ) x (z_size_latent )
+        [x_data, y_data, z_data] = self.get_conv_schedule()
+        return self.get_channels()[-1] * x_data[-1]["out"] * y_data[-1]["out"] * z_data[-1]["out"]
+        
 class SmallTestDomain(Config):
     def __init__(self):
         super(SmallTestDomain, self).__init__()
