@@ -31,7 +31,7 @@ class DataLoader():
     def get_X(self, settings):
         if settings.FORCE_GEN_X or not os.path.exists(settings.X_FP):
             fps = self.get_sorted_fps_U(settings.DATA_FP)
-            X = self.create_X_from_fps(fps, settings.FIELD_NAME)
+            X = self.create_X_from_fps(fps, settings)
             if settings.SAVE:
                 np.save(settings.X_FP, X, allow_pickle=True)
         else:
@@ -67,26 +67,22 @@ class DataLoader():
         return fps_sorted
 
     @staticmethod
-    def create_X_from_fps(fps, field_name, field_type  = "scalar", three_dim = False):
+    def create_X_from_fps(fps, settings, field_type  = "scalar"):
         """Creates a numpy array of values of scalar field_name
         Input list must be sorted"""
+
+        field_name = settings.FIELD_NAME
         M = len(fps) #number timesteps
 
         for idx, fp in enumerate(fps):
             # create array of tracer
             ug = vtktools.vtu(fp)
-            if not three_dim:
-                if field_type == "scalar":
-                    matrix = ug.GetScalarField(field_name)
-                elif field_type == "vector":
-                    matrix = ug.GetVectorField(field_name)
-                else:
-                    raise ValueError("field_name must be in {\'scalar\', \'vector\'}")
-            elif three_dim == True:
-                matrix = FluidityUtils.get_3D_grid(ug, field_name, npoints=None, factor_inc=2.43,
-                            newshape = None, save_newgrid_fp = None, ret_torch=False)
+            if not settings.THREE_DIM:
+                matrix = FluidityUtils.get_1D_grid(ug, field_type)
+            elif settings.THREE_DIM == True:
+                matrix = FluidityUtils.get_3D_grid(ug, settings)
             else:
-                raise ValueError("three_dim must be True or eval to False")
+                raise ValueError("<config>.THREE_DIM must be True or eval to False")
 
             if idx == 0:
                 #fix length of vectors and initialize the output array:
@@ -98,7 +94,7 @@ class DataLoader():
                 assert vec_len == n, "All input .vtu files must be of the same length."
             output[idx] = matrix
 
-        if three_dim:
+        if settings.THREE_DIM:
             raise NotImplemtedError("Decide output dims")
         else:
             output = output.T #return (n x M)
@@ -113,22 +109,33 @@ class FluidityUtils():
     def __init__(self):
         pass
 
-    def get_3D_grid(self, ug, field_name, npoints=None, factor_inc=2.43,
-                newshape = None, save_newgrid_fp = None, ret_torch=False):
+    @staticmethod
+    def get_1D_grid(ug, field_type):
+        if field_type == "scalar":
+            matrix = ug.GetScalarField(field_name)
+        elif field_type == "vector":
+            matrix = ug.GetVectorField(field_name)
+        else:
+            raise ValueError("field_name must be in {\'scalar\', \'vector\'}")
+        return matrix
+
+    def get_3D_grid(self, ug, settings, save_newgrid_fp=None):
         """Returns numpy array or torch tensor of the vtu file input
         Accepts:
             :ug - .vtu object
-            :field_name - str. name of field to extract. e.g. "pressure"
-            :npoints - when newshape=None, this is the total number of points in output.
-                If None, the number is (approximately) the (input number * factor_inc)
-            :factor_inc - Factor by which to increase (or decrease) the number of points (when newshape=None)
-            :newshape - tuple of 3 ints which gives new shape of output. Overides npoints and factor_inc
+            :setting - a Config object containing some/all of the following information:
+                :FACTOR_INCREASE - Factor by which to increase (or decrease) the number of points (when newshape=None)
+                     the number of output points is (approximately) the (input number points * FACTOR_INCREASE)
+                :n - tuple of 3 ints which gives new shape of output. Overides FACTOR_INCREASE
             :save_newgrid_fp - str. if not None, the restructured vtu grid will be
-                saved at this location relative to the working directory
+                saved at this location relative to the working directory"""
 
-            :ret_torch - if True, returns a torch tensor. Otherwise returns a numpy array."""
+        field_name = settings.FIELD_NAME
 
-        newshape = self.get_newshape_3D(ug, newshape, npoints, factor_inc, )
+        newshape = self.get_newshape_3D(ug, settings.n, settings.FACTOR_INCREASE, )
+
+        #update settings
+        settings.n3d = newshape
 
         (nx, ny, nz) = newshape
 
@@ -143,18 +150,16 @@ class FluidityUtils():
 
         #Fortran order reshape (i.e first index changes fastest):
         result = np.reshape(np_data, newshape, order='F')
-        if ret_torch:
-            result = torch.Tensor(result)
+
 
         return result
 
-    def get_newshape_3D(self, ug, newshape, npoints, factor_inc, ):
+    def get_newshape_3D(self, ug, newshape, factor_inc, ):
 
         if newshape == None:
             points = ug.ugrid.GetPoints()
 
-            if npoints == None:
-                npoints = factor_inc * points.GetNumberOfPoints()
+            npoints = factor_inc * points.GetNumberOfPoints()
 
             bounds = points.GetBounds()
             ax, bx, ay, by, az, bz = bounds
@@ -170,7 +175,7 @@ class FluidityUtils():
 
             newshape = (nx, ny, nz)
         else:
-            (nx, ny, nz) = newshape
+            pass
 
         return newshape
 
