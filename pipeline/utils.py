@@ -29,8 +29,7 @@ class DataLoader():
         pass
 
     def get_X(self, settings):
-        print(settings.FORCE_GEN_X, "settings.FORCE_GEN_X ")
-        print(not os.path.exists(settings.X_FP), "not os.path.exists(settings.X_FP)")
+        """Returns X in the M x n format"""
         if settings.FORCE_GEN_X or not os.path.exists(settings.X_FP):
             fps = self.get_sorted_fps_U(settings.DATA_FP)
             X = self.create_X_from_fps(fps, settings)
