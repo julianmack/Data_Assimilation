@@ -25,7 +25,7 @@ class DAPipeline():
 
         self.settings = settings
 
-        data, hist_idx, obs_idx, nobs, std, mean = self.vda_setup(settings)
+        data, std, mean = self.vda_setup(settings)
 
         V = data.get("V")
         u_0 = data.get("u_0")
@@ -57,7 +57,7 @@ class DAPipeline():
             w_0 = torch.zeros((settings.NUMBER_MODES))
             #u_0 = decoder(w_0).detach().numpy()
 
-            #Now access explicit gradient function
+            # Now access explicit gradient function
             try:
                 data["V_grad"] = settings.AE_MODEL_TYPE(**kwargs).jac_explicit
             except:
@@ -141,55 +141,31 @@ class DAPipeline():
         loader = utils.DataLoader()
         X = loader.get_X(settings)
 
-        n, M = X.shape
+        train_X, test_X, u_c, mean, std = loader.test_train_DA_split_maybe_normalize(X, settings)
 
+        V = self.create_V_from_X(train_X)
 
-        # Split X into historical and present data. We will
-        # assimilate "observations" at a single timestep t_DA
-        # which corresponds to the control state u_c
         # We will take initial condition u_0, as mean of historical data
-        hist_idx = int(M * settings.HIST_FRAC)
-        t_DA = M - settings.TDA_IDX_FROM_END - 1
-        assert t_DA >= hist_idx, ("Cannot select observation from historical data."
-                                "Reduce HIST_FRAC or reduce TDA_IDX_FROM_END to prevent overlap.\n"
-                                "t_DA = {} and hist_idx = {}".format(t_DA, hist_idx))
-
-        hist_X = X[:, : hist_idx] #select training set data
-
         if settings.NORMALIZE:
-            #use only the training set to calculate mean and std
-            mean = np.mean(hist_X, axis=1)
-            std = np.std(hist_X, axis=1)
-            #NOTE: when hist_X -> X in 2 lines above, the MAE reduces massively
-            #In preliminary experiments, this is not true with hist_X
-
-            X = (X.T - mean).T
-            X = (X.T / std).T
-
-            hist_X = X[:, : hist_idx]
-            V, u_0, _ = self.create_V_from_X(hist_X, return_mean = True)
+            u_0 = np.zeros(settings.n) #since the data is mean centred
         else:
-            V, mean, std = self.create_V_from_X(hist_X, return_mean = True)
             u_0 = mean
-
-        #select control state
-        u_c = X[:, t_DA]
 
         observations, obs_idx, nobs = self.select_obs(settings.OBS_MODE, u_c, settings.OBS_FRAC) #options are specific for rand
         #Now define quantities required for 3D-VarDA - see Algorithm 1 in Rossella et al (2019)
-        H_0 = self.create_H(obs_idx, n, nobs)
+        H_0 = self.create_H(obs_idx, settings.n, nobs)
         d = observations - H_0 @ u_0 #'d' in literature
         #R_inv = self.create_R_inv(OBS_VARIANCE, nobs)
         data = {"d": d, "G": H_0, "V": V,
                 "observations": observations,
-                "u_c": u_c, "u_0": u_0, "X": X, "hist_X": hist_X, "t_DA": t_DA}
+                "u_c": u_c, "u_0": u_0, "X": X, "train_X": train_X}
 
 
-        return data, hist_idx, obs_idx, nobs, std, mean
+        return data, std, mean
 
 
     @staticmethod
-    def create_V_from_X(X_fp, return_mean = False):
+    def create_V_from_X(X_fp):
         """Creates a mean centred matrix V from input matrix X.
         X_FP can be a numpy matrix or a fp to X"""
         if type(X_fp) == str:
@@ -205,9 +181,7 @@ class DAPipeline():
         V = (X.T - mean).T
 
         # V = (M - 1) ** (- 0.5) * V
-        if return_mean:
-            std = np.std(X, axis=1)
-            return V, mean, std
+
         return V
 
     def select_obs(self, mode, vec, frac=None):

@@ -100,6 +100,46 @@ class DataLoader():
             output = output.T #return (n x M)
         return output
 
+    @staticmethod
+    def test_train_DA_split_maybe_normalize(X, settings):
+        """Returns non-overlapping train/test and DA control state data.
+        This function also deals with normalization (to ensure than only the
+        training data is used for normalization mean and std)"""
+
+        if settings.THREE_DIM:
+            M, _, _, _ = X.shape
+        else:
+            _, M = X.shape
+
+        hist_idx = int(M * settings.HIST_FRAC)
+        hist_X = X[:, : hist_idx] #select historical data (i.e. training set in ML terminology)
+                                 # that will be used for normalize
+
+        #use only the training set to calculate mean and std
+        mean = np.mean(hist_X, axis=1)
+        std = np.std(hist_X, axis=1)
+
+        if settings.NORMALIZE:
+            X = (X.T - mean).T
+            X = (X.T / std).T
+
+        # Split X into historical and present data. We will
+        # assimilate "observations" at a single timestep t_DA
+        # which corresponds to the control state u_c
+        # We will take initial condition u_0, as m ean of historical data
+
+        t_DA = M - (settings.TDA_IDX_FROM_END + 1) #idx of Data Assimilation
+        assert t_DA >= hist_idx, ("Cannot select observation from historical data."
+                                "Reduce HIST_FRAC or reduce TDA_IDX_FROM_END to prevent overlap.\n"
+                                "t_DA = {} and hist_idx = {}".format(t_DA, hist_idx))
+        assert t_DA > hist_idx, ("Test set cannot have zero size")
+
+        train_X = X[:, : hist_idx]
+        test_X = X[:, hist_idx : t_DA]
+        u_c = X[:, t_DA] #control state (for DA)
+
+        return train_X, test_X, u_c, mean, std
+
 class FluidityUtils():
     """Class to hold Fluidity helper functions.
     In theory this should be part of

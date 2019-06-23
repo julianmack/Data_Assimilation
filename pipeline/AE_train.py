@@ -26,20 +26,7 @@ class TrainAE():
         loader = utils.DataLoader()
         X = loader.get_X(settings)
 
-        n, M = X.shape
-        hist_idx = int(M * settings.HIST_FRAC)
-        hist_X = X[:, : hist_idx]
-
-        #Normalize:
-        #use only the training set to calculate mean and std
-        mean = np.mean(hist_X, axis=1)
-        std = np.std(hist_X, axis=1)
-
-        X_centered = (X.T - mean).T
-        X_norm = (X_centered.T / std).T
-
-        train_X = X_norm[:, : hist_idx]
-        test_X = X_norm[:, hist_idx : -(settings.TDA_IDX_FROM_END+1)] #leave final elements for DA
+        train_X, test_X, _,  mean, std = loader.test_train_DA_split_maybe_normalize(X, settings)
 
         #Dataloaders
         train_dataset = TensorDataset(torch.Tensor(train_X.T))
