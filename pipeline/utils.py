@@ -80,9 +80,10 @@ class DataLoader():
             if not settings.THREE_DIM:
                 matrix = FluidityUtils.get_1D_grid(ug, field_type)
             elif settings.THREE_DIM == True:
-                matrix = FluidityUtils.get_3D_grid(ug, settings)
+                matrix = FluidityUtils().get_3D_grid(ug, settings)
             else:
                 raise ValueError("<config>.THREE_DIM must be True or eval to False")
+            mat_size = matrix.shape
 
             if idx == 0:
                 #fix length of vectors and initialize the output array:
@@ -91,11 +92,11 @@ class DataLoader():
                 output = np.zeros(size)
             else:
                 #enforce all vectors are of the same length
-                assert vec_len == n, "All input .vtu files must be of the same length."
+                assert mat_size == n, "All input .vtu files must be of the same size."
             output[idx] = matrix
 
         if settings.THREE_DIM:
-            raise NotImplemtedError("Decide output dims")
+            pass #return (M x nx x ny x nz)
         else:
             output = output.T #return (n x M)
         return output
