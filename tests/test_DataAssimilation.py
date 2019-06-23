@@ -55,6 +55,8 @@ class TestSetup():
         X = np.zeros((3, 4))
         X[:,:2] = np.arange(6).reshape((3, 2))
         X[0, 3] = 1
+        X = X.T
+
 
         INTERMEDIATE_FP = "inter"
         p = tmpdir.mkdir(INTERMEDIATE_FP).join("X_fp.npy")
@@ -64,6 +66,7 @@ class TestSetup():
         settings = config.Config()
         settings.X_FP = str(p)
         settings.n = 3
+        settings.FORCE_GEN_X = False
         settings.OBS_MODE = "single_max"
         settings.OBS_VARIANCE = 0.1
         settings.TDA_IDX_FROM_END = 0
@@ -71,28 +74,28 @@ class TestSetup():
 
         settings.NORMALIZE = False
 
-        data, hist_idx, obs_idx, nobs, std, mean = DA.vda_setup(settings)
+        data,  std, mean = DA.vda_setup(settings)
         X_ret = data.get("X")
         V = data.get("V")
         n, M = X_ret.shape
         u_c = data.get("u_c")
         u_0 = data.get("u_0")
+        nobs = len(data["observations"])
 
-
+        X_expt = X.T
         mean_exp = np.array([0.5, 2.5, 4.5])
         std_exp = np.array([0.5, 0.5, 0.5])
-        V_exp = X[:, :2] - mean_exp.reshape((-1, 1))
 
-        assert np.array_equal(X, X_ret)
+
+        V_exp = X_expt[:,:2] - mean_exp.reshape((-1, 1))
+
+        assert np.array_equal(np.array(X_expt[:,:2]), data.get("train_X"))
+        assert np.array_equal(X_expt, X_ret)
         assert (3, 4) == (n, M)
-        assert 2 == hist_idx
-        assert np.array_equal(np.array(X[:, :2]), data.get("hist_X"))
-        assert np.array_equal(np.array(X[:,-1]), u_c)
-        assert data.get("t_DA") == 3
+        assert np.array_equal(np.array(X[-1]), u_c)
         assert np.array_equal(V_exp, V)
         assert np.array_equal(mean_exp, u_0)
         assert data.get("observations") == [1]
-        assert obs_idx == [0]
         assert nobs == 1
         assert np.allclose(np.array([1, 0, 0]), data.get("G"))
         assert [0.5] == data.get("d")
@@ -105,6 +108,7 @@ class TestSetup():
         X = np.zeros((3, 4))
         X[:,:2] = np.arange(6).reshape((3, 2))
         X[0, 3] = 1
+        X = X.T
 
         INTERMEDIATE_FP = "inter"
         p = tmpdir.mkdir(INTERMEDIATE_FP).join("X_fp.npy")
@@ -114,6 +118,7 @@ class TestSetup():
         settings = config.Config()
         settings.X_FP = str(p)
         settings.n = 3
+        settings.FORCE_GEN_X = False
         settings.OBS_MODE = "single_max"
         settings.OBS_VARIANCE = 0.1
         settings.TDA_IDX_FROM_END = 0
@@ -121,29 +126,28 @@ class TestSetup():
 
         settings.NORMALIZE = True
 
-        data, hist_idx, obs_idx, nobs, std, mean = DA.vda_setup(settings)
+        data,  std, mean = DA.vda_setup(settings)
         X_ret = data.get("X")
+        X_train = data.get("train_X")
         V = data.get("V")
         n, M = X_ret.shape
         u_c = data.get("u_c")
         u_0 = data.get("u_0")
+        nobs = len(data["observations"])
 
         mean_exp = np.array([0.5, 2.5, 4.5])
         std_exp = np.array([0.5, 0.5, 0.5])
-        X_exp = ( X - mean_exp.reshape((-1, 1))) * 2
+        X_exp = (( X - mean_exp) * 2).T
         X_00_exp = -1
 
-        assert X_00_exp == X_ret[0, 0]
+        assert X_00_exp == X_train[0, 0] and  X_00_exp == X_ret[0, 0]
         assert np.array_equal(X_exp, X_ret)
         assert (3, 4) == (n, M)
-        assert 2 == hist_idx
-        assert np.array_equal(np.array(X_exp[:, :2]), data.get("hist_X"))
+        assert np.array_equal(np.array(X_exp[:, :2]), data.get("train_X"))
         assert np.array_equal(np.array(X_exp[:,-1]), u_c)
-        assert data.get("t_DA") == 3
         assert np.array_equal(X_exp[:, :2], V)
         assert np.allclose(np.zeros((3)), u_0)
         assert data.get("observations") == [1.]
-        assert obs_idx == [0]
         assert nobs == 1
         assert np.allclose(np.array([1, 0, 0]), data.get("G"))
         assert [1.] == data.get("d")
@@ -174,6 +178,7 @@ class TestMinimizeJ():
             X = np.zeros((3, 4))
             X[:,:2] = np.arange(6).reshape((3, 2))
             X[0, 3] = 1
+            X = X.T
 
             INTERMEDIATE_FP = "inter"
             p = tmpdir.mkdir(INTERMEDIATE_FP).join("X_fp.npy")
@@ -183,6 +188,7 @@ class TestMinimizeJ():
             settings = config.Config()
             settings.X_FP = str(p)
             settings.n = 3
+            settings.FORCE_GEN_X = False
             settings.OBS_MODE = "single_max"
             settings.OBS_VARIANCE = 0.5
             settings.TDA_IDX_FROM_END = 0
@@ -193,14 +199,14 @@ class TestMinimizeJ():
             settings.TOL = 1e-8
             settings.NORMALIZE = normalize
 
-            data, hist_idx, obs_idx, nobs, std, mean = DA.vda_setup(settings)
-
+            data,  std, mean = DA.vda_setup(settings)
 
 
             self.u_0 = data.get("u_0")
             self.V = data.get("V")
             self.H_0 = data.get("G")
             self.d = data.get("d")
+            nobs = len(data["observations"])
             self.R_inv = (1 / settings.OBS_VARIANCE) * np.eye(nobs)
             data["R_inv"] = self.R_inv
 
