@@ -71,14 +71,13 @@ class DataLoader():
         """Creates a numpy array of values of scalar field_name
         Input list must be sorted"""
 
-        field_name = settings.FIELD_NAME
         M = len(fps) #number timesteps
 
         for idx, fp in enumerate(fps):
             # create array of tracer
             ug = vtktools.vtu(fp)
             if not settings.THREE_DIM:
-                matrix = FluidityUtils.get_1D_grid(ug, field_type)
+                matrix = FluidityUtils.get_1D_grid(ug,  settings.FIELD_NAME, field_type)
             elif settings.THREE_DIM == True:
                 matrix = FluidityUtils().get_3D_grid(ug, settings)
             else:
@@ -111,7 +110,7 @@ class FluidityUtils():
         pass
 
     @staticmethod
-    def get_1D_grid(ug, field_type):
+    def get_1D_grid(ug, field_name, field_type = "scalar"):
         if field_type == "scalar":
             matrix = ug.GetScalarField(field_name)
         elif field_type == "vector":
