@@ -10,7 +10,7 @@ import pickle
 
 import pipeline.config as config
 
-from pipeline import utils
+from pipeline import utils, DAPipeline
 import os
 
 BATCH = 256
@@ -149,14 +149,34 @@ class TrainAE():
         """As the DA procedure is so expensive, only eval on a single state.
         By default this is the final element of the test or train set"""
         if self.DA_MAE:
-            if test_valid = "train":
+            if test_valid == "train":
                 u_c = self.train_X[-1]
-            elif test_valid = "test":
+            elif test_valid == "test":
                 u_c = self.test_X[-1]
             else:
                 raise ValueError("Can only evaluate DA_MAE on 'test' or 'train'")
 
+            if not hasattr(self, "DA_data"):
+                DA = DAPipeline(self.settings)
+                data, std, mean = DA.vda_setup(settings)
+                self.DA_data = data
+                self.__da_data_wipe_some_values()
+
+            DA = DAPipeline(self.settings)
+            DA_results = DA.perform_VarDA(self.DA_data, self.settings)
+            ref_mae = DA_results["ref_MAE_mean"]
+            mae = DA_results["da_MAE_mean"]
+            self.__da_data_wipe_some_values()
+            return mae
+        else:
+            return "NO_CALC"
             
+
+    def __da_data_wipe_some_values():
+        #Now wipe some key attributes to prevent overlap between
+        #successive calls to maybe_eval_DA_MAE()
+        self.DA_data["u_c"] = None
+
 
     def to_csv(self, np_array, fp):
         df = pd.DataFrame(np_array, columns = ["epoch","reconstruction_err","DA_MAE"])
