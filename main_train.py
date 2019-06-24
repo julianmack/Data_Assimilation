@@ -5,7 +5,7 @@ from pipeline import TrainAE
 def main():
 
     settings = config.CAEConfig()
-    expdir = "experiments/CAE_zoo"
+    expdir = "experiments/CAE_first"
     trainer = TrainAE(settings, expdir)
     model = trainer.train(1)
 

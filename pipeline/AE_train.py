@@ -16,7 +16,15 @@ import os
 BATCH = 256
 
 class TrainAE():
-    def __init__(self, AE_settings, expdir):
+    def __init__(self, AE_settings, expdir, DA_MAE=False, batch_sz=BATCH):
+        """Initilaizes the AE training class.
+
+        ::AE_settings - a config.Config class with the DA settings
+        ::expdir - a directory of form `experiments/<possible_path>` to keep logs
+        ::DA_MAE - boolean. If True, training will evaluate DA Mean Absolute Error
+            during the training cycle. Note: this is *MUCH* slower
+        """
+
         self.settings = AE_settings
 
         err_msg = """AE_settings must be an AE configuration class"""
@@ -27,6 +35,8 @@ class TrainAE():
         self.test_fp = self.expdir + "test.csv"
         self.train_fp = self.expdir + "train.csv"
         self.settings_fp = self.expdir + "settings.txt"
+        self.DA_MAE = DA_MAE
+        self.batch_sz = batch_sz
 
     def train(self, num_epoch = 100, learning_rate = 0.001):
         settings = self.settings
@@ -34,17 +44,17 @@ class TrainAE():
         loader = utils.DataLoader()
         X = loader.get_X(settings)
 
-        train_X, test_X, _, X_norm,  mean, std = loader.test_train_DA_split_maybe_normalize(X, settings)
+        train_X, test_X, DA_u_c, X_norm,  mean, std = loader.test_train_DA_split_maybe_normalize(X, settings)
 
         #Add Channel
-        train_X = np.expand_dims(train_X, 1)
-        test_X = np.expand_dims(test_X, 1)
+        self.train_X = np.expand_dims(train_X, 1)
+        self.test_X = np.expand_dims(test_X, 1)
 
         #Dataloaders
-        train_dataset = TensorDataset(torch.Tensor(train_X))
-        train_loader = DataLoader(train_dataset, BATCH, shuffle=True)
-        test_dataset = TensorDataset(torch.Tensor(test_X))
-        test_loader = DataLoader(test_dataset, test_X.shape[0])
+        train_dataset = TensorDataset(torch.Tensor(self.train_X))
+        train_loader = DataLoader(train_dataset, self.batch_sz, shuffle=True)
+        test_dataset = TensorDataset(torch.Tensor(self.test_X))
+        test_loader = DataLoader(test_dataset, self.test_X.shape[0])
 
         print("train_size = ", len(train_loader.dataset))
         print("test_size = ", len(test_loader.dataset))
@@ -62,23 +72,94 @@ class TrainAE():
 
         print("Number of parameters:", sum(p.numel() for p in model.parameters()))
 
+        if settings.SAVE == True:
+            model_dir = self.expdir
+        else:
+            model_dir = None
 
-        train_losses, test_losses = utils.ML_utils.training_loop_AE(model, optimizer,
+        train_losses, test_losses = self.training_loop_AE(model, optimizer,
                                 loss_fn, train_loader, test_loader,
                                 num_epoch, device, print_every=1, test_every=5, model_dir = self.expdir)
 
 
         #Save results and settings file (so that it can be exactly reproduced)
-        self.to_csv(train_losses, self.train_fp)
-        self.to_csv(test_losses, self.test_fp)
-        with open(self.settings_fp, "wb") as f:
-            pickle.dump(settings, f)
+        if settings.SAVE == True:
+            self.to_csv(train_losses, self.train_fp)
+            self.to_csv(test_losses, self.test_fp)
+            with open(self.settings_fp, "wb") as f:
+                pickle.dump(settings, f)
 
 
         return model
 
+    @staticmethod
+    def training_loop_AE(model, optimizer, loss_fn, train_loader, test_loader,
+            num_epoch, device=None, print_every=1, test_every=5, save_every=5, model_dir=None):
+        """Runs a torch AE model training loop.
+        NOTE: Ensure that the loss_fn is in mode "sum"
+        """
+        utils.set_seeds()
+        train_losses = []
+        test_losses = []
+        if device == None:
+            device = utils.ML_utils.get_device()
+
+        for epoch in range(num_epoch):
+            train_loss = 0
+            model.to(device)
+
+            for batch_idx, data in enumerate(train_loader):
+                model.train()
+                x, = data
+                x = x.to(device)
+                optimizer.zero_grad()
+                y = model(x)
+
+                loss = loss_fn(y, x)
+                loss.backward()
+                train_loss += loss.item()
+                optimizer.step()
+
+            train_DA_MAE = self.maybe_eval_DA_MAE("train")
+            train_losses.append((epoch, train_loss / len(train_loader.dataset), train_DA_MAE))
+            if epoch % print_every == 0 or epoch in [0, num_epoch - 1]:
+                print('epoch [{}/{}], loss:{:.4f}'.format(epoch + 1, num_epoch, train_loss / len(train_loader.dataset)))
+            if epoch % test_every == 0 or epoch == num_epoch - 1:
+                model.eval()
+                test_loss = 0
+                for batch_idx, data in enumerate(test_loader):
+                    x_test, = data
+                    x_test = x_test.to(device)
+                    y_test = model(x_test)
+                    loss = loss_fn(y_test, x_test)
+                    test_loss += loss.item()
+                test_DA_MAE = self.maybe_eval_DA_MAE("test")
+                print('epoch [{}/{}], validation loss:{:.4f}'.format(epoch + 1, num_epoch, test_loss / len(test_loader.dataset)))
+                test_losses.append((epoch, test_loss/len(test_loader.dataset), test_DA_MAE))
+            if epoch % save_every == 0 and model_dir != None:
+                model_fp_new = "{}{}.pth".format(model_dir, epoch)
+                torch.save(model.state_dict(), model_fp_new)
+        if epoch % save_every != 0 and model_dir != None:
+            #Save model (if new model hasn't just been saved)
+            model_fp_new = "{}{}.pth".format(model_dir, epoch)
+            torch.save(model.state_dict(), model_fp_new)
+        return train_losses, test_losses
+
+    def maybe_eval_DA_MAE(self, test_valid):
+        """As the DA procedure is so expensive, only eval on a single state.
+        By default this is the final element of the test or train set"""
+        if self.DA_MAE:
+            if test_valid = "train":
+                u_c = self.train_X[-1]
+            elif test_valid = "test":
+                u_c = self.test_X[-1]
+            else:
+                raise ValueError("Can only evaluate DA_MAE on 'test' or 'train'")
+
+            
+
     def to_csv(self, np_array, fp):
-        df = pd.DataFrame(np_array, columns = ["epoch","loss","DA_MAE"])
+        df = pd.DataFrame(np_array, columns = ["epoch","reconstruction_err","DA_MAE"])
         df.to_csv(fp)
 
 

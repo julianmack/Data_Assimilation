@@ -108,7 +108,7 @@ class CAEConfig(ConfigAE):
         self.X_FP = self.INTERMEDIATE_FP + "X_3D_{}.npy".format(self.FIELD_NAME)
         model_name  = self.__class__.__name__
         #self.AE_MODEL_FP = self.HOME_DIR + "models/{}_{}.pth".format(model_name, self.NUMBER_MODES)
-
+        self.SAVE = True
         self.LAYERS_DECODE = len(self.get_conv_schedule()[0])
         #define getter for __kwargs since they may change after initialization
 
