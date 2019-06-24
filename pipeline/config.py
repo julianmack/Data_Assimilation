@@ -85,7 +85,7 @@ class ConfigAE(Config):
         super(ConfigAE, self).__init__()
         self.COMPRESSION_METHOD = "AE"
         self.NUMBER_MODES = 4
-        self.AE_MODEL_FP = self.HOME_DIR + "models/AE_dim{}_epoch120.pth".format(self.NUMBER_MODES) #AE_dim40_epoch120.pth"
+        #self.AE_MODEL_FP = self.HOME_DIR + "models/AE_dim{}_epoch120.pth".format(self.NUMBER_MODES) #AE_dim40_epoch120.pth"
         self.AE_MODEL_TYPE = VanillaAE #this must match
         self.HIDDEN = [1000, 200]
         self.ACTIVATION = "lrelu"
@@ -98,7 +98,7 @@ class ToyAEConfig(ConfigAE):
         super(ToyAEConfig, self).__init__()
         self.NUMBER_MODES = 2
         self.HIDDEN = 32
-        self.AE_MODEL_FP = self.HOME_DIR + "models/AE_toy_{}_{}_{}.pth".format(self.NUMBER_MODES, self.HIDDEN, self.FIELD_NAME)
+        #self.AE_MODEL_FP = self.HOME_DIR + "models/AE_toy_{}_{}_{}.pth".format(self.NUMBER_MODES, self.HIDDEN, self.FIELD_NAME)
         self.DEBUG = True
         self.AE_MODEL_TYPE = ToyAE
         self.ACTIVATION = "relu"
@@ -115,7 +115,7 @@ class CAEConfig(ConfigAE):
         self.THREE_DIM = True
         self.X_FP = self.INTERMEDIATE_FP + "X_3D_{}.npy".format(self.FIELD_NAME)
         model_name  = self.__class__.__name__
-        self.AE_MODEL_FP = self.HOME_DIR + "models/{}_{}.pth".format(model_name, self.NUMBER_MODES)
+        #self.AE_MODEL_FP = self.HOME_DIR + "models/{}_{}.pth".format(model_name, self.NUMBER_MODES)
 
         self.LAYERS_DECODE = len(self.get_conv_schedule()[0])
         #define getter for __kwargs since they may change after initialization
