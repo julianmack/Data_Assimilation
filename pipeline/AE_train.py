@@ -195,11 +195,14 @@ class TrainAE():
 
 
     def __init_expdir(self, expdir):
+        expdir = utils.win_to_unix_fp(expdir)
         wd = utils.get_home_dir()
         try:
             dir_ls = expdir.split("/")
-            assert dir_ls[0] == "experiments"
-        except (AssertionError, KeyError, AttributeError):
+            print(dir_ls)
+            assert "experiments" in dir_ls
+        except (AssertionError, KeyError, AttributeError) as e:
+            print("~~~~~~~~{}~~~~~~~~~".format(str(e)))
             raise ValueError("expdir must be in the experiments/ directory")
 
         if expdir[0] == "/":
