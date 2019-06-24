@@ -50,7 +50,6 @@ class DataLoader():
                 np.save(settings.X_FP, X, allow_pickle=True)
         else:
             X = np.load(settings.X_FP,  allow_pickle=True)
-            print("ELSE branch", X.shape)
         return X
 
     @staticmethod
