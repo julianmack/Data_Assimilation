@@ -106,7 +106,6 @@ class ToyAEConfig(ConfigAE):
 class CAEConfig(ConfigAE):
     def __init__(self):
         super(CAEConfig, self).__init__()
-        self.AE_MODEL_FP = self.HOME_DIR + "models/CAE_toy_{}_{}_{}.pth".format(self.NUMBER_MODES, self.HIDDEN, self.FIELD_NAME)
         self.AE_MODEL_TYPE = CAE_3D
         self.n3d = (91, 85, 32)
         self.FACTOR_INCREASE = 2.43 #interpolation ratio of oridinal # points to final
@@ -115,7 +114,10 @@ class CAEConfig(ConfigAE):
         self.NUMBER_MODES = self.calc_modes()
         self.THREE_DIM = True
         self.X_FP = self.INTERMEDIATE_FP + "X_3D_{}.npy".format(self.FIELD_NAME)
+        model_name  = self.__class__.__name__
+        self.AE_MODEL_FP = self.HOME_DIR + "models/{}_{}.pth".format(model_name, self.NUMBER_MODES)
 
+        self.LAYERS_DECODE = len(self.get_conv_schedule()[0])
         #define getter for __kwargs since they may change after initialization
 
     def get_kwargs(self):
@@ -134,7 +136,7 @@ class CAEConfig(ConfigAE):
         #TODO add self.lowest_out != None
         #TODO add self.MAX_Layers
         #TODO - give ability to set bespoke schedule
-        return utils.ML_utils.conv_scheduler3D(self.n, None, 1, False)
+        return utils.ML_utils.conv_scheduler3D(self.n, None, 1, True)
 
     def get_channels(self):
         if self.CHANNELS != None:
