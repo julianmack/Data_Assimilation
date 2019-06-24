@@ -29,14 +29,15 @@ class DataLoader():
         pass
 
     def get_X(self, settings):
+        """Returns X in the M x n format"""
         if settings.FORCE_GEN_X or not os.path.exists(settings.X_FP):
             fps = self.get_sorted_fps_U(settings.DATA_FP)
-            X = self.create_X_from_fps(fps, settings.FIELD_NAME)
+            X = self.create_X_from_fps(fps, settings)
             if settings.SAVE:
                 np.save(settings.X_FP, X, allow_pickle=True)
         else:
             X = np.load(settings.X_FP,  allow_pickle=True)
-
+            print("ELSE branch", X.shape)
         return X
 
     @staticmethod
@@ -67,35 +68,85 @@ class DataLoader():
         return fps_sorted
 
     @staticmethod
-    def create_X_from_fps(fps, field_name, field_type  = "scalar"):
+    def create_X_from_fps(fps, settings, field_type  = "scalar"):
         """Creates a numpy array of values of scalar field_name
         Input list must be sorted"""
+
         M = len(fps) #number timesteps
 
         for idx, fp in enumerate(fps):
             # create array of tracer
             ug = vtktools.vtu(fp)
-            if field_type == "scalar":
-                vector = ug.GetScalarField(field_name)
-            elif field_type == "vector":
-                vector = ug.GetVectorField(field_name)
+            if not settings.THREE_DIM:
+                matrix = FluidityUtils.get_1D_grid(ug,  settings.FIELD_NAME, field_type)
+            elif settings.THREE_DIM == True:
+                matrix = FluidityUtils().get_3D_grid(ug, settings)
             else:
-                raise ValueError("field_name must be in {\'scalar\', \'vector\'}")
-            #print("Length of vector:", vector.shape)
+                raise ValueError("<config>.THREE_DIM must be True or eval to False")
+            mat_size = matrix.shape
 
-            vec_len, = vector.shape
             if idx == 0:
                 #fix length of vectors and initialize the output array:
-                n = vec_len
-                output = np.zeros((M, n))
+                n = matrix.shape
+                size = (M,) + n
+                output = np.zeros(size)
             else:
                 #enforce all vectors are of the same length
-                assert vec_len == n, "All input .vtu files must be of the same length."
+                assert mat_size == n, "All input .vtu files must be of the same size."
+            output[idx] = matrix
+
+        #return (M x nx x ny x nz) or (M x n)
+
+        return output
+
+    @staticmethod
+    def get_dim_X(X, settings):
+
+        if settings.THREE_DIM:
+            M, nx, ny, nz = X.shape
+            n = (nx, ny, nz)
+        else:
+            M, n = X.shape
+        assert n == settings.n, "dimensions {} must = {}".format(n, settings.n)
+        return M, n
+
+    @staticmethod
+    def test_train_DA_split_maybe_normalize(X, settings ):
+        """Returns non-overlapping train/test and DA control state data.
+        This function also deals with normalization (to ensure than only the
+        training data is used for normalization mean and std)"""
 
 
-            output[idx] = vector
+        M, n = DataLoader.get_dim_X(X, settings)
 
-        return output.T #return (n x M)
+        hist_idx = int(M * settings.HIST_FRAC)
+        hist_X = X[: hist_idx] #select historical data (i.e. training set in ML terminology)
+                                 # that will be used for normalize
+
+        #use only the training set to calculate mean and std
+        mean = np.mean(hist_X, axis=0)
+        std = np.std(hist_X, axis=0)
+
+        if settings.NORMALIZE:
+            X = (X - mean)
+            X = (X / std)
+
+        # Split X into historical and present data. We will
+        # assimilate "observations" at a single timestep t_DA
+        # which corresponds to the control state u_c
+        # We will take initial condition u_0, as m ean of historical data
+
+        t_DA = M - (settings.TDA_IDX_FROM_END + 1) #idx of Data Assimilation
+        assert t_DA >= hist_idx, ("Cannot select observation from historical data."
+                                "Reduce HIST_FRAC or reduce TDA_IDX_FROM_END to prevent overlap.\n"
+                                "t_DA = {} and hist_idx = {}".format(t_DA, hist_idx))
+        assert t_DA > hist_idx, ("Test set cannot have zero size")
+
+        train_X = X[: hist_idx]
+        test_X = X[hist_idx : t_DA]
+        u_c = X[t_DA] #control state (for DA)
+
+        return train_X, test_X, u_c, X, mean, std
 
 class FluidityUtils():
     """Class to hold Fluidity helper functions.
@@ -106,28 +157,57 @@ class FluidityUtils():
     def __init__(self):
         pass
 
+    @staticmethod
+    def get_1D_grid(ug, field_name, field_type = "scalar"):
+        if field_type == "scalar":
+            matrix = ug.GetScalarField(field_name)
+        elif field_type == "vector":
+            matrix = ug.GetVectorField(field_name)
+        else:
+            raise ValueError("field_name must be in {\'scalar\', \'vector\'}")
+        return matrix
 
-    def get_3D_grid(self, fp, field_name, npoints=None, factor_inc=2.5,
-                newshape = None, save_newgrid_fp = None, ret_torch=False):
+    def get_3D_grid(self, ug, settings, save_newgrid_fp=None):
         """Returns numpy array or torch tensor of the vtu file input
         Accepts:
-            :fp - str. filepath to .vtu file
-            :field_name - str. name of field to extract. e.g. "pressure"
-            :npoints - when newshape=None, this is the total number of points in output.
-                If None, the number is (approximately) the (input number * factor_inc)
-            :factor_inc - Factor by which to increase (or decrease) the number of points (when newshape=None)
-            :newshape - tuple of 3 ints which gives new shape of output. Overides npoints and factor_inc
+            :ug - .vtu object
+            :setting - a Config object containing some/all of the following information:
+                :FACTOR_INCREASE - Factor by which to increase (or decrease) the number of points (when newshape=None)
+                     the number of output points is (approximately) the (input number points * FACTOR_INCREASE)
+                :n - tuple of 3 ints which gives new shape of output. Overides FACTOR_INCREASE
             :save_newgrid_fp - str. if not None, the restructured vtu grid will be
-                saved at this location relative to the working directory
+                saved at this location relative to the working directory"""
 
-            :ret_torch - if True, returns a torch tensor. Otherwise returns a numpy array."""
-        ug = vtktools.vtu(fp)
+        field_name = settings.FIELD_NAME
+
+        newshape = self.get_newshape_3D(ug, settings.n, settings.FACTOR_INCREASE, )
+
+        #update settings
+        settings.n3d = newshape
+
+        (nx, ny, nz) = newshape
+
+        struct_grid = ug.StructuredPointProbe(nx, ny, nz)
+
+        if save_newgrid_fp:
+            self.save_structured_vtu(save_newgrid_fp, struct_grid)
+
+        pointdata = struct_grid.GetPointData()
+        vtkdata = pointdata.GetScalars(field_name)
+        np_data = nps.vtk_to_numpy(vtkdata)
+
+        #Fortran order reshape (i.e first index changes fastest):
+        result = np.reshape(np_data, newshape, order='F')
+
+
+        return result
+
+    def get_newshape_3D(self, ug, newshape, factor_inc, ):
 
         if newshape == None:
             points = ug.ugrid.GetPoints()
 
-            if npoints == None:
-                npoints = factor_inc * points.GetNumberOfPoints()
+            npoints = factor_inc * points.GetNumberOfPoints()
 
             bounds = points.GetBounds()
             ax, bx, ay, by, az, bz = bounds
@@ -143,24 +223,11 @@ class FluidityUtils():
 
             newshape = (nx, ny, nz)
         else:
-            (nx, ny, nz) = newshape
+            pass
+
+        return newshape
 
 
-        struct_grid = ug.StructuredPointProbe(nx, ny, nz)
-
-        if save_newgrid_fp:
-            self.save_structured_vtu(save_newgrid_fp, struct_grid)
-
-        pointdata = struct_grid.GetPointData()
-        vtkdata = pointdata.GetScalars(field_name)
-        np_data = nps.vtk_to_numpy(vtkdata)
-
-        #Fortran order reshape (i.e first index changes fastest):
-        result = np.reshape(np_data, newshape, order='F')
-        if ret_torch:
-            result = torch.Tensor(result)
-
-        return result
 
     def save_structured_vtu(self, filename, struc_grid):
         from evtk.hl import pointsToVTK
@@ -310,4 +377,168 @@ class ML_utils():
         X = torch.stack(X, dim=-1)
         return X.t()
 
+    @staticmethod
+    def conv_formula(inp, stride, pad, kernel):
+        x = (inp + 2 * pad - kernel)
+        if x < 0:
+            raise ValueError("Cannot have (input + 2* padding) < kernel")
+        return x  // stride + 1
 
+    @staticmethod
+    def conv_scheduler3D(inps, changeovers=None, lowest_outs=1, verbose = True):
+        """Convolutional Scheduler for 3D system"""
+
+        assert inps != None
+        arg_tuples = [inps, changeovers, lowest_outs]
+
+        args = []
+        for arg in arg_tuples:
+            if isinstance(arg, int) or arg == None:
+                argument = (arg, arg, arg)
+            else:
+                assert isinstance(arg, tuple)
+                assert len(arg) == 3
+                argument = arg
+            args.append(argument)
+
+        inps, changeovers, lowest_outs = args[0], args[1], args[2]
+
+        results = []
+        for idx, n_i in enumerate(inps):
+            res_i = ML_utils.conv_scheduler1D(n_i, changeovers[idx], lowest_outs[idx])
+            results.append(res_i)
+        min_len = min([len(i) for i in results])
+
+        intermediate = []
+        for dim_results in results:
+            intermediate.append(dim_results[: min_len])
+
+        if verbose:
+            for idx, _ in enumerate(intermediate[0]):
+                for dim in range(3):
+                    print(intermediate[dim][idx]["in"], end=", ")
+                print("stride=(", end="")
+                for dim in range(3):
+                    print(intermediate[dim][idx]["stride"], end=", ")
+                print(")  ", end="")
+                print("kernel_size=(", end="")
+                for dim in range(3):
+                    print(intermediate[dim][idx]["kernel"], end=", ")
+                print(")  ", end="")
+                print("padding=(", end="")
+                for dim in range(3):
+                    print(intermediate[dim][idx]["pad"], end=", ")
+                print(")  ", end="")
+                print()
+            #final out
+            for dim in range(3):
+                print(results[dim][min_len - 1]["out"], end=", ")
+
+            print("\nNum layers is:", len(intermediate[0]))
+        return intermediate
+
+    @staticmethod
+    def get_init_data_from_schedule(conv_data):
+        """Takes data returned from conv_scheduler3D and creates init data for CAE_3D"""
+        init_data = []
+        n_dims = len(conv_data)
+        n_layers = len(conv_data[0])
+
+        for layer_idx in range(n_layers):
+            layer_data = []
+            for dim in range(n_dims):
+                layer_data.append(conv_data[dim][layer_idx])
+            stride = tuple([x["stride"] for x in layer_data])
+            padding = tuple([x["pad"] for x in layer_data])
+            kernel = tuple([x["kernel"] for x in layer_data])
+            init_layer = {"kernel_size": kernel,
+                         "padding": padding,
+                         "stride": stride}
+            init_data.append(init_layer)
+
+        return init_data
+
+    @staticmethod
+    def conv_scheduler1D(inp, changeover_out=None, lowest_out=1):
+        """Desired schedule which combines stride=1 layers initially with
+        later stride=2 for downsampling
+        ::changeover_out - output size at which the schedule changes from stride=1 to stride=2
+
+        """
+        if changeover_out == None:
+            changeover_out = inp - 10 # This is a good heuristic if you are not sure
+        assert lowest_out >= 1, "lowest_out must be >= 1"
+        assert changeover_out > lowest_out, "changeover_out must be > lowest_out"
+        res = []
+        res_s1 = ML_utils.conv_scheduler1D_stride1(inp, changeover_out)
+        if len(res_s1) > 0:
+            inp = res_s1[-1]["out"]
+        res_s2 = ML_utils.conv_scheduler1D_stride2(inp, lowest_out)
+        res_s1.extend(res_s2)
+        return res_s1
+
+
+    @staticmethod
+    def conv_scheduler1D_stride1(inp, lowest_out = 1):
+        assert lowest_out >= 1, "lowest_out must be >= 1"
+        res = []
+        stride = 1
+        pad = 0
+        kernel = 3
+        while inp >= lowest_out and (inp + 2*pad) >= kernel:
+            out = ML_utils.conv_formula(inp, stride, pad, kernel)
+            res.append({"in": inp, "out": out, "stride": stride, "pad": pad, "kernel": kernel})
+            inp = out
+        return res
+
+    @staticmethod
+    def conv_scheduler1D_stride2(inp, lowest_out = 1):
+        """Fn to find convolutional schedule that attampts to avoid:
+            a) Lots of padding @ latter stages (as this may introduce artefacts)
+            b) Any rounding errors in the floor operation (which are particularly
+            difficult to reconstruct in the deoder of an AE)
+
+        NOTE: lowest_out is a soft limit - a value may be accepted as part of
+        the scheudle if it is slightly lower than this value"""
+        res = []
+        out = inp
+        while inp > 3:
+            pad = 0
+            stride = 2
+            kernel = 3
+            if inp % 2 == 0: #input is even
+                kernel = 2
+                out = ML_utils.conv_formula(inp, stride, pad, kernel)
+                if out % 2 == 0: #input even and output even
+                    pad = 1
+                    out = ML_utils.conv_formula(inp, stride, pad, kernel)
+            else: #input is odd
+                out = ML_utils.conv_formula(inp, stride, pad, kernel)
+                if out % 2 == 0:  #input is and out is even
+                    pad = 1
+                    out = ML_utils.conv_formula(inp, stride, pad, kernel)
+
+            res.append({"in": inp, "out": out, "stride": stride, "pad": pad, "kernel": kernel})
+            inp = out
+            if out <= lowest_out:
+                #break
+                return res
+        if out <= lowest_out:
+            return res
+
+        if inp == 3:
+            pad = 0
+            stride = 1
+            kernel = 2
+            out = ML_utils.conv_formula(inp, stride, pad, kernel)
+            res.append({"in": inp, "out": out, "stride": stride, "pad": pad, "kernel": kernel})
+            inp = out
+        if out <= lowest_out:
+            return res
+        if inp == 2:
+            pad = 0
+            stride = 1
+            kernel = 2
+            out = ML_utils.conv_formula(inp, stride, pad, kernel)
+            res.append({"in": inp, "out": out, "stride": stride, "pad": pad, "kernel": kernel})
+        return res

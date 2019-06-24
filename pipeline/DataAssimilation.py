@@ -25,7 +25,7 @@ class DAPipeline():
 
         self.settings = settings
 
-        data, hist_idx, obs_idx, nobs, std, mean = self.vda_setup(settings)
+        data, std, mean = self.vda_setup(settings)
 
         V = data.get("V")
         u_0 = data.get("u_0")
@@ -39,7 +39,7 @@ class DAPipeline():
             w_0 = np.zeros((W.shape[-1],)) #TODO - I'm not sure about this - can we assume is it 0?
 
             V_grad = None
-            #OR - Alternatively, use the following:
+            # OR - Alternatively, use the following:
             # V_plus_trunc = W.T * (1 / s) @  U.T
             # w_0_v2 = V_plus_trunc @ u_0 #i.e. this is the value given in Rossella et al (2019).
             #     #I'm not clear if there is any difference - we are minimizing so expect them to
@@ -57,7 +57,7 @@ class DAPipeline():
             w_0 = torch.zeros((settings.NUMBER_MODES))
             #u_0 = decoder(w_0).detach().numpy()
 
-            #Now access explicit gradient function
+            # Now access explicit gradient function
             try:
                 data["V_grad"] = settings.AE_MODEL_TYPE(**kwargs).jac_explicit
             except:
@@ -118,7 +118,7 @@ class DAPipeline():
 
         if settings.SAVE:
             #Save .vtu files so that I can look @ in paraview
-            sample_fp = self.get_sorted_fps_U(settings.DATA_FP)[0]
+            sample_fp = utils.DataLoader.get_sorted_fps_U(settings.DATA_FP)[0]
             out_fp_ref = settings.INTERMEDIATE_FP + "ref_MAE.vtu"
             out_fp_DA =  settings.INTERMEDIATE_FP + "DA_MAE.vtu"
 
@@ -134,64 +134,55 @@ class DAPipeline():
 
 
     def vda_setup(self, settings):
-        #The X array should already be saved in settings.X_FP
-        #but can be created from .vtu fps if required. see trunc_SVD.py for an example
-
+        """Generates matrices for VarDA. All returned matrices are in the
+        (n X M) format (as typical in VarDA) although when
+        settings.THREE_DIM = True, some are 4-dimensional"""
         data = {}
         loader = utils.DataLoader()
         X = loader.get_X(settings)
 
-        n, M = X.shape
+        train_X, test_X, u_c, X, mean, std = loader.test_train_DA_split_maybe_normalize(X, settings)
 
+        V = self.create_V_from_X(train_X, settings)
 
-        # Split X into historical and present data. We will
-        # assimilate "observations" at a single timestep t_DA
-        # which corresponds to the control state u_c
-        # We will take initial condition u_0, as mean of historical data
-        hist_idx = int(M * settings.HIST_FRAC)
-        t_DA = M - settings.TDA_IDX_FROM_END - 1
-        assert t_DA >= hist_idx, ("Cannot select observation from historical data."
-                                "Reduce HIST_FRAC or reduce TDA_IDX_FROM_END to prevent overlap.\n"
-                                "t_DA = {} and hist_idx = {}".format(t_DA, hist_idx))
-
-        hist_X = X[:, : hist_idx] #select training set data
-
-        if settings.NORMALIZE:
-            #use only the training set to calculate mean and std
-            mean = np.mean(hist_X, axis=1)
-            std = np.std(hist_X, axis=1)
-            #NOTE: when hist_X -> X in 2 lines above, the MAE reduces massively
-            #In preliminary experiments, this is not true with hist_X
-
-            X = (X.T - mean).T
-            X = (X.T / std).T
-
-            hist_X = X[:, : hist_idx]
-            V, u_0, _ = self.create_V_from_X(hist_X, return_mean = True)
+        if settings.THREE_DIM:
+            #MUST return in ( nx x ny x nz x M) form 
+            raise NotImplementedError("Must deal with 3d case")
         else:
-            V, mean, std = self.create_V_from_X(hist_X, return_mean = True)
+            #Deal with dimensions:
+            #currently dim are: (M x nx x ny x nz ) or (M x n )
+            X = X.T
+            train_X = train_X.T
+            test_X = test_X.T
+            V = V.T
+
+
+        # We will take initial condition u_0, as mean of historical data
+        if settings.NORMALIZE:
+            u_0 = np.zeros(settings.n) #since the data is mean centred
+        else:
             u_0 = mean
 
-        #select control state
-        u_c = X[:, t_DA]
-
         observations, obs_idx, nobs = self.select_obs(settings.OBS_MODE, u_c, settings.OBS_FRAC) #options are specific for rand
+
         #Now define quantities required for 3D-VarDA - see Algorithm 1 in Rossella et al (2019)
-        H_0 = self.create_H(obs_idx, n, nobs)
+        H_0 = self.create_H(obs_idx, settings.n, nobs)
         d = observations - H_0 @ u_0 #'d' in literature
         #R_inv = self.create_R_inv(OBS_VARIANCE, nobs)
         data = {"d": d, "G": H_0, "V": V,
                 "observations": observations,
-                "u_c": u_c, "u_0": u_0, "X": X, "hist_X": hist_X, "t_DA": t_DA}
+                "u_c": u_c, "u_0": u_0, "X": X, "train_X": train_X, "test_X":test_X}
 
 
-        return data, hist_idx, obs_idx, nobs, std, mean
+        return data, std, mean
 
 
     @staticmethod
-    def create_V_from_X(X_fp, return_mean = False):
+    def create_V_from_X(X_fp, settings):
         """Creates a mean centred matrix V from input matrix X.
-        X_FP can be a numpy matrix or a fp to X"""
+        X_FP can be a numpy matrix or a fp to X.
+        returns V in the  M x n format"""
+
         if type(X_fp) == str:
             X = np.load(X_fp)
         elif type(X_fp) == np.ndarray:
@@ -199,28 +190,38 @@ class DAPipeline():
         else:
             raise TypeError("X_fp must be a filpath or a numpy.ndarray")
 
-        n, M = X.shape
-        mean = np.mean(X, axis=1)
+        M, n = utils.DataLoader.get_dim_X(X, settings)
 
-        V = (X.T - mean).T
+        mean = np.mean(X, axis=0)
+
+        V = (X - mean)
 
         # V = (M - 1) ** (- 0.5) * V
-        if return_mean:
-            std = np.std(X, axis=1)
-            return V, mean, std
+
         return V
+
+    def get_npoints_from_shape(self, n):
+        if type(n) == tuple:
+            npoints = 1
+            for val in n:
+                npoints *= val
+        elif type(n) == int:
+            npoints = n
+        else:
+            raise TypeError("Size n must be of type int or tuple")
+        return npoints
 
     def select_obs(self, mode, vec, frac=None):
         """Selects and return a subset of observations and their indexes
         from vec according to a user selected mode"""
-        n = vec.shape[0]
+        npoints = self.get_npoints_from_shape(vec.shape)
 
         if mode == "rand":
             # Define observations as a random subset of the control state.
-            nobs = int(frac * n) #number of observations
+            nobs = int(frac * npoints) #number of observations
 
             utils.set_seeds(seed = self.settings.SEED) #set seeds so that the selected subset is the same every time
-            obs_idx = random.sample(range(n), nobs) #select nobs integers w/o replacement
+            obs_idx = random.sample(range(npoints), nobs) #select nobs integers w/o replacement
             observations = np.take(vec, obs_idx)
         elif mode == "single_max":
             nobs = 1
@@ -239,6 +240,7 @@ class DAPipeline():
         returns
             :H - numpy array of size (nobs x n)
         """
+        #raise NotImplementedError("Haven't worked out what to do with 3D observation operator")
 
         H = np.zeros((nobs, n))
         H[range(nobs), obs_idxs] = 1

@@ -1,7 +1,7 @@
 import torch
 from pipeline.utils import ML_utils as ML
 from pipeline import config
-from pipeline.AutoEncoders import ToyAE, VanillaAE, ToyCAE
+from pipeline.AutoEncoders import ToyAE, VanillaAE, CAE_3D
 import pytest
 
 class TestAEInit():
@@ -158,28 +158,32 @@ class TestJacExplicit():
 
         assert torch.allclose(jac_true, jac_expl, rtol=1e-02), "Two jacobians are not equal"
 
-class TestToyCAE():
+class TestCAE_3D():
     """These tests are the ToyAE equivalents of the above but are all placed here
     (rather than in respective classes such as TestAEInit and TestAEForward
     so that they can be run w/o the standard AE tests)"""
 
-    def test_ToyCAE_init_base_config(self):
-        settings = config.ToyCAEConfig()
+    def test_CAE_init_base_config(self):
+        settings = config.CAEConfig()
         try:
             model = settings.AE_MODEL_TYPE(**settings.get_kwargs())
         except Exception as e:
             print(e)
             pytest.fail("Unable to init model")
 
-    # def test_ToyCAE_forward_nobatch(self):
-    #     settings = config.ToyCAEConfig()
-    #     settings.n = 3
-    #     settings.HIDDEN = 4
-    #     settings.NUMBER_MODES = 2
-    #     x = torch.rand((settings.n), requires_grad=True)
-    #
-    #     model = ToyAE(**settings.get_kwargs())
-    #     try:
-    #         y = model(x)
-    #     except:
-    #         pytest.fail("Unable to do forward pass")
+    def test_CAE_forward(self):
+        settings = config.CAEConfig()
+        batch_sz = 1
+        Cin = settings.get_channels()[0]
+        size = (batch_sz, Cin) + settings.n
+        device = ML.get_device()
+        x = torch.rand(size, requires_grad=True, device = device)
+
+        model = CAE_3D(**settings.get_kwargs())
+
+        model.to(device)
+        try:
+
+            y = model(x)
+        except:
+            pytest.fail("Unable to do forward pass")

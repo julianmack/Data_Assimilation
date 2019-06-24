@@ -26,26 +26,17 @@ class TrainAE():
         loader = utils.DataLoader()
         X = loader.get_X(settings)
 
-        n, M = X.shape
-        hist_idx = int(M * settings.HIST_FRAC)
-        hist_X = X[:, : hist_idx]
+        train_X, test_X, _, X_norm,  mean, std = loader.test_train_DA_split_maybe_normalize(X, settings)
 
-        #Normalize:
-        #use only the training set to calculate mean and std
-        mean = np.mean(hist_X, axis=1)
-        std = np.std(hist_X, axis=1)
-
-        X_centered = (X.T - mean).T
-        X_norm = (X_centered.T / std).T
-
-        train_X = X_norm[:, : hist_idx]
-        test_X = X_norm[:, hist_idx : -(settings.TDA_IDX_FROM_END+1)] #leave final elements for DA
+        #Add Channel 
+        train_X = np.expand_dims(train_X, 1)
+        test_X = np.expand_dims(test_X, 1)
 
         #Dataloaders
-        train_dataset = TensorDataset(torch.Tensor(train_X.T))
+        train_dataset = TensorDataset(torch.Tensor(train_X))
         train_loader = DataLoader(train_dataset, BATCH, shuffle=True)
-        test_dataset = TensorDataset(torch.Tensor(test_X.T))
-        test_loader = DataLoader(test_dataset, test_X.shape[1])
+        test_dataset = TensorDataset(torch.Tensor(test_X))
+        test_loader = DataLoader(test_dataset, test_X.shape[0])
 
         print("train_size = ", len(train_loader.dataset))
         print("test_size = ", len(test_loader.dataset))

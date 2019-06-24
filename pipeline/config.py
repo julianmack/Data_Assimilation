@@ -4,7 +4,9 @@ User can create new classes that inherit from class Config and override class va
 in order to create new combinations of config options. Alternatively, individual config
 options can be altered one at a time on an ad-hoc basis."""
 
-from pipeline.AutoEncoders import VanillaAE, ToyAE, ToyCAE
+from pipeline.AutoEncoders import VanillaAE, ToyAE, CAE_3D
+from pipeline import utils
+
 import socket
 import os, sys
 
@@ -16,9 +18,10 @@ class Config():
         self.DATA_FP = self.HOME_DIR + "data/small3DLSBU/"
         self.INTERMEDIATE_FP = self.HOME_DIR + "data/small3D_intermediate/"
         self.FIELD_NAME = "Pressure"
-        self.X_FP = self.INTERMEDIATE_FP + "X_small3D_{}.npy".format(self.FIELD_NAME)
-        self.FORCE_GEN_X = False
+        self.X_FP = self.INTERMEDIATE_FP + "X_1D_{}.npy".format(self.FIELD_NAME)
+        self.FORCE_GEN_X = True
         self.n = 100040
+        self.THREE_DIM = False # i.e. is representation in 3D tensor or 1D array
         self.SAVE = True
         self.DEBUG = True
 
@@ -100,14 +103,52 @@ class ToyAEConfig(ConfigAE):
         self.AE_MODEL_TYPE = ToyAE
         self.ACTIVATION = "relu"
 
-class ToyCAEConfig(ToyAEConfig):
+class CAEConfig(ConfigAE):
     def __init__(self):
-        super(ToyCAEConfig, self).__init__()
-        self.NUMBER_MODES = 4
+        super(CAEConfig, self).__init__()
         self.AE_MODEL_FP = self.HOME_DIR + "models/CAE_toy_{}_{}_{}.pth".format(self.NUMBER_MODES, self.HIDDEN, self.FIELD_NAME)
-        self.AE_MODEL_TYPE = ToyCAE
-        self.HIDDEN = [128, 256, 256]
+        self.AE_MODEL_TYPE = CAE_3D
+        self.n3d = (91, 85, 32)
+        self.FACTOR_INCREASE = 2.43 #interpolation ratio of oridinal # points to final
+        self.n = self.get_n_3D() #This overrides FACTOR_INCREASE
+        self.CHANNELS = None
+        self.NUMBER_MODES = self.calc_modes()
+        self.THREE_DIM = True
+        self.X_FP = self.INTERMEDIATE_FP + "X_3D_{}.npy".format(self.FIELD_NAME)
+
         #define getter for __kwargs since they may change after initialization
+
+    def get_kwargs(self):
+        conv_data = self.get_conv_schedule()
+        init_data = utils.ML_utils.get_init_data_from_schedule(conv_data)
+        channels = self.get_channels()
+        kwargs =   {"layer_data": init_data, "channels": channels, "activation": self.ACTIVATION}
+        return kwargs
+
+    def get_n_3D(self):
+
+        return self.n3d
+
+    def get_conv_schedule(self):
+        #TODO add self.CROSSOVER != None
+        #TODO add self.lowest_out != None
+        #TODO add self.MAX_Layers
+        #TODO - give ability to set bespoke schedule
+        return utils.ML_utils.conv_scheduler3D(self.n, None, 1, False)
+
+    def get_channels(self):
+        if self.CHANNELS != None:
+            return self.CHANNELS
+        else: #gen random channels
+            n_layers_decode = len(self.get_conv_schedule()[0])
+            channels = [8] * (n_layers_decode + 1)
+            channels[0] = 1
+            return channels
+
+    def calc_modes(self):
+        #lantent dim is Channels_latent * (x_size_latent ) x (y_size_latent ) x (z_size_latent )
+        [x_data, y_data, z_data] = self.get_conv_schedule()
+        return self.get_channels()[-1] * x_data[-1]["out"] * y_data[-1]["out"] * z_data[-1]["out"]
 
 class SmallTestDomain(Config):
     def __init__(self):
