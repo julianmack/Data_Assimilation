@@ -9,16 +9,34 @@ import pickle
 import pipeline.config as config
 
 from pipeline import utils
-
+import os
 
 BATCH = 256
 
 class TrainAE():
-    def __init__(self, settings):
-        self.settings = settings
+    def __init__(self, AE_settings, expdir):
+        self.settings = AE_settings
 
-        err_msg = """settings must be an AE configuration class"""
+        err_msg = """AE_settings must be an AE configuration class"""
         assert self.settings.COMPRESSION_METHOD == "AE", err_msg
+
+        self.expdir = self.__init_expdir(expdir)
+
+    def __init_expdir(self, expdir):
+
+        try:
+            dir_ls = expdir.split("/")
+            assert dir_ls[0] == "experiments"
+        except (AssertionError, KeyError, AttributeError):
+            raise ValueError("expdir must be in the experiments/ directory")
+
+        if os.path.isdir(expdir):
+            if len(os.listdir(expdir)) > 0:
+                raise "Cannot overwrite files in expdir. Exiting."
+        else:
+            os.mkdir(expdir)
+        return expdir
+
 
     def train(self, num_epoch = 100, learning_rate = 0.001):
         settings = self.settings
@@ -28,7 +46,7 @@ class TrainAE():
 
         train_X, test_X, _, X_norm,  mean, std = loader.test_train_DA_split_maybe_normalize(X, settings)
 
-        #Add Channel 
+        #Add Channel
         train_X = np.expand_dims(train_X, 1)
         test_X = np.expand_dims(test_X, 1)
 
