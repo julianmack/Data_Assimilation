@@ -65,7 +65,7 @@ class TrainAE():
 
         train_losses, test_losses = utils.ML_utils.training_loop_AE(model, optimizer,
                                 loss_fn, train_loader, test_loader,
-                                num_epoch, device, print_every=1, test_every=1, model_dir = self.expdir)
+                                num_epoch, device, print_every=1, test_every=5, model_dir = self.expdir)
 
 
         #Save results and settings file (so that it can be exactly reproduced)

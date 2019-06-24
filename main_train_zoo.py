@@ -7,6 +7,8 @@ def main():
     activations = ["lrelu", "relu"]
     chann_sf = [1, 0.5] #scaling factors for final channel
     EPOCHS = 25
+    expdir_base = "experiments/CAE_zoo/"
+    exp_idx = 0 #experiment index (for logging)
     for archi in architectures:
         settings = archi()
         #use half latent dimension
@@ -19,9 +21,10 @@ def main():
                     chan = 1
                 settings.CHANNELS[-1] = chan
 
-                trainer = TrainAE(settings)
+                expdir = expdir_base + exp_idx
+                trainer = TrainAE(settings, expdir)
                 model = trainer.train(EPOCHS)
-
+                exp_idx += 1
 
 
 
