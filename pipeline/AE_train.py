@@ -28,6 +28,10 @@ class TrainAE():
 
         train_X, test_X, _, X_norm,  mean, std = loader.test_train_DA_split_maybe_normalize(X, settings)
 
+        #Add Channel 
+        train_X = np.expand_dims(train_X, 1)
+        test_X = np.expand_dims(test_X, 1)
+
         #Dataloaders
         train_dataset = TensorDataset(torch.Tensor(train_X))
         train_loader = DataLoader(train_dataset, BATCH, shuffle=True)
