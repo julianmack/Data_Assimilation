@@ -16,12 +16,12 @@ import os
 BATCH = 256
 
 class TrainAE():
-    def __init__(self, AE_settings, expdir, DA_MAE=False, batch_sz=BATCH):
+    def __init__(self, AE_settings, expdir, calc_DA_MAE=False, batch_sz=BATCH):
         """Initilaizes the AE training class.
 
         ::AE_settings - a config.Config class with the DA settings
         ::expdir - a directory of form `experiments/<possible_path>` to keep logs
-        ::DA_MAE - boolean. If True, training will evaluate DA Mean Absolute Error
+        ::calc_DA_MAE - boolean. If True, training will evaluate DA Mean Absolute Error
             during the training cycle. Note: this is *MUCH* slower
         """
 
@@ -35,7 +35,7 @@ class TrainAE():
         self.test_fp = self.expdir + "test.csv"
         self.train_fp = self.expdir + "train.csv"
         self.settings_fp = self.expdir + "settings.txt"
-        self.DA_MAE = DA_MAE
+        self.calc_DA_MAE = calc_DA_MAE
         self.batch_sz = batch_sz
 
     def train(self, num_epoch = 100, learning_rate = 0.001):
@@ -92,8 +92,8 @@ class TrainAE():
 
         return model
 
-    @staticmethod
-    def training_loop_AE(model, optimizer, loss_fn, train_loader, test_loader,
+
+    def training_loop_AE(self, model, optimizer, loss_fn, train_loader, test_loader,
             num_epoch, device=None, print_every=1, test_every=5, save_every=5, model_dir=None):
         """Runs a torch AE model training loop.
         NOTE: Ensure that the loss_fn is in mode "sum"
@@ -120,10 +120,13 @@ class TrainAE():
                 train_loss += loss.item()
                 optimizer.step()
 
-            train_DA_MAE = self.maybe_eval_DA_MAE("train")
-            train_losses.append((epoch, train_loss / len(train_loader.dataset), train_DA_MAE))
+            train_DA_MAE, train_DA_ratio = self.maybe_eval_DA_MAE("train")
+            train_losses.append((epoch, train_loss / len(train_loader.dataset), train_DA_MAE, train_DA_ratio))
             if epoch % print_every == 0 or epoch in [0, num_epoch - 1]:
-                print('epoch [{}/{}], loss:{:.4f}'.format(epoch + 1, num_epoch, train_loss / len(train_loader.dataset)))
+                out_str = 'epoch [{}/{}], loss:{:.4f}'.format(epoch + 1, num_epoch, train_loss / len(train_loader.dataset))
+                if self.calc_DA_MAE:
+                    out_str +  ", DA_MAE:{:.4f}".format(train_DA_MAE)
+                print(out_str)
             if epoch % test_every == 0 or epoch == num_epoch - 1:
                 model.eval()
                 test_loss = 0
@@ -133,9 +136,12 @@ class TrainAE():
                     y_test = model(x_test)
                     loss = loss_fn(y_test, x_test)
                     test_loss += loss.item()
-                test_DA_MAE = self.maybe_eval_DA_MAE("test")
-                print('epoch [{}/{}], validation loss:{:.4f}'.format(epoch + 1, num_epoch, test_loss / len(test_loader.dataset)))
-                test_losses.append((epoch, test_loss/len(test_loader.dataset), test_DA_MAE))
+                test_DA_MAE, test_DA_ratio = self.maybe_eval_DA_MAE("test")
+                out_str = "epoch [{}/{}], valid: -loss:{:.4f}".format(epoch + 1, num_epoch, test_loss / len(test_loader.dataset))
+                if self.calc_DA_MAE:
+                    out_str +  ", -DA_MAE:{:.4f}".format(test_DA_MAE)
+                print(out_str)
+                test_losses.append((epoch, test_loss/len(test_loader.dataset), test_DA_MAE, test_DA_ratio))
             if epoch % save_every == 0 and model_dir != None:
                 model_fp_new = "{}{}.pth".format(model_dir, epoch)
                 torch.save(model.state_dict(), model_fp_new)
@@ -148,7 +154,7 @@ class TrainAE():
     def maybe_eval_DA_MAE(self, test_valid):
         """As the DA procedure is so expensive, only eval on a single state.
         By default this is the final element of the test or train set"""
-        if self.DA_MAE:
+        if self.calc_DA_MAE:
             if test_valid == "train":
                 u_c = self.train_X[-1]
             elif test_valid == "test":
@@ -162,15 +168,20 @@ class TrainAE():
                 self.DA_data = data
                 self.__da_data_wipe_some_values()
 
+            #update control state:
+            self.DA_data["u_c"] = u_c
             DA = DAPipeline(self.settings)
+
             DA_results = DA.perform_VarDA(self.DA_data, self.settings)
             ref_mae = DA_results["ref_MAE_mean"]
             mae = DA_results["da_MAE_mean"]
+
+            ratio_improve_mae = (ref_MAE_mean - da_MAE_mean)/ref_MAE_mean
             self.__da_data_wipe_some_values()
-            return mae
+            return mae, ratio_improve_mae
         else:
-            return "NO_CALC"
-            
+            return "NO_CALC", "NO_CALC"
+
 
     def __da_data_wipe_some_values():
         #Now wipe some key attributes to prevent overlap between
@@ -179,7 +190,7 @@ class TrainAE():
 
 
     def to_csv(self, np_array, fp):
-        df = pd.DataFrame(np_array, columns = ["epoch","reconstruction_err","DA_MAE"])
+        df = pd.DataFrame(np_array, columns = ["epoch","reconstruction_err","DA_MAE", "DA_ratio_improve_MAE"])
         df.to_csv(fp)
 
 
