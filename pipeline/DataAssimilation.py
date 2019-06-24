@@ -25,70 +25,24 @@ class DAPipeline():
 
         self.settings = settings
 
-        data, std, mean = self.vda_setup(settings)
+        self.data, std, mean = self.vda_setup(settings)
 
-        V = data.get("V")
-        u_0 = data.get("u_0")
-        u_c = data.get("u_c")
+        u_0 = self.data.get("u_0")
+        u_c = self.data.get("u_c")
 
+        self.init_VarDA()
 
-        if settings.COMPRESSION_METHOD == "SVD":
-            V_trunc, U, s, W = self.trunc_SVD(V, settings.NUMBER_MODES)
-            data["V_trunc"] = V_trunc
-            #Define intial w_0
-            w_0 = np.zeros((W.shape[-1],)) #TODO - I'm not sure about this - can we assume is it 0?
+        w_0 = self.data.get("w_0")
 
-            V_grad = None
-            # OR - Alternatively, use the following:
-            # V_plus_trunc = W.T * (1 / s) @  U.T
-            # w_0_v2 = V_plus_trunc @ u_0 #i.e. this is the value given in Rossella et al (2019).
-            #     #I'm not clear if there is any difference - we are minimizing so expect them to
-            #     #be equivalent
-            # w_0 = w_0_v2
+        DA_results = self.perform_VarDA(self.data, self.settings)
 
-        elif settings.COMPRESSION_METHOD == "AE":
-            kwargs = settings.get_kwargs()
+        ref_MAE = DA_results["ref_MAE"]
+        da_MAE = DA_results["da_MAE"]
+        u_DA = DA_results["u_DA"]
+        ref_MAE_mean = DA_results["ref_MAE_mean"]
+        da_MAE_mean = DA_results["da_MAE_mean"]
+        w_opt = DA_results["w_opt"]
 
-            encoder, decoder = utils.ML_utils.load_AE(settings.AE_MODEL_TYPE, settings.AE_MODEL_FP, **kwargs)
-
-            V_trunc = decoder
-            data["V_trunc"] = V_trunc
-
-            w_0 = torch.zeros((settings.NUMBER_MODES))
-            #u_0 = decoder(w_0).detach().numpy()
-
-            # Now access explicit gradient function
-            try:
-                data["V_grad"] = settings.AE_MODEL_TYPE(**kwargs).jac_explicit
-            except:
-                raise NotImpelemtedError("This model type does not have a gradient available")
-        else:
-            raise ValueError("COMPRESSION_METHOD must be in {SVD, AE}")
-
-        args = (data, settings)
-        res = minimize(self.cost_function_J, w_0, args = args, method='L-BFGS-B',
-                jac=self.grad_J, tol=settings.TOL)
-
-        w_opt = res.x
-        if settings.COMPRESSION_METHOD == "SVD":
-            delta_u_DA = V_trunc @ w_opt
-        elif settings.COMPRESSION_METHOD == "AE":
-            delta_u_DA = V_trunc(torch.Tensor(w_opt)).detach().numpy()
-
-
-        u_DA = u_0 + delta_u_DA
-
-
-        #Undo normalization
-        if settings.UNDO_NORMALIZE:
-            u_DA = (u_DA.T * std + mean).T
-            u_c = (u_c.T * std + mean).T
-            u_0 = (u_0.T * std + mean).T
-        elif settings.NORMALIZE:
-            print("Normalization not undone")
-
-        ref_MAE = np.abs(u_0 - u_c)
-        da_MAE = np.abs(u_DA - u_c)
 
         if settings.DEBUG:
             size = len(std)
@@ -101,9 +55,6 @@ class DAPipeline():
             print("u_DA:   ", u_DA[-size:])
             print("ref_MAE:", ref_MAE[-size:])
             print("da_MAE: ", da_MAE[-size:])
-
-        ref_MAE_mean = np.mean(ref_MAE)
-        da_MAE_mean = np.mean(da_MAE)
 
         counts = (ref_MAE > da_MAE).sum()
 
@@ -146,7 +97,7 @@ class DAPipeline():
         V = self.create_V_from_X(train_X, settings)
 
         if settings.THREE_DIM:
-            #MUST return in ( nx x ny x nz x M) form 
+            #MUST return in ( nx x ny x nz x M) form
             raise NotImplementedError("Must deal with 3d case")
         else:
             #Deal with dimensions:
@@ -171,10 +122,91 @@ class DAPipeline():
         #R_inv = self.create_R_inv(OBS_VARIANCE, nobs)
         data = {"d": d, "G": H_0, "V": V,
                 "observations": observations,
-                "u_c": u_c, "u_0": u_0, "X": X, "train_X": train_X, "test_X":test_X}
+                "u_c": u_c, "u_0": u_0, "X": X,
+                "train_X": train_X, "test_X":test_X,
+                "std": std, "mean": mean}
 
 
         return data, std, mean
+
+    def init_VarDA(self):
+        settings = self.settings
+        data = self.data
+        V = self.data["V"]
+
+        if settings.COMPRESSION_METHOD == "SVD":
+            V_trunc, U, s, W = self.trunc_SVD(V, settings.NUMBER_MODES)
+            data["V_trunc"] = V_trunc
+            #Define intial w_0
+            self.data["w_0"] = np.zeros((W.shape[-1],)) #TODO - I'm not sure about this - can we assume is it 0?
+
+            self.data["V_grad"] = None
+            # OR - Alternatively, use the following:
+            # V_plus_trunc = W.T * (1 / s) @  U.T
+            # w_0_v2 = V_plus_trunc @ u_0 #i.e. this is the value given in Rossella et al (2019).
+            #     #I'm not clear if there is any difference - we are minimizing so expect them to
+            #     #be equivalent
+            # w_0 = w_0_v2
+
+        elif settings.COMPRESSION_METHOD == "AE":
+            kwargs = settings.get_kwargs()
+
+            encoder, decoder = utils.ML_utils.load_AE(settings.AE_MODEL_TYPE, settings.AE_MODEL_FP, **kwargs)
+
+            V_trunc = decoder
+            self.data["V_trunc"] = V_trunc
+
+            self.data["w_0"] = torch.zeros((settings.NUMBER_MODES))
+            #u_0 = decoder(w_0).detach().numpy()
+
+            # Now access explicit gradient function
+            try:
+                self.data["V_grad"] = settings.AE_MODEL_TYPE(**kwargs).jac_explicit
+            except:
+                raise NotImpelemtedError("This model type does not have a gradient available")
+        else:
+            raise ValueError("COMPRESSION_METHOD must be in {SVD, AE}")
+
+    @staticmethod
+    def perform_VarDA(data, settings):
+        """This is a static method so that it can be performed in AE_train with user specified data"""
+        args = (data, settings)
+        res = minimize(DAPipeline.cost_function_J, data.get("w_0"), args = args, method='L-BFGS-B',
+                jac=DAPipeline.grad_J, tol=settings.TOL)
+
+        w_opt = res.x
+        if settings.COMPRESSION_METHOD == "SVD":
+            delta_u_DA = data.get("V_trunc") @ w_opt
+        elif settings.COMPRESSION_METHOD == "AE":
+            delta_u_DA = data.get("V_trunc")(torch.Tensor(w_opt)).detach().numpy()
+
+        u_0 = data.get("u_0")
+        u_c = data.get("u_c")
+
+        u_DA = u_0 + delta_u_DA
+
+        #Undo normalization
+        if settings.UNDO_NORMALIZE:
+            std = data.get("std")
+            mean = data.get("mean")
+            u_DA = (u_DA.T * std + mean).T
+            u_c = (u_c.T * std + mean).T
+            u_0 = (u_0.T * std + mean).T
+        elif settings.NORMALIZE:
+            print("Normalization not undone")
+
+        ref_MAE = np.abs(u_0 - u_c)
+        da_MAE = np.abs(u_DA - u_c)
+        ref_MAE_mean = np.mean(ref_MAE)
+        da_MAE_mean = np.mean(da_MAE)
+
+        results_data = {"ref_MAE": ref_MAE,
+                    "da_MAE": da_MAE,
+                    "u_DA": u_DA,
+                    "ref_MAE_mean": ref_MAE_mean,
+                    "da_MAE_mean": da_MAE_mean,
+                    "w_opt": w_opt}
+        return results_data
 
 
     @staticmethod
