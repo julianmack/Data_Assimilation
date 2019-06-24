@@ -5,6 +5,7 @@ from pipeline import TrainAE
 def main():
 
     settings = config.CAEConfig()
+    number_modes = settings.NUMBER_MODES
     trainer = TrainAE(settings)
     model = trainer.train()
 

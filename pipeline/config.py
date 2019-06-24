@@ -141,14 +141,15 @@ class CAEConfig(ConfigAE):
             return self.CHANNELS
         else: #gen random channels
             n_layers_decode = len(self.get_conv_schedule()[0])
-            channels = [2] * (n_layers_decode + 1)
+            channels = [8] * (n_layers_decode + 1)
+            channels[0] = 1
             return channels
 
     def calc_modes(self):
         #lantent dim is Channels_latent * (x_size_latent ) x (y_size_latent ) x (z_size_latent )
         [x_data, y_data, z_data] = self.get_conv_schedule()
         return self.get_channels()[-1] * x_data[-1]["out"] * y_data[-1]["out"] * z_data[-1]["out"]
-        
+
 class SmallTestDomain(Config):
     def __init__(self):
         super(SmallTestDomain, self).__init__()
