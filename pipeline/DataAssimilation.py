@@ -166,7 +166,7 @@ class DAPipeline():
                 raise NotImpelemtedError("This model type does not have a gradient available")
         else:
             raise ValueError("COMPRESSION_METHOD must be in {SVD, AE}")
-    
+
     @staticmethod
     def perform_VarDA(data, settings):
         """This is a static method so that it can be performed in AE_train with user specified data"""
@@ -385,6 +385,11 @@ class DAPipeline():
             assert callable(V), "V must be a function if mode=AE is used"
             w_tensor = torch.Tensor(w)
             V_w = V(w_tensor).detach().numpy()
+            print(V)
+            print(w_tensor.shape, "w_tensor.shape")
+            print(G.shape, "G.shape")
+            print(V_w.shape, "(V_w.shape)")
+            print(d.shape, "d.shape")
             Q = (G @ V_w - d)
 
         else:
