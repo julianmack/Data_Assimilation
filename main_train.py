@@ -7,7 +7,7 @@ def main():
     settings = config.CAEConfig()
     expdir = "experiments/CAE_zoo"
     trainer = TrainAE(settings, expdir)
-    model = trainer.train(2)
+    model = trainer.train(1)
 
 
 if __name__ == "__main__":

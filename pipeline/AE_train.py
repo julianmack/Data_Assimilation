@@ -4,6 +4,8 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torch.utils.data import TensorDataset, DataLoader
 import numpy as np
+import pandas as pd
+
 import pickle
 
 import pipeline.config as config
@@ -67,15 +69,17 @@ class TrainAE():
 
 
         #Save results and settings file (so that it can be exactly reproduced)
-        self.__write_csv(train_losses, self.train_fp)
-        self.__write_csv(test_losses, self.test_losses)
-        pickle.dump(settings, self.settings_fp)
+        self.to_csv(train_losses, self.train_fp)
+        self.to_csv(test_losses, self.test_fp)
+        with open(self.settings_fp, "wb") as f:
+            pickle.dump(settings, f)
+
 
         return model
 
-    def __write_csv(np_array, fp):
-        header = "epoch,loss,DA_MAE"
-        np.savetxt(fp, np_array, delimiter=",", header=header)
+    def to_csv(self, np_array, fp):
+        df = pd.DataFrame(np_array, columns = ["epoch","loss","DA_MAE"])
+        df.to_csv(fp)
 
 
     def __init_expdir(self, expdir):
@@ -86,15 +90,17 @@ class TrainAE():
         except (AssertionError, KeyError, AttributeError):
             raise ValueError("expdir must be in the experiments/ directory")
 
+        if expdir[0] == "/":
+            expdir = expdir[1:]
+        if not expdir[-1] == "/":
+            expdir += "/"
+
+        expdir = wd + expdir
+
         if os.path.isdir(expdir):
             if len(os.listdir(expdir)) > 0:
-                raise "Cannot overwrite files in expdir. Exit-ing."
+                raise ValueError("Cannot overwrite files in expdir. Exit-ing.")
         else:
-            if expdir[0] == "/":
-                expdir = expdir[1:]
-            if not expdir[-1] == "/":
-                expdir += "/"
-            expdir = wd + expdir
             os.makedirs(expdir)
         return expdir
 

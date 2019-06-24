@@ -325,8 +325,8 @@ class ML_utils():
                 train_loss += loss.item()
                 optimizer.step()
 
-            train_DA_MAE = np.nan #TODO
-            train_losses.append((epoch, train_loss / len(train_loader.dataset, train_DA_MAE)))
+            train_DA_MAE = "DA" #TODO
+            train_losses.append((epoch, train_loss / len(train_loader.dataset), train_DA_MAE))
             if epoch % print_every == 0 or epoch in [0, num_epoch - 1]:
                 print('epoch [{}/{}], loss:{:.4f}'.format(epoch + 1, num_epoch, train_loss / len(train_loader.dataset)))
             if epoch % test_every == 0 or epoch == num_epoch - 1:
@@ -338,9 +338,9 @@ class ML_utils():
                     y_test = model(x_test)
                     loss = loss_fn(y_test, x_test)
                     test_loss += loss.item()
-                test_DA_MAE = np.nan #TODO
+                test_DA_MAE = "DA" #TODO
                 print('epoch [{}/{}], validation loss:{:.4f}'.format(epoch + 1, num_epoch, test_loss / len(test_loader.dataset)))
-                test_losses.append((epoch, test_loss/len(test_loader.dataset, test_DA_MAE)))
+                test_losses.append((epoch, test_loss/len(test_loader.dataset), test_DA_MAE))
             if epoch % save_every == 0 and model_dir != None:
                 model_fp_new = "{}{}.pth".format(model_dir, epoch)
                 torch.save(model.state_dict(), model_fp_new)
