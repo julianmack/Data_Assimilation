@@ -13,7 +13,7 @@ import os, sys
 class Config():
 
     def __init__(self):
-        self.HOME_DIR = self.__get_home_dir()
+        self.HOME_DIR = utils.get_home_dir()
         self.RESULTS_FP = self.HOME_DIR + "results/"
         self.DATA_FP = self.HOME_DIR + "data/small3DLSBU/"
         self.INTERMEDIATE_FP = self.HOME_DIR + "data/small3D_intermediate/"
@@ -61,14 +61,6 @@ class Config():
         for k, v in self.env_vars.items():
             env[str(k)] = str(v)
 
-    def __get_home_dir(self):
-        wd = os.getcwd()
-        if sys.platform[0:3] == 'win': #i.e. windows
-            #replace the backslashes with forward slashes
-            wd = wd.replace("\\", '/')
-            wd = wd.replace("C:", "")
-        wd += "/"
-        return wd
 
 
 

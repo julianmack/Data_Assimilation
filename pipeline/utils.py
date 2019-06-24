@@ -7,7 +7,7 @@ import pipeline.config
 
 import vtk.util.numpy_support as nps
 import vtk
-import os
+import os, sys
 
 def set_seeds(seed = None):
     "Fix all seeds"
@@ -22,6 +22,15 @@ def set_seeds(seed = None):
     torch.cuda.manual_seed(seed)
     if torch.cuda.is_available():
         torch.backends.cudnn.deterministic = True
+
+def get_home_dir():
+    wd = os.getcwd()
+    if sys.platform[0:3] == 'win': #i.e. windows
+        #replace the backslashes with forward slashes
+        wd = wd.replace("\\", '/')
+        wd = wd.replace("C:", "")
+    wd += "/"
+    return wd
 
 class DataLoader():
     """Class to load data from files in preparation for Data Assimilation or AE training"""
@@ -291,7 +300,7 @@ class ML_utils():
 
     @staticmethod
     def training_loop_AE(model, optimizer, loss_fn, train_loader, test_loader,
-            num_epoch, device=None, print_every=1, test_every=5):
+            num_epoch, device=None, print_every=1, test_every=5, save_every=5, model_dir=None):
         """Runs a torch AE model training loop.
         NOTE: Ensure that the loss_fn is in mode "sum"
         """
@@ -299,7 +308,7 @@ class ML_utils():
         train_losses = []
         test_losses = []
         if device == None:
-            device = get_device()
+            device = ML_utils.get_device()
         for epoch in range(num_epoch):
             train_loss = 0
             model.to(device)
@@ -315,7 +324,9 @@ class ML_utils():
                 loss.backward()
                 train_loss += loss.item()
                 optimizer.step()
-            train_losses.append((epoch, train_loss / len(train_loader.dataset)))
+
+            train_DA_MAE = np.nan #TODO
+            train_losses.append((epoch, train_loss / len(train_loader.dataset, train_DA_MAE)))
             if epoch % print_every == 0 or epoch in [0, num_epoch - 1]:
                 print('epoch [{}/{}], loss:{:.4f}'.format(epoch + 1, num_epoch, train_loss / len(train_loader.dataset)))
             if epoch % test_every == 0 or epoch == num_epoch - 1:
@@ -327,8 +338,16 @@ class ML_utils():
                     y_test = model(x_test)
                     loss = loss_fn(y_test, x_test)
                     test_loss += loss.item()
+                test_DA_MAE = np.nan #TODO
                 print('epoch [{}/{}], validation loss:{:.4f}'.format(epoch + 1, num_epoch, test_loss / len(test_loader.dataset)))
-                test_losses.append((epoch, test_loss/len(test_loader.dataset)))
+                test_losses.append((epoch, test_loss/len(test_loader.dataset, test_DA_MAE)))
+            if epoch % save_every == 0 and model_dir != None:
+                model_fp_new = "{}{}.pth".format(model_dir, epoch)
+                torch.save(model.state_dict(), model_fp_new)
+        if epoch % save_every != 0 and model_dir != None:
+            #Save model (if new model hasn't just been saved)
+            model_fp_new = "{}{}.pth".format(model_dir, epoch)
+            torch.save(model.state_dict(), model_fp_new)
         return train_losses, test_losses
 
     @staticmethod

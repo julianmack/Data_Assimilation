@@ -5,8 +5,9 @@ from pipeline import TrainAE
 def main():
 
     settings = config.CAEConfig()
-    trainer = TrainAE(settings)
-    model = trainer.train()
+    expdir = "experiments/CAE_zoo"
+    trainer = TrainAE(settings, expdir)
+    model = trainer.train(2)
 
 
 if __name__ == "__main__":

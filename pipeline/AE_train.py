@@ -22,21 +22,9 @@ class TrainAE():
 
         self.expdir = self.__init_expdir(expdir)
 
-    def __init_expdir(self, expdir):
-
-        try:
-            dir_ls = expdir.split("/")
-            assert dir_ls[0] == "experiments"
-        except (AssertionError, KeyError, AttributeError):
-            raise ValueError("expdir must be in the experiments/ directory")
-
-        if os.path.isdir(expdir):
-            if len(os.listdir(expdir)) > 0:
-                raise "Cannot overwrite files in expdir. Exiting."
-        else:
-            os.mkdir(expdir)
-        return expdir
-
+        self.test_fp = self.expdir + "test.csv"
+        self.train_fp = self.expdir + "train.csv"
+        self.settings_fp = self.expdir + "settings.txt"
 
     def train(self, num_epoch = 100, learning_rate = 0.001):
         settings = self.settings
@@ -62,33 +50,53 @@ class TrainAE():
 
         device = utils.ML_utils.get_device()
 
-        model_fp = settings.AE_MODEL_FP
-        results_fp_train = settings.RESULTS_FP + "toy_train_mode{}_hid{}.txt".format(settings.NUMBER_MODES, settings.HIDDEN)
-        results_fp_test = settings.RESULTS_FP + "toy_test_mode{}_hid{}.txt".format(settings.NUMBER_MODES, settings.HIDDEN)
-
         loss_fn = torch.nn.L1Loss(reduction='sum')
         model = settings.AE_MODEL_TYPE(**settings.get_kwargs())
+
         self.model = model
 
         optimizer = optim.Adam(model.parameters(), learning_rate)
 
-        print(model)
+
         print("Number of parameters:", sum(p.numel() for p in model.parameters()))
+
 
         train_losses, test_losses = utils.ML_utils.training_loop_AE(model, optimizer,
                                 loss_fn, train_loader, test_loader,
-                                num_epoch, device, print_every=1, test_every=5)
+                                num_epoch, device, print_every=1, test_every=1, model_dir = self.expdir)
 
-        torch.save(model.state_dict(), model_fp)
 
-        with open(results_fp_train, 'wb') as fp:
-            pickle.dump(train_losses, fp)
-        with open(results_fp_test, 'wb') as fp:
-            pickle.dump(test_losses, fp)
-
+        #Save results and settings file (so that it can be exactly reproduced)
+        self.__write_csv(train_losses, self.train_fp)
+        self.__write_csv(test_losses, self.test_losses)
+        pickle.dump(settings, self.settings_fp)
 
         return model
 
+    def __write_csv(np_array, fp):
+        header = "epoch,loss,DA_MAE"
+        np.savetxt(fp, np_array, delimiter=",", header=header)
+
+
+    def __init_expdir(self, expdir):
+        wd = utils.get_home_dir()
+        try:
+            dir_ls = expdir.split("/")
+            assert dir_ls[0] == "experiments"
+        except (AssertionError, KeyError, AttributeError):
+            raise ValueError("expdir must be in the experiments/ directory")
+
+        if os.path.isdir(expdir):
+            if len(os.listdir(expdir)) > 0:
+                raise "Cannot overwrite files in expdir. Exit-ing."
+        else:
+            if expdir[0] == "/":
+                expdir = expdir[1:]
+            if not expdir[-1] == "/":
+                expdir += "/"
+            expdir = wd + expdir
+            os.makedirs(expdir)
+        return expdir
 
 
 if __name__ == "__main__":
