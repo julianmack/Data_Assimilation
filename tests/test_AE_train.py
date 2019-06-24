@@ -10,7 +10,15 @@ class TestAE_train():
         epochs = 1
         settings = config.ToyAEConfig()
         expdir = tmpdir.mkdir("experiments/")
-        print(expdir)
-        print(os.getcwd())
+
         trainer = TrainAE(settings, str(expdir))
+        model = trainer.train(epochs)
+
+    def test_AE_train_linear_DA(self, tmpdir):
+        epochs = 1
+        settings = config.ToyAEConfig()
+        expdir = tmpdir.mkdir("experiments/")
+        calc_DA_MAE = True
+        
+        trainer = TrainAE(settings, str(expdir), calc_DA_MAE)
         model = trainer.train(epochs)

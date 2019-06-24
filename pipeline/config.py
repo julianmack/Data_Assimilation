@@ -89,7 +89,7 @@ class ToyAEConfig(ConfigAE):
     def __init__(self):
         super(ToyAEConfig, self).__init__()
         self.NUMBER_MODES = 2
-        self.HIDDEN = 32
+        self.HIDDEN = 3
         #self.AE_MODEL_FP = self.HOME_DIR + "models/AE_toy_{}_{}_{}.pth".format(self.NUMBER_MODES, self.HIDDEN, self.FIELD_NAME)
         self.DEBUG = True
         self.AE_MODEL_TYPE = ToyAE

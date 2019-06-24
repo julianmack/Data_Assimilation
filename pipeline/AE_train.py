@@ -164,12 +164,15 @@ class TrainAE():
 
             if not hasattr(self, "DA_data"):
                 DA = DAPipeline(self.settings)
-                data, std, mean = DA.vda_setup(settings)
+                data, std, mean = DA.vda_setup(self.settings)
                 self.DA_data = data
                 self.__da_data_wipe_some_values()
 
             #update control state:
             self.DA_data["u_c"] = u_c
+            self.DA_data["w_0"] = torch.zeros((self.settings.NUMBER_MODES))
+            self.DA_data["V_trunc"] = self.model.jac_explicit
+
             DA = DAPipeline(self.settings)
 
             DA_results = DA.perform_VarDA(self.DA_data, self.settings)
@@ -183,11 +186,12 @@ class TrainAE():
             return "NO_CALC", "NO_CALC"
 
 
-    def __da_data_wipe_some_values():
+    def __da_data_wipe_some_values(self):
         #Now wipe some key attributes to prevent overlap between
         #successive calls to maybe_eval_DA_MAE()
         self.DA_data["u_c"] = None
-
+        self.DA_data["w_0"] = None
+        self.DA_data["V_trunc"] = None
 
     def to_csv(self, np_array, fp):
         df = pd.DataFrame(np_array, columns = ["epoch","reconstruction_err","DA_MAE", "DA_ratio_improve_MAE"])
@@ -199,7 +203,6 @@ class TrainAE():
         wd = utils.get_home_dir()
         try:
             dir_ls = expdir.split("/")
-            print(dir_ls)
             assert "experiments" in dir_ls
         except (AssertionError, KeyError, AttributeError) as e:
             print("~~~~~~~~{}~~~~~~~~~".format(str(e)))

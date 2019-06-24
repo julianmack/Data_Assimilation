@@ -166,7 +166,7 @@ class DAPipeline():
                 raise NotImpelemtedError("This model type does not have a gradient available")
         else:
             raise ValueError("COMPRESSION_METHOD must be in {SVD, AE}")
-
+    
     @staticmethod
     def perform_VarDA(data, settings):
         """This is a static method so that it can be performed in AE_train with user specified data"""

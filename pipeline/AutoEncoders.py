@@ -59,6 +59,9 @@ class BaseAE(nn.Module):
 
         return layers
 
+    def jac_explicit(self):
+        raise NotImplementedError("jac_explicit method not implemented. Must override.")
+
 
 class VanillaAE(BaseAE):
     """Variable size AE - using only fully connected layers.
