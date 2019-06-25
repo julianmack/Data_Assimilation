@@ -19,19 +19,29 @@ class BaseAE(nn.Module):
         return x
 
     def encode(self, x):
+        x = self.__maybe_convert_to_batched(x)
+
         layers = self.layers_encode
         for layer in layers[:-1]:
             x = self.act_fn(layer(x))
         x = layers[-1](x) #no activation function for latent space
+
+        x = self.__flatten_encode(x)
+        x = self.__maybe_convert_to_non_batched(x)
         return x
 
-    def decode(self, x):
+    def decode(self, x, latent_sz=None):
+        x = self.__maybe_convert_to_batched(x)
+        x = self.__unflatten_decode(x, latent_sz)
+        
         layers = self.layers_decode
         for layer in layers[:-1]:
             x = self.act_fn(layer(x))
 
         x = layers[-1](x) #no activation function for output
+        x = self.__maybe_convert_to_non_batched(x)
         return x
+
     def __check_instance_vars(self):
         try:
             x = self.layers_decode
@@ -41,6 +51,52 @@ class BaseAE(nn.Module):
 
         assert isinstance(x, nn.ModuleList), "model.layers_decode must be of type nn.ModuleList"
         assert isinstance(y, nn.ModuleList), "model.layers_encode must be of type nn.ModuleList"
+
+    def __flatten_encode(self, x):
+        """Flattens input after encoding and saves latent_sz.
+        NOTE: all inputs x will be batched"""
+
+        self.latent_sz = x.shape
+
+        x = torch.flatten(x, start_dim=1) #start at dim = 1 since batched input
+
+        return x
+
+    def __unflatten_decode(self, x, latent_sz=None):
+        """Unflattens decoder input before decoding.
+        NOTE: If the AE has not been used for an encoding, it is necessary to pass
+        the desired latent_sz.
+        NOTE: all inputs x will be batched"""
+        if latent_sz == None:
+            if hasattr(self, "latent_sz"):
+                latent_sz = self.latent_sz
+            else:
+                raise ValueError("No latent_sz provided to decoder and encoder not run")
+
+        self.latent_sz = self.latent_sz
+
+        x = x.view(self.latent_sz)
+
+        return x
+
+    def __maybe_convert_to_batched(self, x):
+        """Converts system to batched input if not batched
+        (since Conv3D requires batching) and sets a flag to make clear that system
+        should be converted back before output"""
+        # In encoder, batched input will have dimensions 2: (M x n)
+        # or 5: (M x Cin x nx x ny x nz) (for batch size M).
+        # In decoder, batched input will have dimensions 2: (M x L)
+        dims = len(x.shape)
+        if dims in [2, 5]:
+            self.batch = True
+        else:
+            self.batch = False
+            x = x.unsqueeze(0)
+        return x
+    def __maybe_convert_to_non_batched(self, x):
+        if not self.batch:
+            x = x.squeeze(0)
+        return x
 
     def get_list_AE_layers(self, input_size, latent_dim, hidden):
         """Helper function to get a list of the number of fc nodes or conv
@@ -285,11 +341,6 @@ class BaselineCAE(nn.Module):
         z = self.normd4(self.sigmoid(self.deconv4(z)))
 
         return z
-
-    def forward(self, x):
-        z = self.encode(x)
-        recon = self.decode(z)
-        return recon
 
 class ToyCAE(BaseAE):
     """Creates a simple CAE for which
