@@ -19,6 +19,7 @@ class BaseAE(nn.Module):
                         latent_size = (Cout, nx, ny, nz)
     """
     def forward(self, x):
+
         self.__check_instance_vars()
         x = self.encode(x)
         x = self.decode(x)
@@ -26,12 +27,12 @@ class BaseAE(nn.Module):
 
     def encode(self, x):
         x = self.__maybe_convert_to_batched(x)
-
+        print("ENTERING ENCODE: x.shape", x.shape)
         layers = self.layers_encode
         for layer in layers[:-1]:
             x = self.act_fn(layer(x))
         x = layers[-1](x) #no activation function for latent space
-
+        print("FINISHED ENCODE (pre-process): x.shape", x.shape)
         x = self.__flatten_encode(x)
         x = self.__maybe_convert_to_non_batched(x)
         return x
@@ -62,6 +63,8 @@ class BaseAE(nn.Module):
         """Flattens input after encoding and saves latent_sz.
         NOTE: all inputs x will be batched"""
 
+        print("SETTING LATENT SIZE. Before = {}, after={}".format(self.latent_sz, x.shape[1:]))
+        print(x.shape)
         self.latent_sz = x.shape[1:]
 
         x = torch.flatten(x, start_dim=1) #start at dim = 1 since batched input
@@ -81,8 +84,11 @@ class BaseAE(nn.Module):
         if latent_sz == None:
             raise ValueError("No latent_sz provided to decoder and encoder not run")
 
-        self.latent_sz = self.latent_sz
+        self.latent_sz = latent_sz
         size = (self.batch_sz,) + tuple(self.latent_sz)
+        print(self.latent_sz, "self.latent_sz ")
+        print("self.batch_sz", self.batch_sz)
+        print("size", size)
         x = x.view(size)
 
         return x
@@ -145,6 +151,7 @@ class VanillaAE(BaseAE):
         self.hidden = hidden
         self.latent_dim = latent_dim
         self.latent_sz = (latent_dim, )
+        print("latent_sz at init", self.latent_sz )
         self.activation = activation
         self.__init_multilayer_AE()
 

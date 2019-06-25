@@ -384,9 +384,11 @@ class DAPipeline():
         elif mode == "AE":
             assert callable(V), "V must be a function if mode=AE is used"
             w_tensor = torch.Tensor(w)
+            print("w.shape", w.shape)
+            print(w_tensor.shape, "w_tensor.shape 1")
             V_w = V(w_tensor).detach().numpy()
             print(V)
-            print(w_tensor.shape, "w_tensor.shape")
+
             print(G.shape, "G.shape")
             print(V_w.shape, "(V_w.shape)")
             print(d.shape, "d.shape")

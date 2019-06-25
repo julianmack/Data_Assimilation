@@ -44,12 +44,17 @@ class TrainAE():
         loader = utils.DataLoader()
         X = loader.get_X(settings)
 
-        train_X, test_X, DA_u_c, X_norm,  mean, std = loader.test_train_DA_split_maybe_normalize(X, settings)
 
-        #Add Channel
-        self.train_X = np.expand_dims(train_X, 1)
-        self.test_X = np.expand_dims(test_X, 1)
+        self.train_X, self.test_X, DA_u_c, X_norm,  mean, std = loader.test_train_DA_split_maybe_normalize(X, settings)
 
+        
+
+        #Add Channel if we are in 3D case
+        if settings.THREE_DIM:
+            self.train_X = np.expand_dims(self.train_X, 1)
+            self.test_X = np.expand_dims(self.test_X, 1)
+
+        print("Train_X.shape", self.train_X.shape)
         #Dataloaders
         train_dataset = TensorDataset(torch.Tensor(self.train_X))
         train_loader = DataLoader(train_dataset, self.batch_sz, shuffle=True)
@@ -64,7 +69,8 @@ class TrainAE():
 
         loss_fn = torch.nn.L1Loss(reduction='sum')
         model = settings.AE_MODEL_TYPE(**settings.get_kwargs())
-
+        print("kwargs1:", settings.get_kwargs())
+        print("latent2:", model.latent_sz)
         self.model = model
 
         optimizer = optim.Adam(model.parameters(), learning_rate)
@@ -103,7 +109,7 @@ class TrainAE():
         test_losses = []
         if device == None:
             device = utils.ML_utils.get_device()
-
+        print("latent22:", model.latent_sz)
         for epoch in range(num_epoch):
             train_loss = 0
             model.to(device)
@@ -111,6 +117,7 @@ class TrainAE():
             for batch_idx, data in enumerate(train_loader):
                 model.train()
                 x, = data
+                print("batch {}, x.shape=".format(batch_idx),x.shape)
                 x = x.to(device)
                 optimizer.zero_grad()
                 y = model(x)
@@ -120,6 +127,7 @@ class TrainAE():
                 train_loss += loss.item()
                 optimizer.step()
 
+            print("latent222:", model.latent_sz)
             train_DA_MAE, train_DA_ratio = self.maybe_eval_DA_MAE("train")
             train_losses.append((epoch, train_loss / len(train_loader.dataset), train_DA_MAE, train_DA_ratio))
             if epoch % print_every == 0 or epoch in [0, num_epoch - 1]:
@@ -173,7 +181,8 @@ class TrainAE():
             self.DA_data["w_0"] = torch.zeros((self.settings.NUMBER_MODES))
             self.DA_data["V_trunc"] = self.model.decode
             self.DA_data["V_grad"] = self.model.jac_explicit
-
+            print("kwargs2:", self.settings.get_kwargs())
+            print("latent3:", self.model.latent_sz)
             DA = DAPipeline(self.settings)
 
             DA_results = DA.perform_VarDA(self.DA_data, self.settings)
