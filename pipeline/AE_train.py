@@ -48,7 +48,6 @@ class TrainAE():
         self.train_X, self.test_X, DA_u_c, X_norm,  mean, std = loader.test_train_DA_split_maybe_normalize(X, settings)
 
 
-
         #Add Channel if we are in 3D case
         if settings.THREE_DIM:
             self.train_X = np.expand_dims(self.train_X, 1)

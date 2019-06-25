@@ -61,6 +61,7 @@ class TestAE_Train3D():
             p.allow_pickel = True
 
             settings = config.CAEConfig()
+            settings.CHANGEOVERS = (7, 7, 7)
             settings.X_FP = str(p)
             settings.FORCE_GEN_X = False
             settings.n3d = (15, 20, 10)
