@@ -37,10 +37,10 @@ class TestAEInit():
 class TestAEForward():
     def test_ToyAE_forward_nobatch(self):
         settings = config.ToyAEConfig()
-        settings.n = 3
+        settings.set_n(3)
         settings.HIDDEN = 4
         settings.NUMBER_MODES = 2
-        x = torch.rand((settings.n), requires_grad=True)
+        x = torch.rand((settings.get_n()), requires_grad=True)
 
         model = ToyAE(**settings.get_kwargs())
         try:
@@ -50,11 +50,11 @@ class TestAEForward():
 
     def test_ToyAE_forward_single_hid(self):
         settings = config.ToyAEConfig()
-        settings.n = 3
+        settings.set_n(3)
         settings.HIDDEN = 4
         settings.NUMBER_MODES = 2
         Batch_sz = 3
-        x = torch.rand((Batch_sz, settings.n), requires_grad=True)
+        x = torch.rand((Batch_sz, settings.get_n()), requires_grad=True)
 
         model = ToyAE(**settings.get_kwargs())
         try:
@@ -64,11 +64,11 @@ class TestAEForward():
 
     def test_ToyAE_forward_mult_hid(self):
         settings = config.ToyAEConfig()
-        settings.n = 128
+        settings.set_n(128)
         settings.HIDDEN = [128, 128, 64]
         settings.NUMBER_MODES = 4
         Batch_sz = 16
-        x = torch.rand((Batch_sz, settings.n), requires_grad=True)
+        x = torch.rand((Batch_sz, settings.get_n()), requires_grad=True)
 
         model = ToyAE(**settings.get_kwargs())
         try:
@@ -78,11 +78,11 @@ class TestAEForward():
 
     def test_VanillaAE_forward(self):
         settings = config.ConfigAE()
-        settings.n = 3
+        settings.set_n(3)
         settings.HIDDEN = [5, 6, 7]
         settings.NUMBER_MODES = 2
         Batch_sz = 4
-        x = torch.rand((Batch_sz, settings.n), requires_grad=True)
+        x = torch.rand((Batch_sz, settings.get_n()), requires_grad=True)
 
         model = VanillaAE(**settings.get_kwargs())
         try:
@@ -175,7 +175,7 @@ class TestCAE_3D():
         settings = config.CAEConfig()
         batch_sz = 2
         Cin = settings.get_channels()[0]
-        size = (batch_sz, Cin) + settings.n
+        size = (batch_sz, Cin) + settings.get_n()
         device = ML.get_device()
         x = torch.rand(size, requires_grad=True, device = device)
 
@@ -191,7 +191,7 @@ class TestCAE_3D():
     def test_CAE_forward_nobatch(self):
         settings = config.CAEConfig()
         Cin = settings.get_channels()[0]
-        size = (Cin,) + settings.n
+        size = (Cin,) + settings.get_n()
         device = ML.get_device()
         x = torch.rand(size, requires_grad=True, device = device)
 
@@ -208,7 +208,7 @@ class TestCAE_3D():
         settings = config.CAEConfig()
         batch_sz = 2
         Cin = settings.get_channels()[0]
-        size = (batch_sz, Cin) + settings.n
+        size = (batch_sz, Cin) + settings.get_n()
         device = ML.get_device()
         x = torch.rand(size, requires_grad=True, device = device)
 
@@ -232,7 +232,7 @@ class TestCAE_3D():
     def test_CAE_linear_latent_nonbatched(self):
         settings = config.CAEConfig()
         Cin = settings.get_channels()[0]
-        size = (Cin, ) + settings.n
+        size = (Cin, ) + settings.get_n()
         device = ML.get_device()
         x = torch.rand(size, requires_grad=True, device = device)
 

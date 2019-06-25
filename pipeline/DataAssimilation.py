@@ -110,14 +110,14 @@ class DAPipeline():
 
         # We will take initial condition u_0, as mean of historical data
         if settings.NORMALIZE:
-            u_0 = np.zeros(settings.n) #since the data is mean centred
+            u_0 = np.zeros(settings.get_n()) #since the data is mean centred
         else:
             u_0 = mean
 
         observations, obs_idx, nobs = self.select_obs(settings.OBS_MODE, u_c, settings.OBS_FRAC) #options are specific for rand
 
         #Now define quantities required for 3D-VarDA - see Algorithm 1 in Rossella et al (2019)
-        H_0 = self.create_H(obs_idx, settings.n, nobs)
+        H_0 = self.create_H(obs_idx, settings.get_n(), nobs)
         d = observations - H_0 @ u_0 #'d' in literature
         #R_inv = self.create_R_inv(OBS_VARIANCE, nobs)
         data = {"d": d, "G": H_0, "V": V,

@@ -119,7 +119,7 @@ class DataLoader():
             n = (nx, ny, nz)
         else:
             M, n = X.shape
-        assert n == settings.n, "dimensions {} must = {}".format(n, settings.n)
+        assert n == settings.get_n(), "dimensions {} must = {}".format(n, settings.get_n())
         return M, n
 
     @staticmethod
@@ -191,7 +191,7 @@ class FluidityUtils():
 
         field_name = settings.FIELD_NAME
 
-        newshape = self.get_newshape_3D(ug, settings.n, settings.FACTOR_INCREASE, )
+        newshape = self.get_newshape_3D(ug, settings.get_n(), settings.FACTOR_INCREASE, )
 
         #update settings
         settings.n3d = newshape

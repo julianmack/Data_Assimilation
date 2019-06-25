@@ -20,7 +20,7 @@ class Config():
         self.FIELD_NAME = "Pressure"
         self.X_FP = self.INTERMEDIATE_FP + "X_1D_{}.npy".format(self.FIELD_NAME)
         self.FORCE_GEN_X = True
-        self.n = 100040
+        self.__n = 100040
         self.THREE_DIM = False # i.e. is representation in 3D tensor or 1D array
         self.SAVE = True
         self.DEBUG = True
@@ -53,6 +53,10 @@ class Config():
         self.TOL = 1e-3 #Tolerance in VarDA minimization routine
 
         self.export_env_vars()
+    def get_n(self):
+        return self.__n
+    def set_n(self, n):
+        self.__n = n
 
     def export_env_vars(self):
         self.env_vars = {"SEED": self.SEED}
@@ -81,7 +85,7 @@ class ConfigAE(Config):
         self.ACTIVATION = "lrelu"
         #define getter for __kwargs since they may change after initialization
     def get_kwargs(self):
-        return  {"input_size": self.n, "latent_dim": self.NUMBER_MODES, "hidden":self.HIDDEN, "activation": self.ACTIVATION}
+        return  {"input_size": self.get_n(), "latent_dim": self.NUMBER_MODES, "hidden":self.HIDDEN, "activation": self.ACTIVATION}
 
 class ToyAEConfig(ConfigAE):
     def __init__(self):
@@ -99,7 +103,7 @@ class CAEConfig(ConfigAE):
         self.AE_MODEL_TYPE = CAE_3D
         self.n3d = (91, 85, 32)
         self.FACTOR_INCREASE = 2.43 #interpolation ratio of oridinal # points to final
-        self.n = self.get_n_3D() #This overrides FACTOR_INCREASE
+        self.__n = self.n3d #This overrides FACTOR_INCREASE
         self.CHANNELS = None
         self.NUMBER_MODES = self.calc_modes()
         self.THREE_DIM = True
@@ -118,8 +122,11 @@ class CAEConfig(ConfigAE):
         kwargs =   {"layer_data": init_data, "channels": channels, "activation": self.ACTIVATION, "latent_sz": latent_sz}
         return kwargs
 
+    def get_n(self):
+        return self.get_n_3D()
+    def set_n(self, n):
+        self.n3d = n
     def get_n_3D(self):
-
         return self.n3d
 
     def get_conv_schedule(self):
@@ -127,7 +134,7 @@ class CAEConfig(ConfigAE):
         #TODO add self.lowest_out != None
         #TODO add self.MAX_Layers
         #TODO - give ability to set bespoke schedule
-        return utils.ML_utils.conv_scheduler3D(self.n, None, 1, False)
+        return utils.ML_utils.conv_scheduler3D(self.get_n(), None, 1, False)
 
     def get_channels(self):
         if self.CHANNELS != None:
@@ -158,6 +165,6 @@ class SmallTestDomain(Config):
         self.DEBUG = True
         self.NORMALIZE = True
         self.X_FP = self.INTERMEDIATE_FP + "X_small3D_{}_TINY.npy".format(self.FIELD_NAME)
-        self.n = 4
+        self.__n = 4
         self.OBS_FRAC = 0.3
         self.NUMBER_MODES = 3

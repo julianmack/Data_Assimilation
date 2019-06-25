@@ -65,7 +65,7 @@ class TestSetup():
 
         settings = config.Config()
         settings.X_FP = str(p)
-        settings.n = 3
+        settings.set_n(3)
         settings.FORCE_GEN_X = False
         settings.OBS_MODE = "single_max"
         settings.OBS_VARIANCE = 0.1
@@ -117,7 +117,7 @@ class TestSetup():
 
         settings = config.Config()
         settings.X_FP = str(p)
-        settings.n = 3
+        settings.set_n(3)
         settings.FORCE_GEN_X = False
         settings.OBS_MODE = "single_max"
         settings.OBS_VARIANCE = 0.1
@@ -187,7 +187,7 @@ class TestMinimizeJ():
 
             settings = config.Config()
             settings.X_FP = str(p)
-            settings.n = 3
+            settings.set_n(3)
             settings.FORCE_GEN_X = False
             settings.OBS_MODE = "single_max"
             settings.OBS_VARIANCE = 0.5
