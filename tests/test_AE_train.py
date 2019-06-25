@@ -28,6 +28,7 @@ class TestAE_train():
             return settings
 
     def test_AE_train_linear(self, tmpdir):
+        """Test no exception thrown"""
         epochs = 1
         settings = config.ToyAEConfig()
         expdir = tmpdir.mkdir("experiments/")
@@ -36,6 +37,8 @@ class TestAE_train():
         model = trainer.train(epochs)
 
     def test_AE_train_linear_DA(self, tmpdir):
+        """Test no exception thrown"""
+
         epochs = 1
         settings = self.__settings(tmpdir)
         expdir = tmpdir.mkdir("experiments/")

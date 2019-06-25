@@ -171,7 +171,8 @@ class TrainAE():
             #update control state:
             self.DA_data["u_c"] = u_c
             self.DA_data["w_0"] = torch.zeros((self.settings.NUMBER_MODES))
-            self.DA_data["V_trunc"] = self.model.jac_explicit
+            self.DA_data["V_trunc"] = self.model.decode
+            self.DA_data["V_grad"] = self.model.jac_explicit
 
             DA = DAPipeline(self.settings)
 
