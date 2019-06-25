@@ -138,7 +138,6 @@ class DataLoader():
         #use only the training set to calculate mean and std
         mean = np.mean(hist_X, axis=0)
         std = np.std(hist_X, axis=0)
-
         if settings.NORMALIZE:
             X = (X - mean)
             X = (X / std)
@@ -427,7 +426,7 @@ class ML_utils():
                          "stride": stride}
             init_data.append(init_layer)
 
-        
+
         return init_data
 
     @staticmethod
