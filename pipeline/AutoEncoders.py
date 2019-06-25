@@ -77,7 +77,9 @@ class BaseAE(nn.Module):
             if hasattr(self, "latent_sz"):
                 latent_sz = self.latent_sz
             else:
-                raise ValueError("No latent_sz provided to decoder and encoder not run")
+                latent_sz = None
+        if latent_sz == None:
+            raise ValueError("No latent_sz provided to decoder and encoder not run")
 
         self.latent_sz = self.latent_sz
         size = (self.batch_sz,) + tuple(self.latent_sz)
@@ -252,7 +254,7 @@ class ToyAE(VanillaAE):
         return jac_partial, z_i
 
 class CAE_3D(BaseAE):
-    def __init__(self, layer_data, channels, activation = "relu"):
+    def __init__(self, layer_data, channels, activation = "relu", latent_sz=None):
         super(CAE_3D, self).__init__()
         assert len(layer_data) + 1 == len(channels)
 
@@ -275,7 +277,7 @@ class CAE_3D(BaseAE):
             self.layers.append(conv)
 
         #init instance variables
-        self.latent_sz = (latent_dim, )
+        self.latent_sz = latent_sz
         self.layers_encode = self.layers[:num_encode]
         self.layers_decode = self.layers[num_encode:]
 
