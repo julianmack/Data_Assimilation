@@ -114,7 +114,8 @@ class CAEConfig(ConfigAE):
         conv_data = self.get_conv_schedule()
         init_data = utils.ML_utils.get_init_data_from_schedule(conv_data)
         channels = self.get_channels()
-        kwargs =   {"layer_data": init_data, "channels": channels, "activation": self.ACTIVATION}
+        latent_sz = self.__get_latent_sz(conv_data, channels)
+        kwargs =   {"layer_data": init_data, "channels": channels, "activation": self.ACTIVATION, "latent_sz": latent_sz}
         return kwargs
 
     def get_n_3D(self):
@@ -141,6 +142,14 @@ class CAEConfig(ConfigAE):
         #lantent dim is Channels_latent * (x_size_latent ) x (y_size_latent ) x (z_size_latent )
         [x_data, y_data, z_data] = self.get_conv_schedule()
         return self.get_channels()[-1] * x_data[-1]["out"] * y_data[-1]["out"] * z_data[-1]["out"]
+    def __get_latent_sz(self, conv_data, channels):
+        Cout = channels[-1]
+        latent_sz = (Cout, )
+        for dim_data in conv_data:
+            final_layer = dim_data[-1]
+            out = final_layer["out"]
+            latent_sz = latent_sz + (out, )
+        return latent_sz
 
 class SmallTestDomain(Config):
     def __init__(self):

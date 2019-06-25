@@ -8,10 +8,16 @@ import torch.nn.functional as F
 
 class BaseAE(nn.Module):
     """Base AE class which all should inherit from
-    The following instance variables must be initialized:
+    The following instance variables must be instantiated in __init__:
         self.layers_encode - an nn.ModuleList of all encoding layers in the network
         self.layers_decode - an nn.ModuleList of all decoding layers in the network
-        self.act_fn - the activation function to use in between layers"""
+        self.act_fn - the activation function to use in between layers
+    If known, the following instance variables *should* be instantiated in __init__:
+        self.latent_sz - a tuple containing the latent size of the system
+                        (NOT including the batch number).
+                        e.g. if latent.shape = (M x Cout x nx x ny x nz) then
+                        latent_size = (Cout, nx, ny, nz)
+    """
     def forward(self, x):
         self.__check_instance_vars()
         x = self.encode(x)
@@ -33,7 +39,7 @@ class BaseAE(nn.Module):
     def decode(self, x, latent_sz=None):
         x = self.__maybe_convert_to_batched(x)
         x = self.__unflatten_decode(x, latent_sz)
-        
+
         layers = self.layers_decode
         for layer in layers[:-1]:
             x = self.act_fn(layer(x))
@@ -56,7 +62,7 @@ class BaseAE(nn.Module):
         """Flattens input after encoding and saves latent_sz.
         NOTE: all inputs x will be batched"""
 
-        self.latent_sz = x.shape
+        self.latent_sz = x.shape[1:]
 
         x = torch.flatten(x, start_dim=1) #start at dim = 1 since batched input
 
@@ -74,8 +80,8 @@ class BaseAE(nn.Module):
                 raise ValueError("No latent_sz provided to decoder and encoder not run")
 
         self.latent_sz = self.latent_sz
-
-        x = x.view(self.latent_sz)
+        size = (self.batch_sz,) + tuple(self.latent_sz)
+        x = x.view(size)
 
         return x
 
@@ -92,6 +98,9 @@ class BaseAE(nn.Module):
         else:
             self.batch = False
             x = x.unsqueeze(0)
+
+        self.batch_sz = x.shape[0]
+
         return x
     def __maybe_convert_to_non_batched(self, x):
         if not self.batch:
@@ -133,6 +142,7 @@ class VanillaAE(BaseAE):
         self.input_size = input_size
         self.hidden = hidden
         self.latent_dim = latent_dim
+        self.latent_sz = (latent_dim, )
         self.activation = activation
         self.__init_multilayer_AE()
 
@@ -264,6 +274,8 @@ class CAE_3D(BaseAE):
                 conv = nn.ConvTranspose3d(channels[idx], channels[idx + 1], **data)
             self.layers.append(conv)
 
+        #init instance variables
+        self.latent_sz = (latent_dim, )
         self.layers_encode = self.layers[:num_encode]
         self.layers_decode = self.layers[num_encode:]
 
