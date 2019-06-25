@@ -82,7 +82,7 @@ class BaseAE(nn.Module):
 
         self.latent_sz = latent_sz
         size = (self.batch_sz,) + tuple(self.latent_sz)
-        
+
         x = x.view(size)
 
         return x

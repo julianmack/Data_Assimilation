@@ -163,7 +163,6 @@ class TrainAE():
             else:
                 raise ValueError("Can only evaluate DA_MAE on 'test' or 'train'")
 
-            print(self.settings.__class__.__name__)
             if not hasattr(self, "DA_data"):
                 DA = DAPipeline(self.settings)
                 data, std, mean = DA.vda_setup(self.settings)
@@ -176,8 +175,7 @@ class TrainAE():
             self.DA_data["V_trunc"] = self.model.decode
             self.DA_data["V_grad"] = self.model.jac_explicit
 
-            print(self.settings.__class__.__name__)
-            print("pre DA w_0", self.DA_data["w_0"].shape)
+            
             DA = DAPipeline(self.settings)
 
             DA_results = DA.perform_VarDA(self.DA_data, self.settings)

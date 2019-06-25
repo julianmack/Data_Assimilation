@@ -78,7 +78,6 @@ class TestAE_Train3D():
 
     def test_AE_train_3D_DA(self, tmpdir):
         """Test no exception thrown"""
-        return
         epochs = 1
         settings = self.__settings(tmpdir, force_init= True)
         expdir = tmpdir.mkdir("experiments/")
