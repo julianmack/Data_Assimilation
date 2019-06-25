@@ -63,8 +63,6 @@ class Config():
 
 
 
-
-
 class ConfigExample(Config):
     """Override and add relevant configuration options."""
     def __init__(self):
