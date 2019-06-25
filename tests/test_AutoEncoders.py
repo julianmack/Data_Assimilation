@@ -39,7 +39,7 @@ class TestAEForward():
         settings = config.ToyAEConfig()
         settings.set_n(3)
         settings.HIDDEN = 4
-        settings.NUMBER_MODES = 2
+        settings.__NUMBER_MODES = 2
         x = torch.rand((settings.get_n()), requires_grad=True)
 
         model = ToyAE(**settings.get_kwargs())
@@ -52,7 +52,7 @@ class TestAEForward():
         settings = config.ToyAEConfig()
         settings.set_n(3)
         settings.HIDDEN = 4
-        settings.NUMBER_MODES = 2
+        settings.__NUMBER_MODES = 2
         Batch_sz = 3
         x = torch.rand((Batch_sz, settings.get_n()), requires_grad=True)
 
@@ -66,7 +66,7 @@ class TestAEForward():
         settings = config.ToyAEConfig()
         settings.set_n(128)
         settings.HIDDEN = [128, 128, 64]
-        settings.NUMBER_MODES = 4
+        settings.__NUMBER_MODES = 4
         Batch_sz = 16
         x = torch.rand((Batch_sz, settings.get_n()), requires_grad=True)
 
@@ -80,7 +80,7 @@ class TestAEForward():
         settings = config.ConfigAE()
         settings.set_n(3)
         settings.HIDDEN = [5, 6, 7]
-        settings.NUMBER_MODES = 2
+        settings.__NUMBER_MODES = 2
         Batch_sz = 4
         x = torch.rand((Batch_sz, settings.get_n()), requires_grad=True)
 
@@ -226,7 +226,7 @@ class TestCAE_3D():
 
         assert w.shape[0] == batch_sz
         assert len(w.shape) == 2, "There should only be one (non batched) dimension"
-        assert w.shape[1] == settings.NUMBER_MODES
+        assert w.shape[1] == settings.get_number_modes()
 
 
     def test_CAE_linear_latent_nonbatched(self):
@@ -249,4 +249,4 @@ class TestCAE_3D():
             pytest.fail("Unable to do forward pass")
 
         assert len(w.shape) == 1, "There should only be one dimension"
-        assert w.shape[0] == settings.NUMBER_MODES
+        assert w.shape[0] == settings.get_number_modes()

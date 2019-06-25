@@ -52,7 +52,7 @@ class TestAE_Train3D():
         if hasattr(self, "settings") and not force_init:
             return self.settings
         else:
-            X = np.random.rand(9, 15, 20, 10)
+            X = np.random.rand(6, 5, 7, 4)
 
 
             INTERMEDIATE_FP = "inter"
@@ -64,7 +64,7 @@ class TestAE_Train3D():
             settings.CHANGEOVERS = (7, 7, 7)
             settings.X_FP = str(p)
             settings.FORCE_GEN_X = False
-            settings.n3d = (15, 20, 10)
+            settings.n3d = tuple(X.shape[1:])
             self.settings = settings
             return settings
 
@@ -80,7 +80,7 @@ class TestAE_Train3D():
         """Test no exception thrown"""
         return
         epochs = 1
-        settings = self.__settings(tmpdir)
+        settings = self.__settings(tmpdir, force_init= True)
         expdir = tmpdir.mkdir("experiments/")
         calc_DA_MAE = True
 

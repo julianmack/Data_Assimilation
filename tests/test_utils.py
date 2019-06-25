@@ -28,7 +28,7 @@ class TestJacSlow():
     the util .jacobian_slow_torch() is used to test correctness of
     the explicit gradient calculations so the tests here ensure those
     tests are well founded."""
-    
+
     def test_jac_slow_no_batch(self):
         input_size = 3
         hidden = 5

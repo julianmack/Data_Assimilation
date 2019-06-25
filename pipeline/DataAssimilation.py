@@ -97,11 +97,11 @@ class DAPipeline():
         V = self.create_V_from_X(train_X, settings)
 
         if settings.THREE_DIM:
-            #MUST return in ( nx x ny x nz x M) form
+            #MUST return in (nx x ny x nz x M) form
             raise NotImplementedError("Must deal with 3d case")
         else:
             #Deal with dimensions:
-            #currently dim are: (M x nx x ny x nz ) or (M x n )
+            #currently dim are: (M x n ). change to (n x M)
             X = X.T
             train_X = train_X.T
             test_X = test_X.T
@@ -135,7 +135,7 @@ class DAPipeline():
         V = self.data["V"]
 
         if settings.COMPRESSION_METHOD == "SVD":
-            V_trunc, U, s, W = self.trunc_SVD(V, settings.NUMBER_MODES)
+            V_trunc, U, s, W = self.trunc_SVD(V, settings.get_number_modes())
             data["V_trunc"] = V_trunc
             #Define intial w_0
             self.data["w_0"] = np.zeros((W.shape[-1],)) #TODO - I'm not sure about this - can we assume is it 0?
@@ -147,7 +147,6 @@ class DAPipeline():
             #     #I'm not clear if there is any difference - we are minimizing so expect them to
             #     #be equivalent
             # w_0 = w_0_v2
-
         elif settings.COMPRESSION_METHOD == "AE":
             kwargs = settings.get_kwargs()
 
@@ -156,7 +155,7 @@ class DAPipeline():
             V_trunc = decoder
             self.data["V_trunc"] = V_trunc
 
-            self.data["w_0"] = torch.zeros((settings.NUMBER_MODES))
+            self.data["w_0"] = torch.zeros((settings.get_number_modes()))
             #u_0 = decoder(w_0).detach().numpy()
 
             # Now access explicit gradient function

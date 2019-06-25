@@ -38,6 +38,7 @@ class TrainAE():
         self.calc_DA_MAE = calc_DA_MAE
         self.batch_sz = batch_sz
 
+
     def train(self, num_epoch = 100, learning_rate = 0.001):
         settings = self.settings
         #data
@@ -69,7 +70,7 @@ class TrainAE():
         model = settings.AE_MODEL_TYPE(**settings.get_kwargs())
 
         self.model = model
-
+        print(model)
         optimizer = optim.Adam(model.parameters(), learning_rate)
 
 
@@ -116,7 +117,6 @@ class TrainAE():
                 x = x.to(device)
                 optimizer.zero_grad()
                 y = model(x)
-
                 loss = loss_fn(y, x)
                 loss.backward()
                 train_loss += loss.item()
@@ -164,6 +164,7 @@ class TrainAE():
             else:
                 raise ValueError("Can only evaluate DA_MAE on 'test' or 'train'")
 
+            print(self.settings.__class__.__name__)
             if not hasattr(self, "DA_data"):
                 DA = DAPipeline(self.settings)
                 data, std, mean = DA.vda_setup(self.settings)
@@ -172,10 +173,12 @@ class TrainAE():
 
             #update control state:
             self.DA_data["u_c"] = u_c
-            self.DA_data["w_0"] = torch.zeros((self.settings.NUMBER_MODES))
+            self.DA_data["w_0"] = torch.zeros((self.settings.get_number_modes()))
             self.DA_data["V_trunc"] = self.model.decode
             self.DA_data["V_grad"] = self.model.jac_explicit
 
+            print(self.settings.__class__.__name__)
+            print("pre DA w_0", self.DA_data["w_0"].shape)
             DA = DAPipeline(self.settings)
 
             DA_results = DA.perform_VarDA(self.DA_data, self.settings)
