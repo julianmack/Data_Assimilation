@@ -51,7 +51,7 @@ class Config():
             # the Rossella et al. method for selection of truncation parameter
 
         self.TOL = 1e-3 #Tolerance in VarDA minimization routine
-
+        self.JAC_NOT_IMPLEM = True #whether explicit jacobian has been implemented
         self.export_env_vars()
     def get_n(self):
         return self.__n
@@ -92,6 +92,7 @@ class ConfigAE(Config):
 class ToyAEConfig(ConfigAE):
     def __init__(self):
         super(ToyAEConfig, self).__init__()
+        self.JAC_NOT_IMPLEM = False
         self.NUMBER_MODES = 3
         self.HIDDEN = 4
         #self.AE_MODEL_FP = self.HOME_DIR + "models/AE_toy_{}_{}_{}.pth".format(self.NUMBER_MODES, self.HIDDEN, self.FIELD_NAME)

@@ -173,9 +173,14 @@ class TrainAE():
             self.DA_data["u_c"] = u_c
             self.DA_data["w_0"] = torch.zeros((self.settings.get_number_modes()))
             self.DA_data["V_trunc"] = self.model.decode
-            self.DA_data["V_grad"] = self.model.jac_explicit
+            if self.settings.JAC_NOT_IMPLEM:
+                import warnings
+                warnings.warn("Using **Very** slow method of calculating jacobian. Consider disabling DA", Warning)
+                self.DA_data["V_grad"] = self.slow_jac_wrapper
+            else:
+                self.DA_data["V_grad"] = self.model.jac_explicit
 
-            
+
             DA = DAPipeline(self.settings)
 
             DA_results = DA.perform_VarDA(self.DA_data, self.settings)
@@ -188,6 +193,9 @@ class TrainAE():
         else:
             return "NO_CALC", "NO_CALC"
 
+
+    def slow_jac_wrapper(self, x):
+        return utils.ML_utils.jac_explicit_slow_model(x, self.model)
 
     def __da_data_wipe_some_values(self):
         #Now wipe some key attributes to prevent overlap between

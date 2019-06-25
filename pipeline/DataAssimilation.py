@@ -96,16 +96,22 @@ class DAPipeline():
 
         V = self.create_V_from_X(train_X, settings)
 
-        if settings.THREE_DIM:
-            #MUST return in (nx x ny x nz x M) form
-            raise NotImplementedError("Must deal with 3d case")
-        else:
-            #Deal with dimensions:
-            #currently dim are: (M x n ). change to (n x M)
+        #Deal with dimensions:
+        #currently dim are: (M x n ) or (M x nx x ny x nz)
+        #change to (n x M) or (nx x ny x nz x M)
+        if not settings.THREE_DIM:
             X = X.T
             train_X = train_X.T
             test_X = test_X.T
             V = V.T
+
+        else:
+            # can flatten V as it will only be used for SVD (which ignores 3D location)
+            V = V.reshape((V.shape[0], -1)).T
+
+            X = np.moveaxis(X, 0, 3)
+            train_X = np.moveaxis(train_X, 0, 3)
+            test_X = np.moveaxis(test_X, 0, 3)
 
 
         # We will take initial condition u_0, as mean of historical data
@@ -114,10 +120,19 @@ class DAPipeline():
         else:
             u_0 = mean
 
+        #flatten 3D vectors:
+        u_c = u_c.flatten()
+        std = std.flatten()
+        mean = mean.flatten()
+        u_0 = u_0.flatten()
+
+
+
         observations, obs_idx, nobs = self.select_obs(settings.OBS_MODE, u_c, settings.OBS_FRAC) #options are specific for rand
 
+
         #Now define quantities required for 3D-VarDA - see Algorithm 1 in Rossella et al (2019)
-        H_0 = self.create_H(obs_idx, settings.get_n(), nobs)
+        H_0 = self.create_H(obs_idx, settings.get_n(), nobs, settings.THREE_DIM)
         d = observations - H_0 @ u_0 #'d' in literature
         #R_inv = self.create_R_inv(OBS_VARIANCE, nobs)
         data = {"d": d, "G": H_0, "V": V,
@@ -263,7 +278,7 @@ class DAPipeline():
         return observations, obs_idx, nobs
 
     @staticmethod
-    def create_H(obs_idxs, n, nobs):
+    def create_H(obs_idxs, n, nobs, three_dim=False):
         """Creates the mapping matrix from the statespace to the observations.
             :obs_idxs - an iterable of indexes @ which the observations are made
             :n - size of state space
@@ -271,7 +286,11 @@ class DAPipeline():
         returns
             :H - numpy array of size (nobs x n)
         """
-        #raise NotImplementedError("Haven't worked out what to do with 3D observation operator")
+        if three_dim:
+             nx, ny, nz = n
+             n = nx * ny * nz
+        else:
+            assert type(n) == int
 
         H = np.zeros((nobs, n))
         H[range(nobs), obs_idxs] = 1
@@ -385,7 +404,7 @@ class DAPipeline():
             w_tensor = torch.Tensor(w)
 
             V_w = V(w_tensor).detach().numpy()
-
+            V_w = V_w.flatten()
             Q = (G @ V_w - d)
 
         else:
@@ -428,7 +447,7 @@ class DAPipeline():
             w_tensor = torch.Tensor(w)
 
             V_w = V(w_tensor).detach().numpy()
-
+            V_w = V_w.flatten()
             V_grad_w = V_grad(w_tensor).detach().numpy()
 
             Q = (G @ V_w - d)

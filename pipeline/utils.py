@@ -322,6 +322,17 @@ class ML_utils():
         return device
 
     @staticmethod
+    def jac_explicit_slow_model(inputs, model, device=None):
+        inputs.requires_grad = True
+        if device == None:
+            device = ML_utils.get_device()
+        model.to(device)
+        output = model.decode(inputs)
+
+        return ML_utils.jacobian_slow_torch(inputs, output)
+
+
+    @staticmethod
     def jacobian_slow_torch( inputs, outputs):
         """Computes a jacobian of two torch tensor.
         Uses a loop so linear time-complexity in dimension of output.

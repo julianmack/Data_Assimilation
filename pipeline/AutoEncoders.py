@@ -126,8 +126,8 @@ class BaseAE(nn.Module):
 
         return layers
 
-    def jac_explicit(self):
-        raise NotImplementedError("jac_explicit method not implemented. Must override.")
+    def jac_explicit(self, x):
+        raise NotImplemtedError("explicit Jacobian has not been implemented for this class")
 
 
 class VanillaAE(BaseAE):
@@ -254,7 +254,7 @@ class ToyAE(VanillaAE):
         return jac_partial, z_i
 
 class CAE_3D(BaseAE):
-    def __init__(self, layer_data, channels, activation = "relu", latent_sz=None):
+    def __init__(self, layer_data, channels, activation = "relu", latent_sz=None, jac_explicit=None):
         super(CAE_3D, self).__init__()
         assert len(layer_data) + 1 == len(channels)
 
@@ -287,6 +287,7 @@ class CAE_3D(BaseAE):
             self.act_fn = F.relu
         else:
             raise NotImplemtedError("Activation function must be in {'lrelu', 'relu'}")
+
 
 
 class BaselineCAE(nn.Module):
