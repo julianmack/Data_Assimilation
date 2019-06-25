@@ -39,7 +39,7 @@ class TestAEForward():
         settings = config.ToyAEConfig()
         settings.set_n(3)
         settings.HIDDEN = 4
-        settings.__NUMBER_MODES = 2
+        settings.NUMBER_MODES = 2
         x = torch.rand((settings.get_n()), requires_grad=True)
 
         model = ToyAE(**settings.get_kwargs())
@@ -52,7 +52,7 @@ class TestAEForward():
         settings = config.ToyAEConfig()
         settings.set_n(3)
         settings.HIDDEN = 4
-        settings.__NUMBER_MODES = 2
+        settings.NUMBER_MODES = 2
         Batch_sz = 3
         x = torch.rand((Batch_sz, settings.get_n()), requires_grad=True)
 
@@ -66,7 +66,7 @@ class TestAEForward():
         settings = config.ToyAEConfig()
         settings.set_n(128)
         settings.HIDDEN = [128, 128, 64]
-        settings.__NUMBER_MODES = 4
+        settings.NUMBER_MODES = 4
         Batch_sz = 16
         x = torch.rand((Batch_sz, settings.get_n()), requires_grad=True)
 
@@ -80,7 +80,7 @@ class TestAEForward():
         settings = config.ConfigAE()
         settings.set_n(3)
         settings.HIDDEN = [5, 6, 7]
-        settings.__NUMBER_MODES = 2
+        settings.NUMBER_MODES = 2
         Batch_sz = 4
         x = torch.rand((Batch_sz, settings.get_n()), requires_grad=True)
 

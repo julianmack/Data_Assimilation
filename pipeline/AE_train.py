@@ -70,7 +70,6 @@ class TrainAE():
         model = settings.AE_MODEL_TYPE(**settings.get_kwargs())
 
         self.model = model
-        print(model)
         optimizer = optim.Adam(model.parameters(), learning_rate)
 
 

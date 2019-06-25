@@ -46,7 +46,7 @@ class Config():
         self.OBS_VARIANCE = 0.01 #TODO - CHECK this is specific to the sensors (in this case - the error in model predictions)
 
         self.COMPRESSION_METHOD = "SVD" # "SVD"/"AE"
-        self.__NUMBER_MODES = 2 #Number of modes to retain.
+        self.NUMBER_MODES = 2 #Number of modes to retain.
             # If NUMBER_MODES = None (and COMPRESSION_METHOD = "SVD"), we use
             # the Rossella et al. method for selection of truncation parameter
 
@@ -58,8 +58,7 @@ class Config():
     def set_n(self, n):
         self.__n = n
     def get_number_modes(self):
-        print("geting base modes", self.__NUMBER_MODES)
-        return self.__NUMBER_MODES
+        return self.NUMBER_MODES
 
     def export_env_vars(self):
         self.env_vars = {"SEED": self.SEED}
@@ -81,28 +80,27 @@ class ConfigAE(Config):
     def __init__(self):
         super(ConfigAE, self).__init__()
         self.COMPRESSION_METHOD = "AE"
-        self.__NUMBER_MODES = 4
-        #self.AE_MODEL_FP = self.HOME_DIR + "models/AE_dim{}_epoch120.pth".format(self.__NUMBER_MODES) #AE_dim40_epoch120.pth"
+        self.NUMBER_MODES = 4
+        #self.AE_MODEL_FP = self.HOME_DIR + "models/AE_dim{}_epoch120.pth".format(self.NUMBER_MODES) #AE_dim40_epoch120.pth"
         self.AE_MODEL_TYPE = VanillaAE #this must match
         self.HIDDEN = [1000, 200]
         self.ACTIVATION = "lrelu"
         #define getter for __kwargs since they may change after initialization
     def get_kwargs(self):
-        return  {"input_size": self.get_n(), "latent_dim": self.__NUMBER_MODES, "hidden":self.HIDDEN, "activation": self.ACTIVATION}
+        return  {"input_size": self.get_n(), "latent_dim": self.NUMBER_MODES, "hidden":self.HIDDEN, "activation": self.ACTIVATION}
 
 class ToyAEConfig(ConfigAE):
     def __init__(self):
         super(ToyAEConfig, self).__init__()
-        self.__NUMBER_MODES = 3
+        self.NUMBER_MODES = 3
         self.HIDDEN = 4
-        #self.AE_MODEL_FP = self.HOME_DIR + "models/AE_toy_{}_{}_{}.pth".format(self.__NUMBER_MODES, self.HIDDEN, self.FIELD_NAME)
+        #self.AE_MODEL_FP = self.HOME_DIR + "models/AE_toy_{}_{}_{}.pth".format(self.NUMBER_MODES, self.HIDDEN, self.FIELD_NAME)
         self.DEBUG = True
         self.AE_MODEL_TYPE = ToyAE
         self.ACTIVATION = "relu"
 
     def get_number_modes(self):
-        print("geting base modes2", self.__NUMBER_MODES)
-        return self.__NUMBER_MODES
+        return self.NUMBER_MODES
 
 class CAEConfig(ConfigAE):
     def __init__(self):
@@ -115,7 +113,7 @@ class CAEConfig(ConfigAE):
         self.THREE_DIM = True
         self.X_FP = self.INTERMEDIATE_FP + "X_3D_{}.npy".format(self.FIELD_NAME)
         model_name  = self.__class__.__name__
-        #self.AE_MODEL_FP = self.HOME_DIR + "models/{}_{}.pth".format(model_name, self.__NUMBER_MODES)
+        #self.AE_MODEL_FP = self.HOME_DIR + "models/{}_{}.pth".format(model_name, self.NUMBER_MODES)
         self.SAVE = True
         self.LAYERS_DECODE = len(self.get_conv_schedule()[0])
 
@@ -183,4 +181,4 @@ class SmallTestDomain(Config):
         self.X_FP = self.INTERMEDIATE_FP + "X_small3D_{}_TINY.npy".format(self.FIELD_NAME)
         self.__n = 4
         self.OBS_FRAC = 0.3
-        self.__NUMBER_MODES = 3
+        self.NUMBER_MODES = 3
