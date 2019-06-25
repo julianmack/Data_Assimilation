@@ -171,9 +171,9 @@ class TestCAE_3D():
             print(e)
             pytest.fail("Unable to init model")
 
-    def test_CAE_forward(self):
+    def test_CAE_forward_batched(self):
         settings = config.CAEConfig()
-        batch_sz = 1
+        batch_sz = 2
         Cin = settings.get_channels()[0]
         size = (batch_sz, Cin) + settings.n
         device = ML.get_device()
@@ -187,3 +187,66 @@ class TestCAE_3D():
             y = model(x)
         except:
             pytest.fail("Unable to do forward pass")
+
+    def test_CAE_forward_nobatch(self):
+        settings = config.CAEConfig()
+        Cin = settings.get_channels()[0]
+        size = (Cin,) + settings.n
+        device = ML.get_device()
+        x = torch.rand(size, requires_grad=True, device = device)
+
+        model = CAE_3D(**settings.get_kwargs())
+
+        model.to(device)
+        try:
+
+            y = model(x)
+        except:
+            pytest.fail("Unable to do forward pass")
+
+    def test_CAE_linear_latent_batched(self):
+        settings = config.CAEConfig()
+        batch_sz = 2
+        Cin = settings.get_channels()[0]
+        size = (batch_sz, Cin) + settings.n
+        device = ML.get_device()
+        x = torch.rand(size, requires_grad=True, device = device)
+
+        model = CAE_3D(**settings.get_kwargs())
+
+
+
+        model.to(device)
+        encode = model.encode
+        try:
+
+            w = encode(x)
+        except:
+            pytest.fail("Unable to do forward pass")
+
+        assert w.shape[0] == batch_sz
+        assert len(w.shape) == 2, "There should only be one (non batched) dimension"
+        assert w.shape[1] == settings.NUMBER_MODES
+
+
+    def test_CAE_linear_latent_nonbatched(self):
+        settings = config.CAEConfig()
+        Cin = settings.get_channels()[0]
+        size = (Cin, ) + settings.n
+        device = ML.get_device()
+        x = torch.rand(size, requires_grad=True, device = device)
+
+        model = CAE_3D(**settings.get_kwargs())
+
+
+
+        model.to(device)
+        encode = model.encode
+        try:
+
+            w = encode(x)
+        except:
+            pytest.fail("Unable to do forward pass")
+
+        assert len(w.shape) == 1, "There should only be one dimension"
+        assert w.shape[0] == settings.NUMBER_MODES
