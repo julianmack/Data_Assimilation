@@ -47,7 +47,7 @@ class TrainAE():
 
         self.train_X, self.test_X, DA_u_c, X_norm,  mean, std = loader.test_train_DA_split_maybe_normalize(X, settings)
 
-        
+
 
         #Add Channel if we are in 3D case
         if settings.THREE_DIM:
@@ -189,7 +189,7 @@ class TrainAE():
             ref_mae = DA_results["ref_MAE_mean"]
             mae = DA_results["da_MAE_mean"]
 
-            ratio_improve_mae = (ref_MAE_mean - da_MAE_mean)/ref_MAE_mean
+            ratio_improve_mae = (ref_mae - mae)/ref_mae
             self.__da_data_wipe_some_values()
             return mae, ratio_improve_mae
         else:
