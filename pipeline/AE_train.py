@@ -157,9 +157,9 @@ class TrainAE():
         By default this is the final element of the test or train set"""
         if self.calc_DA_MAE:
             if test_valid == "train":
-                u_c = self.train_X[-1]
+                u_c = self.train_X[-1].flatten()
             elif test_valid == "test":
-                u_c = self.test_X[-1]
+                u_c = self.test_X[-1].flatten()
             else:
                 raise ValueError("Can only evaluate DA_MAE on 'test' or 'train'")
 
@@ -171,11 +171,11 @@ class TrainAE():
 
             #update control state:
             self.DA_data["u_c"] = u_c
-            self.DA_data["w_0"] = torch.zeros((self.settings.get_number_modes()))
+            self.DA_data["w_0"] = torch.zeros((self.settings.get_number_modes())).flatten()
             self.DA_data["V_trunc"] = self.model.decode
             if self.settings.JAC_NOT_IMPLEM:
                 import warnings
-                warnings.warn("Using **Very** slow method of calculating jacobian. Consider disabling DA", Warning)
+                warnings.warn("Using **Very** slow method of calculating jacobian. Consider disabling DA", UserWarning)
                 self.DA_data["V_grad"] = self.slow_jac_wrapper
             else:
                 self.DA_data["V_grad"] = self.model.jac_explicit

@@ -127,7 +127,6 @@ class DAPipeline():
         u_0 = u_0.flatten()
 
 
-
         observations, obs_idx, nobs = self.select_obs(settings.OBS_MODE, u_c, settings.OBS_FRAC) #options are specific for rand
 
 
@@ -192,10 +191,11 @@ class DAPipeline():
         if settings.COMPRESSION_METHOD == "SVD":
             delta_u_DA = data.get("V_trunc") @ w_opt
         elif settings.COMPRESSION_METHOD == "AE":
-            delta_u_DA = data.get("V_trunc")(torch.Tensor(w_opt)).detach().numpy()
+            delta_u_DA = data.get("V_trunc")(torch.Tensor(w_opt)).detach().numpy().flatten()
 
         u_0 = data.get("u_0")
         u_c = data.get("u_c")
+        print(u_c.shape, "NOW")
 
         u_DA = u_0 + delta_u_DA
 
@@ -203,6 +203,7 @@ class DAPipeline():
         if settings.UNDO_NORMALIZE:
             std = data.get("std")
             mean = data.get("mean")
+            print(u_DA.shape, std.shape, mean.shape, u_c.shape, u_0.shape)
             u_DA = (u_DA.T * std + mean).T
             u_c = (u_c.T * std + mean).T
             u_0 = (u_0.T * std + mean).T
@@ -274,7 +275,6 @@ class DAPipeline():
             obs_idx = np.argmax(vec)
             obs_idx = [obs_idx]
             observations = np.take(vec, obs_idx)
-
         return observations, obs_idx, nobs
 
     @staticmethod

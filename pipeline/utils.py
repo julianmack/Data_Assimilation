@@ -327,7 +327,10 @@ class ML_utils():
         if device == None:
             device = ML_utils.get_device()
         model.to(device)
-        output = model.decode(inputs)
+        output = model.decode(inputs).flatten()
+
+        print("inputs.shape", inputs.shape)
+        print("output.shape", output.shape)
 
         return ML_utils.jacobian_slow_torch(inputs, output)
 
