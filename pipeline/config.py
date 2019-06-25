@@ -130,11 +130,15 @@ class CAEConfig(ConfigAE):
         return self.n3d
 
     def get_conv_schedule(self):
-        #TODO add self.CROSSOVER != None
+        if hasattr(self, "CHANGEOVERS"):
+            changeovers = self.CHANGEOVERS
+        else:
+            changeovers = None
+        #TODO add  != None
         #TODO add self.lowest_out != None
         #TODO add self.MAX_Layers
         #TODO - give ability to set bespoke schedule
-        return utils.ML_utils.conv_scheduler3D(self.get_n(), None, 1, False)
+        return utils.ML_utils.conv_scheduler3D(self.get_n(), changeovers, 1, False)
 
     def get_channels(self):
         if self.CHANNELS != None:
