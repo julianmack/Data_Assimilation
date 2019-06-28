@@ -21,7 +21,7 @@ def main():
                     chan = 1
                 settings.CHANNELS[-1] = chan
 
-                expdir = expdir_base + exp_idx
+                expdir = expdir_base + str(exp_idx)
                 trainer = TrainAE(settings, expdir)
                 model = trainer.train(EPOCHS)
                 exp_idx += 1
