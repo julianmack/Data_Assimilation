@@ -53,7 +53,7 @@ class DataLoader():
         return X
 
     @staticmethod
-    def get_sorted_fps_U(data_dir):
+    def get_sorted_fps_U(data_dir, max = 988):
         """Creates and returns list of .vtu filepaths sorted according
         to timestamp in name.
         Input files in data_dir must be of the
@@ -69,6 +69,7 @@ class DataLoader():
             idx = int(file_number.replace(".vtu", ""))
             idx_fps.append(idx)
 
+        
         #sort by timestep
         assert len(idx_fps) == len(fps)
         zipped_pairs = zip(idx_fps, fps)
