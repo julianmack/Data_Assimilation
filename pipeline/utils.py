@@ -55,7 +55,7 @@ class DataLoader():
     def get_X(self, settings):
         #TODO - delete or refactor
         """Returns X in the M x n format"""
-        if setting.FORCE_GEN_X and settings.AZURE_DOWNLOAD:
+        if settings.FORCE_GEN_X and settings.AZURE_DOWNLOAD:
             X = download_X_azure(settings)
 
         elif settings.FORCE_GEN_X or not os.path.exists(settings.X_FP):
@@ -63,6 +63,9 @@ class DataLoader():
             X = self.create_X_from_fps(fps, settings)
         else:
             X = np.load(settings.X_FP,  allow_pickle=True)
+        print(X.shape)
+        exit()
+
         return X
 
     @staticmethod
@@ -163,8 +166,7 @@ class DataLoader():
             X = (X - mean)
             X = (X / std)
 
-        print(X.shape)
-        exit()
+
         # Split X into historical and present data. We will
         # assimilate "observations" at a single timestep t_DA
         # which corresponds to the control state u_c
