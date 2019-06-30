@@ -4,7 +4,7 @@ from pipeline import TrainAE
 
 def main():
     epochs = 1
-    settings = config.ToyAEConfig()
+    settings = config.CAEConfig()
     expdir = "experiments/AE_first"
     trainer = TrainAE(settings, expdir)
     model = trainer.train(epochs)

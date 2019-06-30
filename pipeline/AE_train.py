@@ -44,7 +44,6 @@ class TrainAE():
         #data
         loader = utils.DataLoader()
         X = loader.get_X(settings)
-        exit()
 
         self.train_X, self.test_X, DA_u_c, X_norm,  mean, std = loader.test_train_DA_split_maybe_normalize(X, settings)
 
