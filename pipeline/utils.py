@@ -554,13 +554,14 @@ class ML_utils():
 
 def donwload_azure_blob(settings, fp_save, fp_to_access):
     from azure.storage.blob import BlockBlobService
-    os.makedirs(settings.X_FP)
+
     block_blob_service = BlockBlobService(account_name=settings.AZURE_STORAGE_ACCOUNT,
                                     account_key=settings.AZURE_STORAGE_KEY)
     block_blob_service.get_blob_to_path(settings.AZURE_CONTAINER, fp_to_access,
                                         fp_save)
 def download_X_azure(settings):
     fp_azure = settings.X_FP.replace(settings.INTERMEDIATE_FP, "")
+    os.makedirs(settings.INTERMEDIATE_FP)
     donwload_azure_blob(settings, settings.X_FP, fp_azure)
     X = np.load(settings.X_FP, allow_pickle=True)
     return X
