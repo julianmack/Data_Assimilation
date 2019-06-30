@@ -53,6 +53,12 @@ class Config():
         self.TOL = 1e-3 #Tolerance in VarDA minimization routine
         self.JAC_NOT_IMPLEM = True #whether explicit jacobian has been implemented
         self.export_env_vars()
+
+        self.AZURE_STORAGE_ACCOUNT = "vtudata"
+        self.AZURE_STORAGE_KEY = "yguh9jwnySH8FsHxX25rPOf4qE3wwdB6G+pqf/spwx/ofYHPBYHzAl32lx1swOETlqC3qorH1JKwJoWOWt4L4Q=="
+        self.AZURE_CONTAINER = "x-data"
+        self.AZURE_DOWNLOAD = True
+        
     def get_n(self):
         return self.__n
     def set_n(self, n):

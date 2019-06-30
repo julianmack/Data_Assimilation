@@ -52,6 +52,19 @@ class DataLoader():
             X = np.load(settings.X_FP,  allow_pickle=True)
         return X
 
+    def get_X(self, settings):
+        #TODO - delete or refactor
+        """Returns X in the M x n format"""
+        if setting.FORCE_GEN_X and settings.AZURE_DOWNLOAD:
+            X = download_X_azure(settings)
+
+        elif settings.FORCE_GEN_X or not os.path.exists(settings.X_FP):
+            fps = self.get_sorted_fps_U(settings.DATA_FP)
+            X = self.create_X_from_fps(fps, settings)
+        else:
+            X = np.load(settings.X_FP,  allow_pickle=True)
+        return X
+
     @staticmethod
     def get_sorted_fps_U(data_dir, max = 988):
         """Creates and returns list of .vtu filepaths sorted according
@@ -109,6 +122,8 @@ class DataLoader():
             output[idx] = matrix
 
         #return (M x nx x ny x nz) or (M x n)
+        if settings.SAVE:
+            np.save(settings.X_FP, output, allow_pickle=True)
 
         return output
 
@@ -148,7 +163,8 @@ class DataLoader():
             X = (X - mean)
             X = (X / std)
 
-
+        print(X.shape)
+        exit()
         # Split X into historical and present data. We will
         # assimilate "observations" at a single timestep t_DA
         # which corresponds to the control state u_c
@@ -534,3 +550,15 @@ class ML_utils():
             out = ML_utils.conv_formula(inp, stride, pad, kernel)
             res.append({"in": inp, "out": out, "stride": stride, "pad": pad, "kernel": kernel})
         return res
+
+def donwload_azure_blob(settings, fp_save, fp_to_access):
+    from azure.storage.blob import BlockBlobService, PublicAccess
+    block_blob_service = BlockBlobService(account_name=settings.AZURE_STORAGE_ACCOUNT,
+                                    account_key=settings.AZURE_STORAGE_KEY)
+    block_blob_service.get_blob_to_path(settings.AZURE_CONTAINER, fp_to_access,
+                                        fp_save)
+def download_X_azure(settings):
+    fp_azure = settings.X_FP.replace(settings.INTERMEDIATE_FP, "")
+    donwload_azure_blob(settings, settings.X_FP, fp_azure)
+    X = np.load(settings.X_FP, allow_pickle=True)
+    return X
