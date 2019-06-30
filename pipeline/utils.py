@@ -63,8 +63,7 @@ class DataLoader():
                 X = self.create_X_from_fps(fps, settings)
         else:
             X = np.load(settings.X_FP,  allow_pickle=True)
-
-        print("got X, size {}".format(X.shape))
+        
         return X
 
     @staticmethod

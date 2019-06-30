@@ -13,7 +13,7 @@ import pipeline.config as config
 from pipeline import utils, DAPipeline
 import os
 
-BATCH = 16
+BATCH = 32
 
 class TrainAE():
     def __init__(self, AE_settings, expdir, calc_DA_MAE=False, batch_sz=BATCH):
@@ -53,17 +53,23 @@ class TrainAE():
             self.train_X = np.expand_dims(self.train_X, 1)
             self.test_X = np.expand_dims(self.test_X, 1)
 
+
         #Dataloaders
         train_dataset = TensorDataset(torch.Tensor(self.train_X))
-        train_loader = DataLoader(train_dataset, self.batch_sz, shuffle=True)
+        train_loader = DataLoader(train_dataset, self.batch_sz, shuffle=True, num_workers=6)
         test_dataset = TensorDataset(torch.Tensor(self.test_X))
-        test_loader = DataLoader(test_dataset, self.test_X.shape[0])
+        test_batch_sz = min(self.test_X.shape[0], self.batch_sz)
+        test_loader = DataLoader(test_dataset, test_batch_sz)
+
+
 
         print("train_size = ", len(train_loader.dataset))
         print("test_size = ", len(test_loader.dataset))
 
 
+
         device = utils.ML_utils.get_device()
+
 
         loss_fn = torch.nn.L1Loss(reduction='sum')
         model = settings.AE_MODEL_TYPE(**settings.get_kwargs())
@@ -71,6 +77,7 @@ class TrainAE():
         self.model = model
         optimizer = optim.Adam(model.parameters(), learning_rate)
 
+        print(model)
 
         print("Number of parameters:", sum(p.numel() for p in model.parameters()))
 
@@ -107,7 +114,9 @@ class TrainAE():
             device = utils.ML_utils.get_device()
         for epoch in range(num_epoch):
             train_loss = 0
+
             model.to(device)
+
 
             for batch_idx, data in enumerate(train_loader):
                 model.train()
@@ -119,6 +128,8 @@ class TrainAE():
                 loss.backward()
                 train_loss += loss.item()
                 optimizer.step()
+
+
 
             train_DA_MAE, train_DA_ratio = self.maybe_eval_DA_MAE("train")
             train_losses.append((epoch, train_loss / len(train_loader.dataset), train_DA_MAE, train_DA_ratio))
