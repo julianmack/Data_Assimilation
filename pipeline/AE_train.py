@@ -13,7 +13,7 @@ import pipeline.config as config
 from pipeline import utils, DAPipeline
 import os
 
-BATCH = 16
+BATCH = 8
 
 class TrainAE():
     def __init__(self, AE_settings, expdir, calc_DA_MAE=False, batch_sz=BATCH):
@@ -77,7 +77,7 @@ class TrainAE():
         self.model = model
         optimizer = optim.Adam(model.parameters(), learning_rate)
 
-        print(model)
+        
 
         print("Number of parameters:", sum(p.numel() for p in model.parameters()))
 

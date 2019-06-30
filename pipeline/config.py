@@ -122,10 +122,11 @@ class CAEConfig(ConfigAE):
         model_name  = self.__class__.__name__
         #self.AE_MODEL_FP = self.HOME_DIR + "models/{}_{}.pth".format(model_name, self.NUMBER_MODES)
         self.SAVE = True
-        self.LAYERS_DECODE = len(self.get_conv_schedule()[0])
 
 
         #define getter for __kwargs since they may change after initialization
+    def get_num_layers_decode(self):
+        return len(self.get_conv_schedule()[0])
 
     def get_number_modes(self):
         modes = self.calc_modes()
@@ -151,19 +152,24 @@ class CAEConfig(ConfigAE):
             changeovers = self.CHANGEOVERS
         else:
             changeovers = None
+        if hasattr(self, "CHANGEOVER_DEFAULT"):
+            changeover_out_def = self.CHANGEOVER_DEFAULT
+        else:
+            changeover_out_def = 10
         #TODO add  != None
         #TODO add self.lowest_out != None
         #TODO add self.MAX_Layers
         #TODO - give ability to set bespoke schedule
-        return utils.ML_utils.conv_scheduler3D(self.get_n(), changeovers, 1, False)
+        return utils.ML_utils.conv_scheduler3D(self.get_n(), changeovers, 1, False, changeover_out_def=changeover_out_def )
 
-    def get_channels(self):
-        if self.CHANNELS != None:
+    def get_channels(self, override=False):
+        if self.CHANNELS != None and override == False:
             return self.CHANNELS
         else: #gen random channels
             n_layers_decode = len(self.get_conv_schedule()[0])
             channels = [8] * (n_layers_decode + 1)
             channels[0] = 1
+            self.CHANNELS = channels
             return channels
 
     def calc_modes(self):

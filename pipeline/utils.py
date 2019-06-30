@@ -63,7 +63,7 @@ class DataLoader():
                 X = self.create_X_from_fps(fps, settings)
         else:
             X = np.load(settings.X_FP,  allow_pickle=True)
-        
+
         return X
 
     @staticmethod
@@ -392,7 +392,7 @@ class ML_utils():
         return x  // stride + 1
 
     @staticmethod
-    def conv_scheduler3D(inps, changeovers=None, lowest_outs=1, verbose = True):
+    def conv_scheduler3D(inps, changeovers=None, lowest_outs=1, verbose = True, changeover_out_def=10):
         """Convolutional Scheduler for 3D system"""
 
         assert inps != None
@@ -412,7 +412,7 @@ class ML_utils():
 
         results = []
         for idx, n_i in enumerate(inps):
-            res_i = ML_utils.conv_scheduler1D(n_i, changeovers[idx], lowest_outs[idx])
+            res_i = ML_utils.conv_scheduler1D(n_i, changeovers[idx], lowest_outs[idx], changeover_out_def)
             results.append(res_i)
         min_len = min([len(i) for i in results])
 
@@ -467,14 +467,14 @@ class ML_utils():
         return init_data
 
     @staticmethod
-    def conv_scheduler1D(inp, changeover_out=None, lowest_out=1):
+    def conv_scheduler1D(inp, changeover_out=None, lowest_out=1, changeover_out_def=10):
         """Desired schedule which combines stride=1 layers initially with
         later stride=2 for downsampling
         ::changeover_out - output size at which the schedule changes from stride=1 to stride=2
 
         """
         if changeover_out == None:
-            changeover_out = inp - 10 # This is a good heuristic if you are not sure
+            changeover_out = inp - changeover_out_def # This is a good heuristic if you are not sure
         assert lowest_out >= 1, "lowest_out must be >= 1"
         assert changeover_out > lowest_out, "changeover_out must be > lowest_out"
         res = []
