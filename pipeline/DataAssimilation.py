@@ -203,7 +203,6 @@ class DAPipeline():
         if settings.UNDO_NORMALIZE:
             std = data.get("std")
             mean = data.get("mean")
-            print(u_DA.shape, std.shape, mean.shape, u_c.shape, u_0.shape)
             u_DA = (u_DA.T * std + mean).T
             u_c = (u_c.T * std + mean).T
             u_0 = (u_0.T * std + mean).T
