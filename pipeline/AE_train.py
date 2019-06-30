@@ -13,7 +13,7 @@ import pipeline.config as config
 from pipeline import utils, DAPipeline
 import os
 
-BATCH = 256
+BATCH = 16
 
 class TrainAE():
     def __init__(self, AE_settings, expdir, calc_DA_MAE=False, batch_sz=BATCH):
