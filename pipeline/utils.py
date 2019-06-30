@@ -55,12 +55,12 @@ class DataLoader():
     def get_X(self, settings):
         #TODO - delete or refactor
         """Returns X in the M x n format"""
-        if settings.FORCE_GEN_X and settings.AZURE_DOWNLOAD:
-            X = download_X_azure(settings)
-
-        elif settings.FORCE_GEN_X or not os.path.exists(settings.X_FP):
-            fps = self.get_sorted_fps_U(settings.DATA_FP)
-            X = self.create_X_from_fps(fps, settings)
+        if not os.path.exists(settings.X_FP) and settings.FORCE_GEN_X:
+            if settings.AZURE_DOWNLOAD:
+                X = download_X_azure(settings)
+            else:
+                fps = self.get_sorted_fps_U(settings.DATA_FP)
+                X = self.create_X_from_fps(fps, settings)
         else:
             X = np.load(settings.X_FP,  allow_pickle=True)
 
