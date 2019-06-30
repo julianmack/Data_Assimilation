@@ -553,7 +553,8 @@ class ML_utils():
         return res
 
 def donwload_azure_blob(settings, fp_save, fp_to_access):
-    from azure.storage.blob import BlockBlobService, PublicAccess
+    from azure.storage.blob import BlockBlobService
+    os.makedirs(settings.X_FP)
     block_blob_service = BlockBlobService(account_name=settings.AZURE_STORAGE_ACCOUNT,
                                     account_key=settings.AZURE_STORAGE_KEY)
     block_blob_service.get_blob_to_path(settings.AZURE_CONTAINER, fp_to_access,
