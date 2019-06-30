@@ -19,7 +19,7 @@ class Config():
         self.INTERMEDIATE_FP = self.HOME_DIR + "data/small3D_intermediate/"
         self.FIELD_NAME = "Pressure"
         self.X_FP = self.INTERMEDIATE_FP + "X_1D_{}.npy".format(self.FIELD_NAME)
-        self.FORCE_GEN_X = False
+        self.FORCE_GEN_X = True
         self.__n = 100040
         self.THREE_DIM = False # i.e. is representation in 3D tensor or 1D array
         self.SAVE = True
