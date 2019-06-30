@@ -13,7 +13,7 @@ import pipeline.config as config
 from pipeline import utils, DAPipeline
 import os
 
-BATCH = 32
+BATCH = 16
 
 class TrainAE():
     def __init__(self, AE_settings, expdir, calc_DA_MAE=False, batch_sz=BATCH):
@@ -39,7 +39,7 @@ class TrainAE():
         self.batch_sz = batch_sz
 
 
-    def train(self, num_epoch = 100, learning_rate = 0.001):
+    def train(self, num_epoch = 100, learning_rate = 0.003):
         settings = self.settings
         #data
         loader = utils.DataLoader()
