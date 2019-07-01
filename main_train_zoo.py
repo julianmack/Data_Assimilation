@@ -4,7 +4,7 @@ from pipeline import TrainAE
 from pipeline.AEs.CAE_configs import ARCHITECTURES as architectures
 
 def main():
-    activations = ["lrelu"]
+    activations = ["lrelu"] # first experiments showed "lrelu" much better than "relu"
     changeover_def = [0, 10]
     chann_sf = [1, 0.5] #scaling factors for final channel
     EPOCHS = 30
