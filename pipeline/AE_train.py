@@ -184,7 +184,6 @@ class TrainAE():
         test_losses = []
         epoch = num_epoch - 1 #for case where no training occurs
 
-        print(self.learning_rate, start_epoch, num_epoch)
 
         for epoch in range(start_epoch, num_epoch):
 
