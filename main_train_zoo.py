@@ -10,7 +10,7 @@ def main():
     batch_norms = [True, False]
 
     EPOCHS = 30
-    expdir_base = "experiments/CAE_zoo4/"
+    expdir_base = "experiments/CAE_zoo/BN"
     exp_idx = 0 #experiment index (for logging)
 
     for archi in architectures:
