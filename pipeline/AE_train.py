@@ -41,15 +41,55 @@ class TrainAE():
         self.batch_sz = batch_sz
         self.settings.batch_sz =  batch_sz
 
-        self.model =  AE_settings.AE_MODEL_TYPE(**AE_settings.get_kwargs())
+        utils.set_seeds() #set seeds before init model
 
+        self.model =  AE_settings.AE_MODEL_TYPE(**AE_settings.get_kwargs())
+        print("Number of parameters:", sum(p.numel() for p in self.model.parameters()))
+
+
+    def __maybe_cross_val_lr(self, num_epochs_cv = 1):
+        if not num_epochs_cv:
+            return self.learning_rate
+
+        #TODO
+        lrs = [asddas]
+        res = []
+        optimizers = []
+        for idx, lr in enumerate(lrs):
+            utils.set_seeds() #set seeds before init model
+            self.model =  self.settings.AE_MODEL_TYPE(**self.settings.get_kwargs())
+            self.optimizer = optim.Adam(self.model.parameters(), lr)
+            train_losses = []
+            for epoch in range(num_epochs):
+                train, _ = self.train_one_epoch(epoch, 100, 100, num_epochs)
+                test_losses.append(train)
+
+            df = pd.DataFrame(test_losses, columns = ["epoch","reconstruction_err","DA_MAE", "DA_ratio_improve_MAE"])
+            train_final = df.tail(1).reconstruction_err
+
+            res.append(train_final)
+            optimizers.append(self.optimizer)
+
+            #save model if best so far
+            if res[-1] == max(res):
+                best_idx = idx
+                model_fp_new = "{}{}-{}.pth".format(self.model_dir, epoch, lr)
+                torch.save(self.model.state_dict(), model_fp_new)
+                best_model = self.model
+
+        self.model = best_model
+        self.learning_rate = lrs[idx]
+        self.optimizer = optimizers[idx]
+
+        return lr_provided
 
     def train(self, num_epoch = 100, learning_rate = 0.0025):
 
+        self.learning_rate = learning_rate
 
 
         settings = self.settings
-        settings.learning_rate = learning_rate
+
 
         #data
         loader = utils.DataLoader()
@@ -66,31 +106,35 @@ class TrainAE():
 
         #Dataloaders
         train_dataset = TensorDataset(torch.Tensor(self.train_X))
-        train_loader = DataLoader(train_dataset, self.batch_sz, shuffle=True, num_workers=6)
+        self.train_loader = DataLoader(train_dataset, self.batch_sz, shuffle=True, num_workers=6)
         test_dataset = TensorDataset(torch.Tensor(self.test_X))
         test_batch_sz = min(self.test_X.shape[0], self.batch_sz)
-        test_loader = DataLoader(test_dataset, test_batch_sz)
+        self.test_loader = DataLoader(test_dataset, test_batch_sz)
 
 
         device = utils.ML_utils.get_device()
 
 
-        loss_fn = torch.nn.L1Loss(reduction='sum')
-
-        optimizer = optim.Adam(self.model.parameters(), learning_rate)
+        self.loss_fn = torch.nn.L1Loss(reduction='sum')
 
 
 
-        print("Number of parameters:", sum(p.numel() for p in self.model.parameters()))
+        self.learning_rate = self.__maybe_cross_val_lr()
+
+        settings.learning_rate = self.learning_rate #for logging
+
+
+        self.optimizer = optim.Adam(self.model.parameters(), learning_rate)
+
+        #TODO - load model from cross_val_lr
+
 
         if settings.SAVE == True:
             model_dir = self.expdir
         else:
             model_dir = None
 
-        train_losses, test_losses = self.training_loop_AE(self.model, optimizer,
-                                loss_fn, train_loader, test_loader,
-                                num_epoch, device, print_every=1, test_every=5, model_dir = self.expdir)
+        train_losses, test_losses = self.training_loop_AE( num_epoch, device, print_every=1, test_every=5, model_dir = self.expdir)
 
 
         #Save results and settings file (so that it can be exactly reproduced)
@@ -104,65 +148,80 @@ class TrainAE():
         return self.model
 
 
-    def training_loop_AE(self, model, optimizer, loss_fn, train_loader, test_loader,
-            num_epoch, device=None, print_every=1, test_every=5, save_every=5, model_dir=None):
+    def training_loop_AE(self, num_epoch, device=None, print_every=1,
+                        test_every=5, save_every=5, model_dir=None):
         """Runs a torch AE model training loop.
         NOTE: Ensure that the loss_fn is in mode "sum"
         """
+        model = self.model
+        self.model_dir = model_dir
+
+        if device == None:
+            device = utils.ML_utils.get_device()
+        self.device = device
+
+
         utils.set_seeds()
         train_losses = []
         test_losses = []
-        if device == None:
-            device = utils.ML_utils.get_device()
+
         for epoch in range(num_epoch):
-            train_loss = 0
+            train_loss, test_loss = self.train_one_epoch(epoch, print_every, test_every, num_epoch)
+            train_losses.append(train_loss)
+            test_losses.append(test_loss)
 
-            model.to(device)
-
-
-            for batch_idx, data in enumerate(train_loader):
-                model.train()
-                x, = data
-                x = x.to(device)
-                optimizer.zero_grad()
-                y = model(x)
-                loss = loss_fn(y, x)
-                loss.backward()
-                train_loss += loss.item()
-                optimizer.step()
-
-
-
-            train_DA_MAE, train_DA_ratio = self.maybe_eval_DA_MAE("train")
-            train_losses.append((epoch, train_loss / len(train_loader.dataset), train_DA_MAE, train_DA_ratio))
-            if epoch % print_every == 0 or epoch in [0, num_epoch - 1]:
-                out_str = 'epoch [{}/{}], loss:{:.4f}'.format(epoch + 1, num_epoch, train_loss / len(train_loader.dataset))
-                if self.calc_DA_MAE:
-                    out_str +  ", DA_MAE:{:.4f}".format(train_DA_MAE)
-                print(out_str)
-            if epoch % test_every == 0 or epoch == num_epoch - 1:
-                model.eval()
-                test_loss = 0
-                for batch_idx, data in enumerate(test_loader):
-                    x_test, = data
-                    x_test = x_test.to(device)
-                    y_test = model(x_test)
-                    loss = loss_fn(y_test, x_test)
-                    test_loss += loss.item()
-                test_DA_MAE, test_DA_ratio = self.maybe_eval_DA_MAE("test")
-                out_str = "epoch [{}/{}], valid: -loss:{:.4f}".format(epoch + 1, num_epoch, test_loss / len(test_loader.dataset))
-                if self.calc_DA_MAE:
-                    out_str +  ", -DA_MAE:{:.4f}".format(test_DA_MAE)
-                print(out_str)
-                test_losses.append((epoch, test_loss/len(test_loader.dataset), test_DA_MAE, test_DA_ratio))
-            if epoch % save_every == 0 and model_dir != None:
-                model_fp_new = "{}{}.pth".format(model_dir, epoch)
-                torch.save(model.state_dict(), model_fp_new)
-        if epoch % save_every != 0 and model_dir != None:
+        if epoch % save_every != 0 and self.model_dir != None:
             #Save model (if new model hasn't just been saved)
-            model_fp_new = "{}{}.pth".format(model_dir, epoch)
+            model_fp_new = "{}{}.pth".format(self.model_dir, epoch)
             torch.save(model.state_dict(), model_fp_new)
         return train_losses, test_losses
+
+    def train_one_epoch(self, epoch, print_every, test_every, num_epoch):
+
+        train_loss = 0
+
+        self.model.to(self.device)
+
+        for batch_idx, data in enumerate(self.train_loader):
+            self.model.train()
+            x, = data
+            x = x.to(self.device)
+            self.optimizer.zero_grad()
+            y = self.model(x)
+            loss = self.loss_fn(y, x)
+            loss.backward()
+            train_loss += loss.item()
+            self.optimizer.step()
+
+
+
+        train_DA_MAE, train_DA_ratio = self.maybe_eval_DA_MAE("train")
+        train_loss_res = (epoch, train_loss / len(self.train_loader.dataset), train_DA_MAE, train_DA_ratio)
+        if epoch % print_every == 0 or epoch in [0, num_epoch - 1]:
+            out_str = 'epoch [{}/{}], loss:{:.4f}'.format(epoch + 1, num_epoch, train_loss / len(self.train_loader.dataset))
+            if self.calc_DA_MAE:
+                out_str +  ", DA_MAE:{:.4f}".format(train_DA_MAE)
+            print(out_str)
+
+        if epoch % test_every == 0 or epoch == num_epoch - 1:
+            self.model.eval()
+            test_loss = 0
+            for batch_idx, data in enumerate(self.test_loader):
+                x_test, = data
+                x_test = x_test.to(self.device)
+                y_test = self.model(x_test)
+                loss = self.loss_fn(y_test, x_test)
+                test_loss += loss.item()
+            test_DA_MAE, test_DA_ratio = self.maybe_eval_DA_MAE("test")
+            out_str = "epoch [{}/{}], valid: -loss:{:.4f}".format(epoch + 1, num_epoch, test_loss / len(self.test_loader.dataset))
+            if self.calc_DA_MAE:
+                out_str +  ", -DA_MAE:{:.4f}".format(test_DA_MAE)
+            print(out_str)
+            test_loss_res = (epoch, test_loss/len(self.test_loader.dataset), test_DA_MAE, test_DA_ratio)
+        if epoch % test_every == 0 and self.model_dir != None:
+            model_fp_new = "{}{}.pth".format(self.model_dir, epoch)
+            torch.save(self.model.state_dict(), model_fp_new)
+        return train_loss_res, test_loss_res
 
     def maybe_eval_DA_MAE(self, test_valid):
         """As the DA procedure is so expensive, only eval on a single state.
