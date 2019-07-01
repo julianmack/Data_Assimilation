@@ -5,11 +5,11 @@ from pipeline.AEs import CAE_configs
 import shutil
 
 def main():
-    epochs = 1
+    epochs = 3
     settings = CAE_configs.CAE1()
     settings.BATCH_NORM = False
     settings.CHANGEOVER_DEFAULT = 0
-    expdir = "experiments/rand/x"
+    expdir = "experiments/rand/cae1"
     trainer = TrainAE(settings, expdir)
     num_encode = len(trainer.model.layers_encode)
 

@@ -2,7 +2,7 @@
 from pipeline import config
 from pipeline import TrainAE
 from pipeline.AEs.CAE_configs import ARCHITECTURES as architectures
-TEST_INIT_ONLY = False
+TEST_INIT_ONLY = True
 
 def main():
     activations = ["lrelu", "relu"] # first experiments showed "lrelu" much better than "relu"
