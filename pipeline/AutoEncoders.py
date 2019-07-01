@@ -144,6 +144,10 @@ class VanillaAE(BaseAE):
         super(VanillaAE, self).__init__()
         assert hidden == None or type(hidden) == list or type(hidden) == int, "hidden must be a list an int or None"
         assert activation in ["relu", "lrelu"]
+
+        if batch_norm == True:
+            raise NotImplementedError("Batch Norm not implemented for ToyAE")
+
         self.input_size = input_size
         self.hidden = hidden
         self.latent_dim = latent_dim
@@ -190,13 +194,12 @@ class ToyAE(VanillaAE):
 
     The .forward, .encode and .decode methods are inherited from VanillaAE
     """
-    def __init__(self, input_size, latent_dim, activation = "relu", hidden = 128):
+    def __init__(self, input_size, latent_dim, activation = "relu", hidden = 128, batch_norm=False):
 
         if activation == "lrelu":
-            raise NotImpelemtedError("Leaky ReLU not implemented for ToyAE")
+            raise NotImplementedError("Leaky ReLU not implemented for ToyAE")
 
         super(ToyAE, self).__init__(input_size, latent_dim, activation, hidden)
-
 
     def jac_explicit(self, x):
         """Generate explicit gradient for decoder

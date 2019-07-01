@@ -160,9 +160,7 @@ class CAEConfig(ConfigAE):
             changeover_out_def = self.CHANGEOVER_DEFAULT
         else:
             changeover_out_def = 10
-        #TODO add self.lowest_out != None
-        #TODO add self.MAX_Layers
-        #TODO - give ability to set bespoke schedule
+
         return utils.ML_utils.conv_scheduler3D(self.get_n(), changeovers, 1, False, changeover_out_def=changeover_out_def )
 
     def get_channels(self):
@@ -173,6 +171,10 @@ class CAEConfig(ConfigAE):
             return self.CHANNELS
         else:
             raise NotImplementedError("No default channel init")
+    def gen_channels(self):
+        channels = [8] * (self.get_num_layers_decode() + 1)
+        channels[0] = 1
+        return channels
 
     def calc_modes(self):
         #lantent dim is Channels_latent * (x_size_latent ) x (y_size_latent ) x (z_size_latent )
