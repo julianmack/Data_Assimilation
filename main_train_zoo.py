@@ -2,7 +2,7 @@
 from pipeline import config
 from pipeline import TrainAE
 from pipeline.AEs.CAE_configs import ARCHITECTURES as architectures
-TEST_INIT_ONLY = True
+TEST_INIT_ONLY = False
 
 def main():
     activations = ["lrelu", "relu"] # first experiments showed "lrelu" much better than "relu"
@@ -11,10 +11,10 @@ def main():
     batch_norms = [True, False]
 
     EPOCHS = 30
-    expdir_base = "experiments/CAE_zoo/BN"
+    expdir_base = "experiments/CAE_zooBN/"
     exp_idx = 0 #experiment index (for logging)
 
-    for archi in architectures:
+    for archi in architectures[::-1]:
         for changeover in changeover_def:
             settings = archi()
             # use half latent dimension
