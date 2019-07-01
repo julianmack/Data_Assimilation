@@ -44,11 +44,13 @@ class TrainAE():
         self.model =  AE_settings.AE_MODEL_TYPE(**AE_settings.get_kwargs())
 
 
-    def train(self, num_epoch = 100, learning_rate = 0.005):
+    def train(self, num_epoch = 100, learning_rate = 0.0025):
 
 
 
         settings = self.settings
+        settings.learning_rate = learning_rate
+
         #data
         loader = utils.DataLoader()
         X = loader.get_X(settings)

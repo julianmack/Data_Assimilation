@@ -2,10 +2,11 @@
 from pipeline import config
 from pipeline import TrainAE
 from pipeline.AEs.CAE_configs import ARCHITECTURES as architectures
+TEST_INIT_ONLY = True
 
 def main():
-    activations = ["lrelu"] # first experiments showed "lrelu" much better than "relu"
-    changeover_def = [0, 10]
+    activations = ["lrelu", "relu"] # first experiments showed "lrelu" much better than "relu"
+    changeover_def = [0, 8]
     chann_sf = [1, 0.5] #scaling factors for final channel
     batch_norms = [True, False]
 
@@ -48,10 +49,10 @@ def main():
                             print(settings.__class__.__name__, settings.CHANNELS, activ, changeover, sf, BN)
 
                             trainer = TrainAE(settings, expdir, batch_sz = batch_sz)
-
-
+                            if TEST_INIT_ONLY:
+                                exp_idx += 1
+                                continue
                             model = trainer.train(EPOCHS)
-
 
                         except RuntimeError:
                             try:

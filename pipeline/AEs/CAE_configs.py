@@ -9,12 +9,12 @@ class CAE1(config.CAEConfig):
         channels[0] = 1
         return channels
 
-
-class CAE2(config.CAEConfig):
-
-    def gen_channels(self):
-        channels = list(range(1, 2*(self.get_num_layers_decode() + 1) + 1, 2))
-        return channels
+#
+# class CAE2(config.CAEConfig):
+#
+#     def gen_channels(self):
+#         channels = list(range(1, 2*(self.get_num_layers_decode() + 1) + 1, 2))
+#         return channels
 
 class CAE3(config.CAEConfig):
 
@@ -58,4 +58,4 @@ class CAE6(config.CAEConfig):
 
 
 
-ARCHITECTURES = [CAE1, CAE2, CAE3, CAE4, CAE5, CAE6]
+ARCHITECTURES = [CAE1, CAE3, CAE4, CAE5, CAE6]
