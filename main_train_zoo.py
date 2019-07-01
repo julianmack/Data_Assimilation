@@ -7,13 +7,14 @@ def main():
     activations = ["lrelu"] # first experiments showed "lrelu" much better than "relu"
     changeover_def = [0, 10]
     chann_sf = [1, 0.5] #scaling factors for final channel
+    batch_norms = [True, False]
+
     EPOCHS = 30
-    expdir_base = "experiments/CAE_zoo3/"
+    expdir_base = "experiments/CAE_zoo4/"
     exp_idx = 0 #experiment index (for logging)
 
     for archi in architectures:
         for changeover in changeover_def:
-            batch_sz = 16
             settings = archi()
             # use half latent dimension
             settings.CHANGEOVER_DEFAULT = changeover
@@ -24,42 +25,52 @@ def main():
             for activ in activations:
                 settings.ACTIVATION = activ
                 for sf in chann_sf:
-                    chan = int(final_channel * sf)
-                    if chan < 1:
-                        chan = 1
-                    settings.CHANNELS[-1] = chan
-                    expdir_str = "{}-{}-{}-{}-{}".format(settings.__class__.__name__, settings.CHANNELS, activ, changeover, sf)
-                    expdir = expdir_base + expdir_str
+                    for batch_n in batch_norms:
+                        settings.BATCH_NORM = batch_n
+                        chan = int(final_channel * sf)
+                        if chan < 1:
+                            chan = 1
+                        settings.CHANNELS[-1] = chan
+
+                        if settings.BATCH_NORM == True:
+                            BN = "BN"
+                        else:
+                            BN = "NBN" #"no batch norm"
+
+                        expdir_str = "{}-{}-{}-{}-{}-{}".format(settings.__class__.__name__, len(settings.CHANNELS), activ, changeover, sf, BN)
+                        expdir = expdir_base + expdir_str
 
 
-                    settings.final_channel_sf = sf
-                    try:
-
-                        batch_sz = 16
-                        print(settings.__class__.__name__, settings.CHANNELS, activ, changeover, sf)
-
-                        trainer = TrainAE(settings, expdir, batch_sz = batch_sz)
-                        model = trainer.train(EPOCHS)
-
-
-                    except RuntimeError:
+                        settings.final_channel_sf = sf
                         try:
 
-                            batch_sz = 8
+                            batch_sz = 16
+                            print(settings.__class__.__name__, settings.CHANNELS, activ, changeover, sf, BN)
+
                             trainer = TrainAE(settings, expdir, batch_sz = batch_sz)
+
+
                             model = trainer.train(EPOCHS)
-                        except:
+
+
+                        except RuntimeError:
                             try:
 
-                                batch_sz = 2
+                                batch_sz = 8
                                 trainer = TrainAE(settings, expdir, batch_sz = batch_sz)
                                 model = trainer.train(EPOCHS)
-                            except Exception as e:
-                                print("skipping - memory error: ", str(e))
-                    except ValueError: #experiment has already been (at least partly) performed
-                        print("skipping - already done")
+                            except:
+                                try:
 
-                    exp_idx += 1
+                                    batch_sz = 2
+                                    trainer = TrainAE(settings, expdir, batch_sz = batch_sz)
+                                    model = trainer.train(EPOCHS)
+                                except Exception as e:
+                                    print("skipping - memory error: ", str(e))
+                        except ValueError: #experiment has already been (at least partly) performed
+                            print("skipping - already done")
+
+                        exp_idx += 1
 
     print("Total Experiments: {}".format(exp_idx + 1))
 

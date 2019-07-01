@@ -5,6 +5,8 @@ import with:
 import torch.nn as nn
 import torch
 import torch.nn.functional as F
+from collections import OrderedDict
+
 
 class BaseAE(nn.Module):
     """Base AE class which all should inherit from
@@ -77,7 +79,7 @@ class BaseAE(nn.Module):
                 latent_sz = self.latent_sz
             else:
                 latent_sz = None
-        if latent_sz == None: 
+        if latent_sz == None:
             raise ValueError("No latent_sz provided to decoder and encoder not run")
 
         self.latent_sz = latent_sz
@@ -100,6 +102,7 @@ class BaseAE(nn.Module):
         else:
             self.batch = False
             x = x.unsqueeze(0)
+
 
         self.batch_sz = x.shape[0]
 
@@ -255,9 +258,11 @@ class ToyAE(VanillaAE):
         return jac_partial, z_i
 
 class CAE_3D(BaseAE):
-    def __init__(self, layer_data, channels, activation = "relu", latent_sz=None, jac_explicit=None, batch_norm=False):
+    def __init__(self, layer_data, channels, activation = "relu", latent_sz=None,
+                jac_explicit=None, batch_norm=False):
         super(CAE_3D, self).__init__()
         assert len(layer_data) + 1 == len(channels)
+        self.batch_norm = batch_norm
 
         self.layers = nn.ModuleList([])
 
@@ -272,16 +277,18 @@ class CAE_3D(BaseAE):
             data = layer_data_list[idx]
 
             if idx  < num_encode:
-                conv = nn.Conv3d(channels[idx], channels[idx + 1], **data)
+                conv = self.__conv_maybe_batch_norm(channels[idx], channels[idx + 1], data, False)
             else:
-                conv = nn.ConvTranspose3d(channels[idx], channels[idx + 1], **data)
+                conv = self.__conv_maybe_batch_norm(channels[idx], channels[idx + 1], data, True)
+
             self.layers.append(conv)
 
         #init instance variables
         self.latent_sz = latent_sz
         self.layers_encode = self.layers[:num_encode]
         self.layers_decode = self.layers[num_encode:]
-        self.batch_norm = batch_norm
+
+
         if activation == "lrelu":
             self.act_fn = nn.LeakyReLU(negative_slope = 0.05, inplace=False)
         elif activation == "relu":
@@ -289,7 +296,17 @@ class CAE_3D(BaseAE):
         else:
             raise NotImplemtedError("Activation function must be in {'lrelu', 'relu'}")
 
+    def __conv_maybe_batch_norm(self, Cin, Cout, data, transpose):
+        layer = OrderedDict()
 
+        if self.batch_norm:
+            layer.update({"0": nn.BatchNorm3d(Cin)})
+        if not transpose:
+            layer.update({"1": nn.Conv3d(Cin, Cout, **data)})
+        else:
+            layer.update({"1": nn.ConvTranspose3d(Cin, Cout, **data)})
+        conv = nn.Sequential(layer)
+        return conv
 
 class BaselineCAE(nn.Module):
     def __init__(self, channels):
