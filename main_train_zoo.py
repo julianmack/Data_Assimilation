@@ -4,7 +4,7 @@ from pipeline import TrainAE
 from pipeline.AEs.CAE_configs import ARCHITECTURES as architectures
 
 def main():
-    activations = ["lrelu", "relu"]
+    activations = ["relu"]
     changeover_def = [0, 10]
     chann_sf = [1, 0.5] #scaling factors for final channel
     EPOCHS = 30
@@ -28,13 +28,16 @@ def main():
                     if chan < 1:
                         chan = 1
                     settings.CHANNELS[-1] = chan
-                    expdir = expdir_base + str(exp_idx)
+                    expdir_str = "{}-{}-{}-{}-{}".format(settings.__class__.__name__, settings.CHANNELS, activ, changeover, sf)
+                    expdir = expdir_base + expdir_str
+
 
                     settings.final_channel_sf = sf
                     try:
 
                         batch_sz = 16
-                        print(settings.__class__.__name__, settings.CHANNELS, activ, changeover)
+                        print(settings.__class__.__name__, settings.CHANNELS, activ, changeover, sf)
+
                         trainer = TrainAE(settings, expdir, batch_sz = batch_sz)
                         model = trainer.train(EPOCHS)
 
