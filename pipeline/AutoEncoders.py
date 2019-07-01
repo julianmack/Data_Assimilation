@@ -77,7 +77,7 @@ class BaseAE(nn.Module):
                 latent_sz = self.latent_sz
             else:
                 latent_sz = None
-        if latent_sz == None:
+        if latent_sz == None: 
             raise ValueError("No latent_sz provided to decoder and encoder not run")
 
         self.latent_sz = latent_sz
@@ -137,7 +137,7 @@ class VanillaAE(BaseAE):
         :latent_dim - int. size of latent representation
         :hidden - int list. size of hidden layers"""
 
-    def __init__(self, input_size, latent_dim, activation = "relu", hidden=None):
+    def __init__(self, input_size, latent_dim, activation = "relu", hidden=None, batch_norm=False):
         super(VanillaAE, self).__init__()
         assert hidden == None or type(hidden) == list or type(hidden) == int, "hidden must be a list an int or None"
         assert activation in ["relu", "lrelu"]
@@ -146,6 +146,7 @@ class VanillaAE(BaseAE):
         self.latent_dim = latent_dim
         self.latent_sz = (latent_dim, )
         self.activation = activation
+        self.batch_norm = batch_norm
         self.__init_multilayer_AE()
 
 
@@ -254,7 +255,7 @@ class ToyAE(VanillaAE):
         return jac_partial, z_i
 
 class CAE_3D(BaseAE):
-    def __init__(self, layer_data, channels, activation = "relu", latent_sz=None, jac_explicit=None):
+    def __init__(self, layer_data, channels, activation = "relu", latent_sz=None, jac_explicit=None, batch_norm=False):
         super(CAE_3D, self).__init__()
         assert len(layer_data) + 1 == len(channels)
 
@@ -280,7 +281,7 @@ class CAE_3D(BaseAE):
         self.latent_sz = latent_sz
         self.layers_encode = self.layers[:num_encode]
         self.layers_decode = self.layers[num_encode:]
-
+        self.batch_norm = batch_norm
         if activation == "lrelu":
             self.act_fn = nn.LeakyReLU(negative_slope = 0.05, inplace=False)
         elif activation == "relu":

@@ -32,14 +32,22 @@ class TrainAE():
 
         self.expdir = self.__init_expdir(expdir)
 
+
         self.test_fp = self.expdir + "test.csv"
         self.train_fp = self.expdir + "train.csv"
         self.settings_fp = self.expdir + "settings.txt"
         self.calc_DA_MAE = calc_DA_MAE
+
         self.batch_sz = batch_sz
+        self.settings.batch_sz =  batch_sz
+
+        self.model =  AE_settings.AE_MODEL_TYPE(**AE_settings.get_kwargs())
 
 
-    def train(self, num_epoch = 100, learning_rate = 0.003):
+    def train(self, num_epoch = 100, learning_rate = 0.005):
+
+
+
         settings = self.settings
         #data
         loader = utils.DataLoader()
@@ -62,31 +70,23 @@ class TrainAE():
         test_loader = DataLoader(test_dataset, test_batch_sz)
 
 
-
-        print("train_size = ", len(train_loader.dataset))
-        print("test_size = ", len(test_loader.dataset))
-
-
-
         device = utils.ML_utils.get_device()
 
 
         loss_fn = torch.nn.L1Loss(reduction='sum')
-        model = settings.AE_MODEL_TYPE(**settings.get_kwargs())
 
-        self.model = model
-        optimizer = optim.Adam(model.parameters(), learning_rate)
+        optimizer = optim.Adam(self.model.parameters(), learning_rate)
 
-        
 
-        print("Number of parameters:", sum(p.numel() for p in model.parameters()))
+
+        print("Number of parameters:", sum(p.numel() for p in self.model.parameters()))
 
         if settings.SAVE == True:
             model_dir = self.expdir
         else:
             model_dir = None
 
-        train_losses, test_losses = self.training_loop_AE(model, optimizer,
+        train_losses, test_losses = self.training_loop_AE(self.model, optimizer,
                                 loss_fn, train_loader, test_loader,
                                 num_epoch, device, print_every=1, test_every=5, model_dir = self.expdir)
 
@@ -99,7 +99,7 @@ class TrainAE():
                 pickle.dump(settings, f)
 
 
-        return model
+        return self.model
 
 
     def training_loop_AE(self, model, optimizer, loss_fn, train_loader, test_loader,

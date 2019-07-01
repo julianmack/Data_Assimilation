@@ -1,25 +1,24 @@
 """File to run elements of pipeline module from"""
 from pipeline import config
 from pipeline import TrainAE
-from pipeline.AEs.CAE_configs import ARCHITECTURES as archis
-from pipeline.AEs.CAE_configs import CAE1A, CAE1B
+from pipeline.AEs.CAE_configs import ARCHITECTURES as architectures
 
 def main():
-    architectures = [CAE1A, CAE1B]
     activations = ["lrelu", "relu"]
-    changeover_def = [1, 3, 6, 20]
+    changeover_def = [0, 10]
     chann_sf = [1, 0.5] #scaling factors for final channel
-    EPOCHS = 25
-    expdir_base = "experiments/CAE_zoo2/"
+    EPOCHS = 30
+    expdir_base = "experiments/CAE_zoo3/"
     exp_idx = 0 #experiment index (for logging)
-    for changeover in changeover_def:
-        for archi in architectures:
+
+    for archi in architectures:
+        for changeover in changeover_def:
             batch_sz = 16
             settings = archi()
-            #use half latent dimension
+            # use half latent dimension
             settings.CHANGEOVER_DEFAULT = changeover
-            channels = settings.get_channels(True)
 
+            channels = settings.get_channels()
             final_channel = settings.CHANNELS[-1]
 
             for activ in activations:
@@ -30,22 +29,24 @@ def main():
                         chan = 1
                     settings.CHANNELS[-1] = chan
                     expdir = expdir_base + str(exp_idx)
+
+                    settings.final_channel_sf = sf
                     try:
-                        print("batch sz 16")
-                        
+
                         batch_sz = 16
+                        print(settings.__class__.__name__, settings.CHANNELS, activ, changeover)
                         trainer = TrainAE(settings, expdir, batch_sz = batch_sz)
                         model = trainer.train(EPOCHS)
+
+
                     except RuntimeError:
                         try:
-                            print("batch sz 8")
 
                             batch_sz = 8
                             trainer = TrainAE(settings, expdir, batch_sz = batch_sz)
                             model = trainer.train(EPOCHS)
                         except:
                             try:
-                                print("batch sz 2")
 
                                 batch_sz = 2
                                 trainer = TrainAE(settings, expdir, batch_sz = batch_sz)
@@ -57,7 +58,7 @@ def main():
 
                     exp_idx += 1
 
-
+    print("Total Experiments: {}".format(exp_idx + 1))
 
 if __name__ == "__main__":
     main()

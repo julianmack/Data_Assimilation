@@ -85,6 +85,7 @@ class ConfigExample(Config):
 class ConfigAE(Config):
     def __init__(self):
         super(ConfigAE, self).__init__()
+        self.BATCH_NORM = False
         self.COMPRESSION_METHOD = "AE"
         self.NUMBER_MODES = 4
         #self.AE_MODEL_FP = self.HOME_DIR + "models/AE_dim{}_epoch120.pth".format(self.NUMBER_MODES) #AE_dim40_epoch120.pth"
@@ -93,7 +94,8 @@ class ConfigAE(Config):
         self.ACTIVATION = "lrelu"
         #define getter for __kwargs since they may change after initialization
     def get_kwargs(self):
-        return  {"input_size": self.get_n(), "latent_dim": self.NUMBER_MODES, "hidden":self.HIDDEN, "activation": self.ACTIVATION}
+        return  {"input_size": self.get_n(), "latent_dim": self.NUMBER_MODES,
+                "hidden":self.HIDDEN, "activation": self.ACTIVATION, "batch_norm": self.BATCH_NORM}
 
 class ToyAEConfig(ConfigAE):
     def __init__(self):
@@ -137,7 +139,9 @@ class CAEConfig(ConfigAE):
         init_data = utils.ML_utils.get_init_data_from_schedule(conv_data)
         channels = self.get_channels()
         latent_sz = self.__get_latent_sz(conv_data, channels)
-        kwargs =   {"layer_data": init_data, "channels": channels, "activation": self.ACTIVATION, "latent_sz": latent_sz}
+        kwargs =   {"layer_data": init_data, "channels": channels,
+                    "activation": self.ACTIVATION, "latent_sz": latent_sz,
+                    "batch_norm": self.BATCH_NORM}
         return kwargs
 
     def get_n(self):
@@ -156,21 +160,19 @@ class CAEConfig(ConfigAE):
             changeover_out_def = self.CHANGEOVER_DEFAULT
         else:
             changeover_out_def = 10
-        #TODO add  != None
         #TODO add self.lowest_out != None
         #TODO add self.MAX_Layers
         #TODO - give ability to set bespoke schedule
         return utils.ML_utils.conv_scheduler3D(self.get_n(), changeovers, 1, False, changeover_out_def=changeover_out_def )
 
-    def get_channels(self, override=False):
-        if self.CHANNELS != None and override == False:
+    def get_channels(self):
+        if self.CHANNELS != None and hasattr(self, "CHANNELS"):
             return self.CHANNELS
-        else: #gen random channels
-            n_layers_decode = len(self.get_conv_schedule()[0])
-            channels = [8] * (n_layers_decode + 1)
-            channels[0] = 1
-            self.CHANNELS = channels
-            return channels
+        elif hasattr(self, "gen_channels"): #gen random channels
+            self.CHANNELS = self.gen_channels()
+            return self.CHANNELS
+        else:
+            raise NotImplementedError("No default channel init")
 
     def calc_modes(self):
         #lantent dim is Channels_latent * (x_size_latent ) x (y_size_latent ) x (z_size_latent )

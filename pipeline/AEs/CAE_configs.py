@@ -4,81 +4,58 @@ from pipeline import config
 
 
 class CAE1(config.CAEConfig):
-    def __init__(self):
-        super(CAE1, self).__init__()
-
+    def gen_channels(self):
         channels = list(range(1, self.get_num_layers_decode() + 2))
-
-        self.CHANNELS = channels
-class CAE1A(config.CAEConfig):
-    def __init__(self):
-        super(CAE1A, self).__init__()
-
-        channels = list(range(1, self.get_num_layers_decode() + 2))
-        channels = [2 * x for x in channels]
         channels[0] = 1
-        self.CHANNELS = channels
-        
-class CAE1B(config.CAEConfig):
-    def __init__(self):
-        super(CAE1B, self).__init__()
+        return channels
 
-        channels = list(range(1, self.get_num_layers_decode() + 2))
-        channels = [3 * x for x in channels]
-        channels[0] = 1
-        self.CHANNELS = channels
 
 class CAE2(config.CAEConfig):
-    def __init__(self):
-        super(CAE2, self).__init__()
 
+    def gen_channels(self):
         channels = list(range(1, 2*(self.get_num_layers_decode() + 1) + 1, 2))
-        self.CHANNELS = channels
+        return channels
 
 class CAE3(config.CAEConfig):
-    def __init__(self):
-        super(CAE3, self).__init__()
 
+    def gen_channels(self):
         channels = [8] * (self.get_num_layers_decode() + 1)
-        channels[0] = 1
 
-        self.CHANNELS = channels
+        channels[0] = 1
+        return channels
+
 
 class CAE4(config.CAEConfig):
-    def __init__(self):
-        super(CAE4, self).__init__()
-
+    def gen_channels(self):
         channels = [4] * (self.get_num_layers_decode() + 1)
-        channels[0] = 1
 
-        self.CHANNELS = channels
+        channels[0] = 1
+        return channels
+
 
 class CAE5(config.CAEConfig):
-    def __init__(self):
-        super(CAE5, self).__init__()
-
+    def gen_channels(self):
         channels = [8] * (self.get_num_layers_decode() + 1)
         half_layers = int((self.get_num_layers_decode() + 1) / 2)
         channels[half_layers:] = [16] *  len(channels[half_layers:])
         channels[-1] = 8
+
         channels[0] = 1
+        return channels
 
-
-        self.CHANNELS = channels
 
 class CAE6(config.CAEConfig):
-    def __init__(self):
-        super(CAE6, self).__init__()
-
+    def gen_channels(self):
         channels = [2 ** x for x in range (self.get_num_layers_decode() + 1)]
 
         half_layers = int((self.get_num_layers_decode() + 1) / 2)
         channels[half_layers + 1:] = [16] * len(channels[half_layers + 1:])
         channels[-2] = 8
         channels[-1] = 2
-        channels[0] = 1
 
-        self.CHANNELS = channels
+        channels[0] = 1
+        return channels
+
 
 
 ARCHITECTURES = [CAE1, CAE2, CAE3, CAE4, CAE5, CAE6]
