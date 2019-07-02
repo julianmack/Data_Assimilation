@@ -1,6 +1,6 @@
 import torch
 from pipeline.utils import ML_utils as ML
-from pipeline import config
+from pipeline.settings import config
 from pipeline import TrainAE
 import pytest
 import os
@@ -23,6 +23,8 @@ class TestAE_TrainLinear():
             settings = config.ToyAEConfig()
             settings.X_FP = str(p)
             settings.FORCE_GEN_X = False
+            settings.calc_DA_MAE = False
+            settings.OBS_FRAC = 0.5
             settings.set_n(10)
             self.settings = settings
             return settings
@@ -52,7 +54,7 @@ class TestAE_Train3D():
         if hasattr(self, "settings") and not force_init:
             return self.settings
         else:
-            X = np.random.rand(6, 5, 7, 4)
+            X = np.random.rand(6, 2, 4, 4)
 
 
             INTERMEDIATE_FP = "inter"
@@ -65,7 +67,9 @@ class TestAE_Train3D():
             settings.X_FP = str(p)
             settings.FORCE_GEN_X = False
             settings.n3d = tuple(X.shape[1:])
-            self.settings = settings
+            settings.OBS_FRAC = 1 / 6.0
+
+            self.settings = settingsgit
             return settings
 
     def test_AE_train_3d(self, tmpdir):
