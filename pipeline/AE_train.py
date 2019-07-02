@@ -207,9 +207,9 @@ class TrainAE():
             self.num_epochs_cv = num_epochs_cv
 
         if self.settings.BATCH_NORM: #i.e. generally larger learning_rate with BN
-            lrs = [0.009, 0.003, 0.021, 0.002]
+            lrs = [0.006, 0.003, 0.015, 0.0015]
         else:
-            lrs = [0.003, 0.001, 0.009, 0.0004]
+            lrs = [0.003, 0.001, 0.006, 0.0006]
 
         res = []
         optimizers = []
