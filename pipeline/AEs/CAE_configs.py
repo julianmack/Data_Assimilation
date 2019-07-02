@@ -1,4 +1,5 @@
-# This file holds CAE configurations that can be run as a batch
+# This file holds a range of CAE channel configurations that
+# can be used to experiment on the best setup in main_train_zoo.py
 
 from pipeline import config
 
@@ -8,13 +9,6 @@ class CAE1(config.CAEConfig):
         channels = list(range(1, self.get_num_layers_decode() + 2))
         channels[0] = 1
         return channels
-
-#
-# class CAE2(config.CAEConfig):
-#
-#     def gen_channels(self):
-#         channels = list(range(1, 2*(self.get_num_layers_decode() + 1) + 1, 2))
-#         return channels
 
 class CAE3(config.CAEConfig):
 
@@ -59,3 +53,32 @@ class CAE6(config.CAEConfig):
 
 
 ARCHITECTURES = [CAE1, CAE3, CAE4, CAE5, CAE6]
+
+####### Architectures below this line are no longer used but are retained here
+####### in order to enable interpretation of results with these architectures
+####### (i.e the config classes are pickled and then loaded at analysis time)
+
+class CAE1A(config.CAEConfig):
+    def gen_channels(self):
+
+        channels = list(range(1, self.get_num_layers_decode() + 2))
+        channels = [2 * x for x in channels]
+        channels[0] = 1
+        return channels
+
+class CAE1B(config.CAEConfig):
+    def gen_channels(self):
+
+        channels = list(range(1, self.get_num_layers_decode() + 2))
+        channels = [3 * x for x in channels]
+        channels[0] = 1
+        return channels
+
+
+class CAE2(config.CAEConfig):
+
+    def gen_channels(self):
+        channels = list(range(1, 2*(self.get_num_layers_decode() + 1) + 1, 2))
+        return channels
+
+
