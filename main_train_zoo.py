@@ -1,7 +1,7 @@
 """File to run elements of pipeline module from"""
-from pipeline import config
+from pipeline.settings import config
 from pipeline import TrainAE
-from pipeline.AEs.CAE_configs import ARCHITECTURES as architectures
+from pipeline.settings.CAE_configs import ARCHITECTURES as architectures
 TEST_INIT_ONLY = False
 
 def main():

@@ -8,7 +8,8 @@ import pandas as pd
 
 import pickle
 
-import pipeline.config as config
+from pipeline.settings import config
+
 
 from pipeline import utils, DAPipeline
 import os

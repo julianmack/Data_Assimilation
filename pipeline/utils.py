@@ -3,7 +3,6 @@ import torch
 import numpy as np
 import random
 import vtktools
-import pipeline.config
 
 import vtk.util.numpy_support as nps
 import vtk
@@ -145,7 +144,7 @@ class DataLoader():
         This function also deals with normalization (to ensure than only the
         training data is used for normalization mean and std)"""
 
- 
+
         M, n = DataLoader.get_dim_X(X, settings)
 
         hist_idx = int(M * settings.HIST_FRAC)

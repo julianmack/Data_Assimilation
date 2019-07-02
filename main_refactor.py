@@ -1,10 +1,12 @@
-from pipeline import config, utils, AutoEncoders
+from pipeline import utils, AutoEncoders
+from pipeline.settings import config
+
 import numpy as np
 import vtk.util.numpy_support as ns
 
 
 def main():
-    ML = utils.ML_utils()
+    ML = utils.ML_utils.load_AE
 
 
 

@@ -1,5 +1,5 @@
 from pipeline import DAPipeline
-from pipeline import config
+from pipeline.settings import config
 import pytest
 import numpy as np
 

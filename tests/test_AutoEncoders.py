@@ -1,6 +1,6 @@
 import torch
 from pipeline.utils import ML_utils as ML
-from pipeline import config
+from pipeline.settings import config
 from pipeline.AutoEncoders import ToyAE, VanillaAE, CAE_3D
 import pytest
 

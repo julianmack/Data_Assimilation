@@ -1,4 +1,5 @@
-from pipeline import config, utils, AutoEncoders
+from pipeline import utils, AutoEncoders
+from pipeline.settings import config
 import numpy as np
 import vtk.util.numpy_support as ns
 

@@ -1,7 +1,7 @@
 """File to run elements of pipeline module from"""
-from pipeline import config
+from pipeline.settings import config
 from pipeline import TrainAE
-from pipeline.AEs import CAE_configs
+from pipeline.settings import CAE_configs
 import shutil
 
 def main():

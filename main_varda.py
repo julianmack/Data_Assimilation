@@ -1,5 +1,7 @@
 """File to run elements of pipeline module from"""
-from pipeline import DataAssimilation, config
+from pipeline import DataAssimilation
+from pipeline.settings import config
+
 
 def main():
     DA = DataAssimilation.DAPipeline()

@@ -8,8 +8,8 @@ from scipy.optimize import minimize
 import vtktools
 
 
-from pipeline import config, utils
-
+from pipeline import utils
+from pipeline.settings import config
 
 class DAPipeline():
     """Class to hold pipeline functions for Variational DA
@@ -290,7 +290,7 @@ class DAPipeline():
              n = nx * ny * nz
         else:
             assert type(n) == int
-        
+
         H = np.zeros((nobs, n))
         H[range(nobs), obs_idxs] = 1
 
