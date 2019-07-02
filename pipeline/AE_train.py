@@ -275,6 +275,7 @@ class TrainAE():
             self.DA_data["u_c"] = u_c
             self.DA_data["w_0"] = torch.zeros((self.settings.get_number_modes())).flatten()
             self.DA_data["V_trunc"] = self.model.decode
+            self.DA_data["model"] = self.model
             if self.settings.JAC_NOT_IMPLEM:
                 import warnings
                 warnings.warn("Using **Very** slow method of calculating jacobian. Consider disabling DA", UserWarning)
@@ -298,7 +299,7 @@ class TrainAE():
     def slow_jac_wrapper(self, x):
         return utils.ML_utils.jac_explicit_slow_model(x, self.model, self.DA_data.get("device"))
 
-    
+
 
     def __da_data_wipe_some_values(self):
         #Now wipe some key attributes to prevent overlap between

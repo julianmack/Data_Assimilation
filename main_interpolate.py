@@ -1,4 +1,6 @@
-from pipeline import config, utils
+from pipeline import  utils
+from pipeline.settings import config
+
 import numpy as np
 import vtk.util.numpy_support as ns
 

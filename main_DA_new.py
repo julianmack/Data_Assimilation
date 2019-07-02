@@ -1,7 +1,7 @@
 """File to run elements of pipeline module from"""
 
 from pipeline import TrainAE
-from pipeline.AEs import CAE_configs
+from pipeline.settings import CAE_configs
 import os
 import sys
 from matplotlib import pyplot as plt
