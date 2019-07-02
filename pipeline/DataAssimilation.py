@@ -134,11 +134,14 @@ class DAPipeline():
         H_0 = self.create_H(obs_idx, settings.get_n(), nobs, settings.THREE_DIM)
         d = observations - H_0 @ u_0 #'d' in literature
         #R_inv = self.create_R_inv(OBS_VARIANCE, nobs)
+
+        device = utils.ML_utils.get_device(False)
+
         data = {"d": d, "G": H_0, "V": V,
                 "observations": observations,
                 "u_c": u_c, "u_0": u_0, "X": X,
                 "train_X": train_X, "test_X":test_X,
-                "std": std, "mean": mean}
+                "std": std, "mean": mean, "device": device}
 
 
         return data, std, mean
@@ -164,34 +167,51 @@ class DAPipeline():
         elif settings.COMPRESSION_METHOD == "AE":
             kwargs = settings.get_kwargs()
 
-            encoder, decoder = utils.ML_utils.load_AE(settings.AE_MODEL_TYPE, settings.AE_MODEL_FP, **kwargs)
+            self.model = settings.AE_MODEL_TYPE(**kwargs)
+            self.model.load_state_dict(torch.load(settings.AE_MODEL_FP))
+            device = self.data.get("device")
 
-            V_trunc = decoder
+            for param in self.model.parameters():
+                param.to(device )
+
+            self.model.to(device)
+
+            self.data["model"] = self.model
+
+            V_trunc = self.model.decode
             self.data["V_trunc"] = V_trunc
 
-            self.data["w_0"] = torch.zeros((settings.get_number_modes()))
+            self.data["w_0"] = torch.zeros((settings.get_number_modes())).to(device)
 
-            if settings.JAC_NOT_IMPLEM:
-                import warnings
-                warnings.warn("Using **Very** slow method of calculating jacobian. Consider disabling DA", UserWarning)
-                self.DA_data["V_grad"] = self.slow_jac_wrapper
-            else:
-                self.DA_data["V_grad"] = self.model.jac_explicit
 
             #u_0 = decoder(w_0).detach().numpy()
 
             # Now access explicit gradient function
-            try:
-                self.data["V_grad"] = settings.AE_MODEL_TYPE(**kwargs).jac_explicit
-            except:
-                raise NotImpelemtedError("This model type does not have a gradient available")
+            if not settings.JAC_NOT_IMPLEM:
+                try:
+                    self.data["V_grad"] = self.model.jac_explicit
+                except:
+                    pass
+            else:
+                import warnings
+                warnings.warn("Using **Very** slow method of calculating jacobian. Consider disabling DA", UserWarning)
+                self.data["V_grad"] = self.slow_jac_wrapper
+
+            if self.data.get("V_grad") == None:
+                raise NotImplementedError("This model type does not have a gradient available")
         else:
             raise ValueError("COMPRESSION_METHOD must be in {SVD, AE}")
+
+        print(self.data["V_grad"])
+
+    def slow_jac_wrapper(self, x):
+        return utils.ML_utils.jac_explicit_slow_model(x, self.model, self.data.get("device"))
 
     @staticmethod
     def perform_VarDA(data, settings):
         """This is a static method so that it can be performed in AE_train with user specified data"""
         args = (data, settings)
+
         res = minimize(DAPipeline.cost_function_J, data.get("w_0"), args = args, method='L-BFGS-B',
                 jac=DAPipeline.grad_J, tol=settings.TOL)
 
@@ -383,7 +403,6 @@ class DAPipeline():
             assert np.allclose(V_trunc, V_trunc2)
 
 
-
         return V_trunc, U_trunc, s_trunc, W_trunc
 
     @staticmethod
@@ -391,7 +410,7 @@ class DAPipeline():
         """Computes VarDA cost function.
         NOTE: eventually - implement this by hand as grad_J and J share quantity Q"""
 
-
+        device = data.get("device")
         d = data.get("d")
         G = data.get("G")
         V_trunc = data.get("V_trunc")
@@ -408,9 +427,10 @@ class DAPipeline():
 
         elif mode == "AE":
             assert callable(V), "V must be a function if mode=AE is used"
-            w_tensor = torch.Tensor(w)
 
-            V_w = V(w_tensor).detach().numpy()
+            w_tensor = torch.Tensor(w).to(device)
+
+            V_w = V(w_tensor).detach().cpu().numpy()
             V_w = V_w.flatten()
             Q = (G @ V_w - d)
 
@@ -435,6 +455,7 @@ class DAPipeline():
 
     @staticmethod
     def grad_J(w, data, settings):
+        device = data.get("device")
         d = data.get("d")
         G = data.get("G")
         V_trunc = data.get("V_trunc")
@@ -451,11 +472,14 @@ class DAPipeline():
             P = V.T @ G.T
         elif mode == "AE":
             assert callable(V_grad), "V_grad must be a function if mode=AE is used"
-            w_tensor = torch.Tensor(w)
+            model = data.get("model").to(device)
 
-            V_w = V(w_tensor).detach().numpy()
+            w_tensor = torch.Tensor(w).to(device)
+
+
+            V_w = V(w_tensor).detach().cpu().numpy()
             V_w = V_w.flatten()
-            V_grad_w = V_grad(w_tensor).detach().numpy()
+            V_grad_w = V_grad(w_tensor).detach().cpu().numpy()
 
             Q = (G @ V_w - d)
             P = V_grad_w.T @ G.T
