@@ -49,7 +49,7 @@ class TrainAE():
         self.device = utils.ML_utils.get_device()
 
 
-    def train(self, num_epoch = 100, learning_rate = 0.0025, print_every=1,
+    def train(self, num_epoch = 100, learning_rate = 0.0025, print_every=2,
             test_every=5):
 
         self.learning_rate = learning_rate
@@ -116,7 +116,7 @@ class TrainAE():
         return self.model
 
 
-    def training_loop_AE(self, start_epoch, num_epoch, device=None, print_every=1,
+    def training_loop_AE(self, start_epoch, num_epoch, device=None, print_every=2,
                         test_every=5, save_every=5, model_dir=None):
         """Runs a torch AE model training loop.
         NOTE: Ensure that the loss_fn is in mode "sum"
@@ -252,7 +252,7 @@ class TrainAE():
         test_loss = best_test
         train_loss = best_train
         return self.learning_rate, train_loss, test_loss
-        
+
     def maybe_eval_DA_MAE(self, test_valid):
         """As the DA procedure is so expensive, only eval on a single state.
         By default this is the final element of the test or train set"""
