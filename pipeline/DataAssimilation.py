@@ -170,6 +170,14 @@ class DAPipeline():
             self.data["V_trunc"] = V_trunc
 
             self.data["w_0"] = torch.zeros((settings.get_number_modes()))
+
+            if settings.JAC_NOT_IMPLEM:
+                import warnings
+                warnings.warn("Using **Very** slow method of calculating jacobian. Consider disabling DA", UserWarning)
+                self.DA_data["V_grad"] = self.slow_jac_wrapper
+            else:
+                self.DA_data["V_grad"] = self.model.jac_explicit
+
             #u_0 = decoder(w_0).detach().numpy()
 
             # Now access explicit gradient function
@@ -290,7 +298,7 @@ class DAPipeline():
              n = nx * ny * nz
         else:
             assert type(n) == int
-        
+
         H = np.zeros((nobs, n))
         H[range(nobs), obs_idxs] = 1
 
