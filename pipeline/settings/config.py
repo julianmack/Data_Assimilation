@@ -114,6 +114,7 @@ class ToyAEConfig(ConfigAE):
 class CAEConfig(ConfigAE):
     def __init__(self):
         super(CAEConfig, self).__init__()
+        self.JAC_NOT_IMPLEM = True
         self.AE_MODEL_TYPE = CAE_3D
         self.n3d = (91, 85, 32)
         self.FACTOR_INCREASE = 2.43 #interpolation ratio of oridinal # points to final

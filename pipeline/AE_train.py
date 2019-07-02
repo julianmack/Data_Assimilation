@@ -295,9 +295,10 @@ class TrainAE():
         else:
             return "NO_CALC", "NO_CALC"
 
-
     def slow_jac_wrapper(self, x):
-        return utils.ML_utils.jac_explicit_slow_model(x, self.model)
+        return utils.ML_utils.jac_explicit_slow_model(x, self.model, self.DA_data.get("device"))
+
+    
 
     def __da_data_wipe_some_values(self):
         #Now wipe some key attributes to prevent overlap between
