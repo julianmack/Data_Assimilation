@@ -59,14 +59,13 @@ class TrainAE():
             self.num_epochs_cv = num_epochs_cv
 
         if self.settings.BATCH_NORM: #i.e. generally larger learning_rate with BN
-            lrs = [0.009, 0.003, 0.021]
+            lrs = [0.009, 0.003, 0.021, 0.002]
         else:
             lrs = [0.003, 0.001, 0.009, 0.0004]
 
         res = []
         optimizers = []
-        test_losses = []
-        train_losses = []
+
 
         for idx, lr in enumerate(lrs):
             print("lr:", lr)
@@ -74,10 +73,13 @@ class TrainAE():
             utils.set_seeds() #set seeds before init model
             self.model =  self.settings.AE_MODEL_TYPE(**self.settings.get_kwargs())
             self.optimizer = optim.Adam(self.model.parameters(), lr)
+            test_losses = []
             train_losses = []
+
             for epoch in range(self.num_epochs_cv):
                 train, test = self.train_one_epoch(epoch, 1, test_every, self.num_epochs_cv)
-                test_losses.append(test)
+                if test:
+                    test_losses.append(test)
                 train_losses.append(train)
 
             df = pd.DataFrame(train_losses, columns = ["epoch","reconstruction_err","DA_MAE", "DA_ratio_improve_MAE"])
@@ -123,6 +125,7 @@ class TrainAE():
         self.train_X, self.test_X, DA_u_c, X_norm,  mean, std = loader.test_train_DA_split_maybe_normalize(X, settings)
 
 
+
         #Add Channel if we are in 3D case
         if settings.THREE_DIM:
             self.train_X = np.expand_dims(self.train_X, 1)
@@ -152,9 +155,11 @@ class TrainAE():
         train_losses_, test_losses_ = self.training_loop_AE(self.num_epochs_cv, self.num_epochs, device,
                                         print_every=print_every, test_every=test_every,
                                         model_dir = self.model_dir)
+        if train_losses_:
+            train_losses.extend(train_losses_)
+        if test_losses_:
+            test_losses.extend(test_losses_)
 
-        train_losses.extend(train_losses_)
-        test_losses.extend(test_losses_)
 
         #Save results and settings file (so that it can be exactly reproduced)
         if settings.SAVE == True:
