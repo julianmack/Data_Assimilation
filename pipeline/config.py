@@ -38,12 +38,12 @@ class Config():
                             #not known by config file)
         self.OBS_MODE = "rand" #Observation mode: "single_max" or "rand" - i.e. use a single
                          # observation or a random subset
-        self.OBS_FRAC = 0.5 # (with OBS_MODE=rand). fraction of state used as "observations".
+        self.OBS_FRAC = 0.005 # (with OBS_MODE=rand). fraction of state used as "observations".
                         # This is ignored when OBS_MODE = single_max
 
         #VarDA hyperparams
         self.ALPHA = 1.0
-        self.OBS_VARIANCE = 0.01 #TODO - CHECK this is specific to the sensors (in this case - the error in model predictions)
+        self.OBS_VARIANCE = 0.0001 #TODO - CHECK this is specific to the sensors (in this case - the error in model predictions)
 
         self.COMPRESSION_METHOD = "SVD" # "SVD"/"AE"
         self.NUMBER_MODES = 2 #Number of modes to retain.

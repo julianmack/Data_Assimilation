@@ -290,7 +290,7 @@ class DAPipeline():
              n = nx * ny * nz
         else:
             assert type(n) == int
-
+        
         H = np.zeros((nobs, n))
         H[range(nobs), obs_idxs] = 1
 
