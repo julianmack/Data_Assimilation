@@ -49,62 +49,6 @@ class TrainAE():
         self.device = utils.ML_utils.get_device()
 
 
-    def __maybe_cross_val_lr(self, test_every, num_epochs_cv = 8):
-        if not num_epochs_cv:
-            self.num_epochs_cv = 0
-            return self.learning_rate
-        elif self.num_epochs < num_epochs_cv:
-            self.num_epochs_cv = self.num_epochs
-        else:
-            self.num_epochs_cv = num_epochs_cv
-
-        if self.settings.BATCH_NORM: #i.e. generally larger learning_rate with BN
-            lrs = [0.009, 0.003, 0.021, 0.002]
-        else:
-            lrs = [0.003, 0.001, 0.009, 0.0004]
-
-        res = []
-        optimizers = []
-
-
-        for idx, lr in enumerate(lrs):
-            print("lr:", lr)
-
-            utils.set_seeds() #set seeds before init model
-            self.model =  self.settings.AE_MODEL_TYPE(**self.settings.get_kwargs())
-            self.optimizer = optim.Adam(self.model.parameters(), lr)
-            test_losses = []
-            train_losses = []
-
-            for epoch in range(self.num_epochs_cv):
-                train, test = self.train_one_epoch(epoch, 1, test_every, self.num_epochs_cv)
-                if test:
-                    test_losses.append(test)
-                train_losses.append(train)
-
-            df = pd.DataFrame(train_losses, columns = ["epoch","reconstruction_err","DA_MAE", "DA_ratio_improve_MAE"])
-            train_final = df.tail(1).reconstruction_err
-
-            res.append(train_final.values[0])
-            optimizers.append(self.optimizer)
-
-            #save model if best so far
-
-            if res[-1] == min(res):
-                best_test = test_losses
-                best_train = train_losses
-                best_idx = idx
-                model_fp_new = "{}{}-{}.pth".format(self.model_dir, epoch, lr)
-                torch.save(self.model.state_dict(), model_fp_new)
-                best_model = self.model
-
-        self.learning_rate = lrs[best_idx]
-        self.optimizer = optimizers[best_idx]
-        self.model = best_model
-        test_loss = best_test
-        train_loss = best_train
-        return self.learning_rate, train_loss, test_loss
-
     def train(self, num_epoch = 100, learning_rate = 0.0025, print_every=1,
             test_every=5):
 
@@ -253,6 +197,62 @@ class TrainAE():
             torch.save(self.model.state_dict(), model_fp_new)
         return train_loss_res, test_loss_res
 
+    def __maybe_cross_val_lr(self, test_every, num_epochs_cv = 8):
+        if not num_epochs_cv:
+            self.num_epochs_cv = 0
+            return self.learning_rate
+        elif self.num_epochs < num_epochs_cv:
+            self.num_epochs_cv = self.num_epochs
+        else:
+            self.num_epochs_cv = num_epochs_cv
+
+        if self.settings.BATCH_NORM: #i.e. generally larger learning_rate with BN
+            lrs = [0.009, 0.003, 0.021, 0.002]
+        else:
+            lrs = [0.003, 0.001, 0.009, 0.0004]
+
+        res = []
+        optimizers = []
+
+
+        for idx, lr in enumerate(lrs):
+            print("lr:", lr)
+
+            utils.set_seeds() #set seeds before init model
+            self.model =  self.settings.AE_MODEL_TYPE(**self.settings.get_kwargs())
+            self.optimizer = optim.Adam(self.model.parameters(), lr)
+            test_losses = []
+            train_losses = []
+
+            for epoch in range(self.num_epochs_cv):
+                train, test = self.train_one_epoch(epoch, 1, test_every, self.num_epochs_cv)
+                if test:
+                    test_losses.append(test)
+                train_losses.append(train)
+
+            df = pd.DataFrame(train_losses, columns = ["epoch","reconstruction_err","DA_MAE", "DA_ratio_improve_MAE"])
+            train_final = df.tail(1).reconstruction_err
+
+            res.append(train_final.values[0])
+            optimizers.append(self.optimizer)
+
+            #save model if best so far
+
+            if res[-1] == min(res):
+                best_test = test_losses
+                best_train = train_losses
+                best_idx = idx
+                model_fp_new = "{}{}-{}.pth".format(self.model_dir, epoch, lr)
+                torch.save(self.model.state_dict(), model_fp_new)
+                best_model = self.model
+
+        self.learning_rate = lrs[best_idx]
+        self.optimizer = optimizers[best_idx]
+        self.model = best_model
+        test_loss = best_test
+        train_loss = best_train
+        return self.learning_rate, train_loss, test_loss
+        
     def maybe_eval_DA_MAE(self, test_valid):
         """As the DA procedure is so expensive, only eval on a single state.
         By default this is the final element of the test or train set"""
