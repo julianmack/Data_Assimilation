@@ -4,21 +4,33 @@ from pipeline import TrainAE
 from pipeline.settings.CAE_configs import ARCHITECTURES as architectures
 TEST_INIT_ONLY = False
 
+#I am seeing Batch norm performing much worse than non bathc norm.
+# I have a suspicion this may be beacuse I:
+# A) wasn't shuffling the training data (i.e. temporal variations meant that these
+#         macro variations were lost in batch norm)
+# B) Was applying batch norm to the inputs - again this could mean that relevant
+# input batch statistics are lost
+# So I'm trying again with the above corrected. To save $$$ I will only run a
+# subset of the most successful experiments run previously
+# Note: there will be repeated experiments which can be used to get an idea
+# of the std of these results (IF there is no noticiable change from A) and B)
+
 def main():
     activations = ["lrelu", "relu"] # first experiments showed "lrelu" much better than "relu"
-    changeover_def = [0, 8]
-    chann_sf = [1, 0.5] #scaling factors for final channel
+    chann_sf = [1] #D0 not run the final chapter scale factor change (for $$$)
     batch_norms = [True, False]
-
+    changeover_def = [0]
     EPOCHS = 30
-    expdir_base = "experiments/CAE_zooBN/"
+    expdir_base = "experiments/CAE_zooBN2/"
     exp_idx = 0 #experiment index (for logging)
 
-    for archi in architectures[::-1]:
+    for archi in architectures:
         for changeover in changeover_def:
             settings = archi()
-            # use half latent dimension
-            settings.CHANGEOVER_DEFAULT = changeover
+
+            #Set changeover default = 0 as previous experiments have shown the
+            #smaller networks perfom better
+            settings.CHANGEOVER_DEFAULT = 0
 
             channels = settings.get_channels()
             final_channel = settings.CHANNELS[-1]
@@ -46,7 +58,7 @@ def main():
                         try:
 
                             batch_sz = 16
-                            print(settings.__class__.__name__, settings.CHANNELS, activ, changeover, sf, BN)
+                            print("expt", exp_idx, settings.__class__.__name__, settings.CHANNELS, activ, changeover, sf, BN)
 
                             trainer = TrainAE(settings, expdir, batch_sz = batch_sz)
                             if TEST_INIT_ONLY:
@@ -73,7 +85,7 @@ def main():
 
                         exp_idx += 1
 
-    print("Total Experiments: {}".format(exp_idx + 1))
+    print("Total Experiments: {}".format(exp_idx))
 
 if __name__ == "__main__":
     main()
