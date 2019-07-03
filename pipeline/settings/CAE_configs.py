@@ -1,7 +1,7 @@
 # This file holds a range of CAE channel configurations that
 # can be used to experiment on the best setup in main_train_zoo.py
 
-from pipeline import config
+from pipeline.settings import config
 
 
 class CAE1(config.CAEConfig):
