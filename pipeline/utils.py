@@ -179,11 +179,12 @@ class DataLoader():
         test_X = X[hist_idx : t_DA]
         u_c = X[t_DA] #control state (for DA)
 
-        print(train_X[4])
+
         if settings.SHUFFLE_DATA:
+            set_seeds()
             np.random.shuffle(train_X)
             np.random.shuffle(test_X)
-        print(train_X[4])
+
 
         return train_X, test_X, u_c, X, mean, std
 
