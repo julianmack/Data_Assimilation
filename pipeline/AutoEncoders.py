@@ -279,7 +279,11 @@ class CAE_3D(BaseAE):
         for idx, data in enumerate(layer_data_list):
             data = layer_data_list[idx]
 
-            if idx  < num_encode:
+            if idx  == 0: #no batch_norm on input
+                self.batch_norm = False
+                conv = self.__conv_maybe_batch_norm(channels[idx], channels[idx + 1], data, False)
+                self.batch_norm = batch_norm
+            elif idx  < num_encode:
                 conv = self.__conv_maybe_batch_norm(channels[idx], channels[idx + 1], data, False)
             else:
                 conv = self.__conv_maybe_batch_norm(channels[idx], channels[idx + 1], data, True)
