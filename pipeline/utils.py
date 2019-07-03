@@ -139,7 +139,7 @@ class DataLoader():
         return M, n
 
     @staticmethod
-    def test_train_DA_split_maybe_normalize(X, settings ):
+    def test_train_DA_split_maybe_normalize(X, settings):
         """Returns non-overlapping train/test and DA control state data.
         This function also deals with normalization (to ensure than only the
         training data is used for normalization mean and std)"""
@@ -178,6 +178,12 @@ class DataLoader():
         train_X = X[: hist_idx]
         test_X = X[hist_idx : t_DA]
         u_c = X[t_DA] #control state (for DA)
+
+        print(train_X[4])
+        if settings.SHUFFLE_DATA:
+            np.random.shuffle(train_X)
+            np.random.shuffle(test_X)
+        print(train_X[4])
 
         return train_X, test_X, u_c, X, mean, std
 

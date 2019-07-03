@@ -29,6 +29,7 @@ class Config():
         self.NORMALIZE = True #Whether to normalize input data
         self.UNDO_NORMALIZE = self.NORMALIZE
 
+        self.SHUFFLE_DATA = True #Shuffle data (after splitting into historical, test and control state?)
         #config options to divide up data between "History", "observation" and "control_state"
         #User is responsible for checking that these regions do not overlap
         self.HIST_FRAC = 4.0 / 5.0 #fraction of data used as "history"
@@ -40,6 +41,7 @@ class Config():
                          # observation or a random subset
         self.OBS_FRAC = 0.005 # (with OBS_MODE=rand). fraction of state used as "observations".
                         # This is ignored when OBS_MODE = single_max
+
 
         #VarDA hyperparams
         self.ALPHA = 1.0
@@ -114,7 +116,6 @@ class ToyAEConfig(ConfigAE):
 class CAEConfig(ConfigAE):
     def __init__(self):
         super(CAEConfig, self).__init__()
-        self.JAC_NOT_IMPLEM = True
         self.AE_MODEL_TYPE = CAE_3D
         self.n3d = (91, 85, 32)
         self.FACTOR_INCREASE = 2.43 #interpolation ratio of oridinal # points to final
