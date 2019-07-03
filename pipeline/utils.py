@@ -54,7 +54,7 @@ class DataLoader():
     def get_X(self, settings):
         #TODO - delete or refactor
         """Returns X in the M x n format"""
-        if not os.path.exists(settings.X_FP) and settings.FORCE_GEN_X:
+        if not os.path.exists(settings.X_FP) or settings.FORCE_GEN_X:
             if settings.AZURE_DOWNLOAD:
                 X = download_X_azure(settings)
             else:
