@@ -69,11 +69,9 @@ class TestAE_Train3D():
             settings.n3d = tuple(X.shape[1:])
             settings.OBS_FRAC = 1 / 6.0
 
-<<<<<<< HEAD
+
             self.settings = settings
-=======
-            self.settings = settingsgit
->>>>>>> master
+
             return settings
 
     def test_AE_train_3d(self, tmpdir):
