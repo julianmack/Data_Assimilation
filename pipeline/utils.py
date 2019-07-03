@@ -566,7 +566,10 @@ def donwload_azure_blob(settings, fp_save, fp_to_access):
                                         fp_save)
 def download_X_azure(settings):
     fp_azure = settings.X_FP.replace(settings.INTERMEDIATE_FP, "")
-    os.makedirs(settings.INTERMEDIATE_FP)
+    try:
+        os.makedirs(settings.INTERMEDIATE_FP)
+    except FileExistsError:
+        pass
     donwload_azure_blob(settings, settings.X_FP, fp_azure)
     X = np.load(settings.X_FP, allow_pickle=True)
     return X
