@@ -5,7 +5,6 @@ from pipeline.settings import CAE_configs
 import os
 import sys
 from matplotlib import pyplot as plt
-from pipeline import DAPipeline, utils
 
 
 def main():

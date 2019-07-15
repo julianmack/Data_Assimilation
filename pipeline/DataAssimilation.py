@@ -9,6 +9,7 @@ import vtktools
 
 
 from pipeline import utils
+from pipeline.utils import ML_utils
 from pipeline.settings import config
 
 class DAPipeline():
@@ -92,7 +93,7 @@ class DAPipeline():
         loader = utils.DataLoader()
         X = loader.get_X(settings)
 
-        train_X, test_X, u_c, X, mean, std = loader.test_train_DA_split_maybe_normalize(X, settings)
+        train_X, test_X, u_c, X, mean, std = loader.train_test_DA_split_maybe_normalize(X, settings)
 
         V = self.create_V_from_X(train_X, settings)
 
@@ -205,7 +206,7 @@ class DAPipeline():
         print(self.data["V_grad"])
 
     def slow_jac_wrapper(self, x):
-        return utils.ML_utils.jac_explicit_slow_model(x, self.model, self.data.get("device"))
+        return utils.ML_utils.Jacobian.jac_explicit_slow_model(x, self.model, self.data.get("device"))
 
     @staticmethod
     def perform_VarDA(data, settings):
@@ -294,7 +295,7 @@ class DAPipeline():
             # Define observations as a random subset of the control state.
             nobs = int(frac * npoints) #number of observations
 
-            utils.set_seeds(seed = self.settings.SEED) #set seeds so that the selected subset is the same every time
+            ML_utils.set_seeds(seed = self.settings.SEED) #set seeds so that the selected subset is the same every time
             obs_idx = random.sample(range(npoints), nobs) #select nobs integers w/o replacement
             observations = np.take(vec, obs_idx)
         elif mode == "single_max":

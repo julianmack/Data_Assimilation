@@ -1,66 +1,10 @@
-#### ML helper functions
+from pipeline.settings import config
+import os
+import pytest
+import numpy as np
+import torch
 
-def load_AE(ModelClass, path, **kwargs):
-    """Loads an encoder and decoder"""
-    model = ModelClass(**kwargs)
-    model.load_state_dict(torch.load(path))
-    #model.eval()
-    encoder = model.encode
-    decoder = model.decode
-
-    return encoder, decoder
-
-def get_device(use_gpu=True, device_idx=0):
-    """get torch device type"""
-    if use_gpu:
-        device = torch.device("cuda:" + str(device_idx) if torch.cuda.is_available() else "cpu")
-    else:
-        device = torch.device("cpu")
-    return device
-
-Class Gradients():
-
-    @staticmethod
-    def jac_explicit_slow_model(inputs, model, device=None):
-        inputs.requires_grad = True
-        if device == None:
-            device = ML_utils.get_device()
-        model.to(device)
-        output = model.decode(inputs).flatten()
-
-        print("inputs.shape", inputs.shape)
-        print("output.shape", output.shape)
-
-        return ML_utils.jacobian_slow_torch(inputs, output)
-
-
-    @staticmethod
-    def jacobian_slow_torch( inputs, outputs):
-        """Computes a jacobian of two torch tensor.
-        Uses a loop so linear time-complexity in dimension of output.
-
-        This (slow) function is used to test the much faster .jac_explicit()
-        functions in AutoEncoders.py"""
-        dims = len(inputs.shape)
-
-        if dims > 1:
-            return ML_utils.__batched_jacobian_slow(inputs, outputs)
-        else:
-            return ML_utils.__no_batch_jacobian_slow(inputs, outputs)
-    @staticmethod
-    def __batched_jacobian_slow(inputs, outputs):
-        dims = len(inputs.shape)
-        return torch.transpose(torch.stack([torch.autograd.grad([outputs[:, i].sum()], inputs, retain_graph=True, create_graph=True)[0]
-                            for i in range(outputs.size(1))], dim=-1), \
-                            dims - 1, dims)
-    @staticmethod
-    def __no_batch_jacobian_slow(inputs, outputs):
-        X = [torch.autograd.grad([outputs[i].sum()], inputs, retain_graph=True, create_graph=True)[0]
-                            for i in range(outputs.size(0))]
-        X = torch.stack(X, dim=-1)
-        return X.t()
-
-class ConvSchedule():
+class ConvScheduler():
     """"Creates convolutional schedule which can be used to init
     a config.CAE_3D model"""
 
@@ -92,7 +36,7 @@ class ConvSchedule():
 
         results = []
         for idx, n_i in enumerate(inps):
-            res_i = ML_utils.conv_scheduler1D(n_i, changeovers[idx], lowest_outs[idx], changeover_out_def)
+            res_i = ConvScheduler.conv_scheduler1D(n_i, changeovers[idx], lowest_outs[idx], changeover_out_def)
             results.append(res_i)
         min_len = min([len(i) for i in results])
 
@@ -158,10 +102,10 @@ class ConvSchedule():
         assert lowest_out >= 1, "lowest_out must be >= 1"
         assert changeover_out > lowest_out, "changeover_out must be > lowest_out"
         res = []
-        res_s1 = ML_utils.conv_scheduler1D_stride1(inp, changeover_out)
+        res_s1 = ConvScheduler.conv_scheduler1D_stride1(inp, changeover_out)
         if len(res_s1) > 0:
             inp = res_s1[-1]["out"]
-        res_s2 = ML_utils.conv_scheduler1D_stride2(inp, lowest_out)
+        res_s2 = ConvScheduler.conv_scheduler1D_stride2(inp, lowest_out)
         res_s1.extend(res_s2)
         return res_s1
 
@@ -174,7 +118,7 @@ class ConvSchedule():
         pad = 0
         kernel = 3
         while inp >= lowest_out and (inp + 2*pad) >= kernel:
-            out = ML_utils.conv_formula(inp, stride, pad, kernel)
+            out = ConvScheduler.conv_formula(inp, stride, pad, kernel)
             res.append({"in": inp, "out": out, "stride": stride, "pad": pad, "kernel": kernel})
             inp = out
         return res
@@ -196,15 +140,15 @@ class ConvSchedule():
             kernel = 3
             if inp % 2 == 0: #input is even
                 kernel = 2
-                out = ML_utils.conv_formula(inp, stride, pad, kernel)
+                out = ConvScheduler.conv_formula(inp, stride, pad, kernel)
                 if out % 2 == 0: #input even and output even
                     pad = 1
-                    out = ML_utils.conv_formula(inp, stride, pad, kernel)
+                    out = ConvScheduler.conv_formula(inp, stride, pad, kernel)
             else: #input is odd
-                out = ML_utils.conv_formula(inp, stride, pad, kernel)
+                out = ConvScheduler.conv_formula(inp, stride, pad, kernel)
                 if out % 2 == 0:  #input is and out is even
                     pad = 1
-                    out = ML_utils.conv_formula(inp, stride, pad, kernel)
+                    out = ConvScheduler.conv_formula(inp, stride, pad, kernel)
 
             res.append({"in": inp, "out": out, "stride": stride, "pad": pad, "kernel": kernel})
             inp = out
@@ -218,7 +162,7 @@ class ConvSchedule():
             pad = 0
             stride = 1
             kernel = 2
-            out = ML_utils.conv_formula(inp, stride, pad, kernel)
+            out = ConvScheduler.conv_formula(inp, stride, pad, kernel)
             res.append({"in": inp, "out": out, "stride": stride, "pad": pad, "kernel": kernel})
             inp = out
         if out <= lowest_out:
@@ -227,7 +171,7 @@ class ConvSchedule():
             pad = 0
             stride = 1
             kernel = 2
-            out = ML_utils.conv_formula(inp, stride, pad, kernel)
+            out = ConvScheduler.conv_formula(inp, stride, pad, kernel)
             res.append({"in": inp, "out": out, "stride": stride, "pad": pad, "kernel": kernel})
         return res
 

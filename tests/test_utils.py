@@ -1,4 +1,5 @@
 from pipeline import utils
+from pipeline.utils import ML_utils
 from pipeline.settings import config
 import os
 import pytest
@@ -8,9 +9,9 @@ import torch
 class TestSeed():
     def test_set_seeds_normal(self):
         seed = 42
-        utils.set_seeds(seed)
+        ML_utils.set_seeds(seed)
         a = np.random.randn(45)
-        utils.set_seeds(seed)
+        ML_utils.set_seeds(seed)
         b = np.random.randn(45)
         c = np.random.randn(45)
         assert np.allclose(a, b)
@@ -21,7 +22,7 @@ class TestSeed():
         if env.get("SEED"):
             del env["SEED"]
         with pytest.raises(NameError):
-            utils.set_seeds()
+            ML_utils.set_seeds()
 
 class TestJacSlow():
     """Tests for jacobian_slow_torch.
@@ -39,7 +40,7 @@ class TestJacSlow():
         b = torch.rand((hidden, ))
         y = W @ x + b
 
-        grad = utils.ML_utils.jacobian_slow_torch(x, y)
+        grad = utils.Jacobian.jacobian_slow_torch(x, y)
 
         assert np.allclose(W, grad)
 
@@ -54,6 +55,6 @@ class TestJacSlow():
         b = torch.rand((hidden, ))
         y = X @ W.t() + b
         W_stacked = W.expand((batch_sz, -1, -1))
-        grad = utils.ML_utils.jacobian_slow_torch(X, y)
+        grad = utils.Jacobian.jacobian_slow_torch(X, y)
 
         assert np.allclose(W_stacked, grad)

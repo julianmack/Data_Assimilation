@@ -8,10 +8,11 @@ import pandas as pd
 
 import pickle
 
-from pipeline.settings import config
+from pipeline import settings
 
 
 from pipeline import utils, DAPipeline
+from pipeline.utils import ML_utils
 import os
 
 BATCH = 16
@@ -20,7 +21,7 @@ class TrainAE():
     def __init__(self, AE_settings, expdir, calc_DA_MAE=False, batch_sz=BATCH):
         """Initilaizes the AE training class.
 
-        ::AE_settings - a config.Config class with the DA settings
+        ::AE_settings - a settings.config.Config class with the DA settings
         ::expdir - a directory of form `experiments/<possible_path>` to keep logs
         ::calc_DA_MAE - boolean. If True, training will evaluate DA Mean Absolute Error
             during the training cycle. Note: this is *MUCH* slower
@@ -42,12 +43,12 @@ class TrainAE():
         self.batch_sz = batch_sz
         self.settings.batch_sz =  batch_sz
 
-        utils.set_seeds() #set seeds before init model
+        ML_utils.set_seeds() #set seeds before init model
 
         self.model =  AE_settings.AE_MODEL_TYPE(**AE_settings.get_kwargs())
         print("Number of parameters:", sum(p.numel() for p in self.model.parameters()))
 
-        self.device = utils.ML_utils.get_device()
+        self.device = ML_utils.get_device()
 
 
     def train(self, num_epoch = 100, learning_rate = 0.0025, print_every=2,
@@ -67,7 +68,7 @@ class TrainAE():
         loader = utils.DataLoader()
         X = loader.get_X(settings)
 
-        self.train_X, self.test_X, DA_u_c, X_norm,  mean, std = loader.test_train_DA_split_maybe_normalize(X, settings)
+        self.train_X, self.test_X, DA_u_c, X_norm,  mean, std = loader.train_test_DA_split_maybe_normalize(X, settings)
 
 
 
@@ -85,7 +86,7 @@ class TrainAE():
         self.test_loader = DataLoader(test_dataset, test_batch_sz)
 
 
-        device = utils.ML_utils.get_device()
+        device = ML_utils.get_device()
 
 
         self.loss_fn = torch.nn.L1Loss(reduction='sum')
@@ -126,10 +127,10 @@ class TrainAE():
         self.model_dir = model_dir
 
         if device == None:
-            device = utils.ML_utils.get_device()
+            device = ML_utils.get_device()
         self.device = device
 
-        utils.set_seeds()
+        ML_utils.set_seeds()
         train_losses = []
         test_losses = []
         epoch = num_epoch - 1 #for case where no training occurs
@@ -219,7 +220,7 @@ class TrainAE():
         for idx, lr in enumerate(lrs):
             print("lr:", lr)
 
-            utils.set_seeds() #set seeds before init model
+            ML_utils.set_seeds() #set seeds before init model
             self.model =  self.settings.AE_MODEL_TYPE(**self.settings.get_kwargs())
             self.optimizer = optim.Adam(self.model.parameters(), lr)
             test_losses = []
@@ -297,7 +298,7 @@ class TrainAE():
             return "NO_CALC", "NO_CALC"
 
     def slow_jac_wrapper(self, x):
-        return utils.ML_utils.jac_explicit_slow_model(x, self.model, self.DA_data.get("device"))
+        return ML_utils.Jacobian.jac_explicit_slow_model(x, self.model, self.DA_data.get("device"))
 
 
 
@@ -314,8 +315,8 @@ class TrainAE():
 
 
     def __init_expdir(self, expdir):
-        expdir = utils.win_to_unix_fp(expdir)
-        wd = utils.get_home_dir()
+        expdir = settings.helpers.win_to_unix_fp(expdir)
+        wd = settings.helpers.get_home_dir()
         try:
             dir_ls = expdir.split("/")
             assert "experiments" in dir_ls
@@ -339,5 +340,5 @@ class TrainAE():
 
 
 if __name__ == "__main__":
-    settings = config.ToyAEConfig
+    settings = settings.config.ToyAEConfig
     main(settings)

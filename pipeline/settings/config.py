@@ -5,6 +5,8 @@ in order to create new combinations of config options. Alternatively, individual
 options can be altered one at a time on an ad-hoc basis."""
 from pipeline.AEs import VanillaAE, ToyAE, CAE_3D
 from pipeline import utils
+from pipeline.settings import helpers as setting_helpers
+
 
 import socket
 import os, sys
@@ -12,7 +14,7 @@ import os, sys
 class Config():
 
     def __init__(self):
-        self.HOME_DIR = utils.get_home_dir()
+        self.HOME_DIR = setting_helpers.get_home_dir()
         self.RESULTS_FP = self.HOME_DIR + "results/"
         self.DATA_FP = self.HOME_DIR + "data/small3DLSBU/"
         self.INTERMEDIATE_FP = self.HOME_DIR + "data/small3D_intermediate/"
@@ -137,7 +139,7 @@ class CAEConfig(ConfigAE):
 
     def get_kwargs(self):
         conv_data = self.get_conv_schedule()
-        init_data = utils.ML_utils.get_init_data_from_schedule(conv_data)
+        init_data = utils.ConvScheduler.get_init_data_from_schedule(conv_data)
         channels = self.get_channels()
         latent_sz = self.__get_latent_sz(conv_data, channels)
         kwargs =   {"layer_data": init_data, "channels": channels,
@@ -162,7 +164,7 @@ class CAEConfig(ConfigAE):
         else:
             changeover_out_def = 10
 
-        return utils.ML_utils.conv_scheduler3D(self.get_n(), changeovers, 1, False, changeover_out_def=changeover_out_def )
+        return utils.ConvScheduler.conv_scheduler3D(self.get_n(), changeovers, 1, False, changeover_out_def=changeover_out_def )
 
     def get_channels(self):
         if self.CHANNELS != None and hasattr(self, "CHANNELS"):
