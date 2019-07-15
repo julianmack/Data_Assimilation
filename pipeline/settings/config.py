@@ -3,8 +3,7 @@
 User can create new classes that inherit from class Config and override class variables
 in order to create new combinations of config options. Alternatively, individual config
 options can be altered one at a time on an ad-hoc basis."""
-
-from pipeline.AutoEncoders import VanillaAE, ToyAE, CAE_3D
+from pipeline.AEs import VanillaAE, ToyAE, CAE_3D
 from pipeline import utils
 
 import socket

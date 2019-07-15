@@ -1,4 +1,4 @@
-from pipeline import AutoEncoders
+from pipeline import AEs
 from pipeline import settings
 from pipeline import utils
 from pipeline.DataAssimilation import DAPipeline
