@@ -71,6 +71,7 @@ class TestSetup():
         settings.OBS_VARIANCE = 0.1
         settings.TDA_IDX_FROM_END = 0
         settings.HIST_FRAC = 0.5
+        settings.SHUFFLE_DATA = False
 
         settings.NORMALIZE = False
 
@@ -123,7 +124,7 @@ class TestSetup():
         settings.OBS_VARIANCE = 0.1
         settings.TDA_IDX_FROM_END = 0
         settings.HIST_FRAC = 0.5
-
+        settings.SHUFFLE_DATA = False
         settings.NORMALIZE = True
 
         data,  std, mean = DA.vda_setup(settings)
@@ -185,6 +186,7 @@ class TestMinimizeJ():
             p.dump(X)
             p.allow_pickel = True
 
+
             settings = config.Config()
             settings.X_FP = str(p)
             settings.set_n(3)
@@ -198,6 +200,7 @@ class TestMinimizeJ():
             settings.SAVE = False
             settings.TOL = 1e-8
             settings.NORMALIZE = normalize
+            settings.SHUFFLE_DATA = False
 
             data,  std, mean = DA.vda_setup(settings)
 
