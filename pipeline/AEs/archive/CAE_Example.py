@@ -1,11 +1,13 @@
+"""Example 3d CAE - don't use this.
+all AEs/CAEs should inherit from the BaseAE class"""
+
 import torch.nn as nn
 import torch
 import torch.nn.functional as F
 
 
 class CAE_Example(nn.Module):
-    """Example 3d CAE - don't use this.
-    Inherit from the BaseAE class"""
+
 
 
     def __init__(self, channels):

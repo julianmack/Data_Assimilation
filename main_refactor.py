@@ -1,4 +1,4 @@
-from pipeline import utils, AutoEncoders
+from pipeline import utils, AEs
 from pipeline.settings import config
 
 import numpy as np

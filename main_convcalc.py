@@ -1,4 +1,4 @@
-from pipeline import AutoEncoders
+from pipeline import AEs as AutoEncoders
 from pipeline.settings import config
 import numpy as np
 import vtk.util.numpy_support as ns
