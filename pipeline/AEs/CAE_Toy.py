@@ -1,5 +1,5 @@
 
-from pipeline.AEs.BaseAE import BaseAE
+from pipeline.AEs import BaseAE
 
 
 class ToyCAE(BaseAE):

@@ -2,7 +2,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from collections import OrderedDict
 
-from pipeline.AEs.BaseAE import BaseAE
+from pipeline.AEs import BaseAE
 
 
 class CAE_3D(BaseAE):
