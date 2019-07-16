@@ -18,23 +18,20 @@ class DAPipeline():
     """Class to hold pipeline functions for Variational DA
     """
 
-    def __init__(self, settings = None):
-        if settings:
-            self.settings = settings
+    def __init__(self, settings):
+        self.settings = settings
 
-    def Var_DA_routine(self, settings, return_stats=False):
+    def run(self, return_stats=False):
         """Runs the variational DA routine using settings from the passed config class
         (see config.py for example)"""
 
-        self.settings = settings
-
-        vda_initilizer = VDAInit(settings)
+        vda_initilizer = VDAInit(self.settings)
         self.data, std, mean = vda_initilizer.run()
+
+        self.init_VarDA()
 
         u_0 = self.data.get("u_0")
         u_c = self.data.get("u_c")
-
-        self.init_VarDA()
 
         w_0 = self.data.get("w_0")
 
@@ -48,7 +45,7 @@ class DAPipeline():
         w_opt = DA_results["w_opt"]
 
 
-        if settings.DEBUG:
+        if self.settings.DEBUG:
             size = len(std)
             if size > 4:
                 size = 4
@@ -71,20 +68,26 @@ class DAPipeline():
         print("Percentage improvement: {:.2f}%".format(100*(ref_MAE_mean - da_MAE_mean)/ref_MAE_mean))
         #Compare abs(u_0 - u_c).sum() with abs(u_DA - u_c).sum() in paraview
 
-        if settings.SAVE:
+        if self.settings.SAVE:
             #Save .vtu files so that I can look @ in paraview
-            sample_fp = GetData.get_sorted_fps_U(settings.DATA_FP)[0]
-            out_fp_ref = settings.INTERMEDIATE_FP + "ref_MAE.vtu"
-            out_fp_DA =  settings.INTERMEDIATE_FP + "DA_MAE.vtu"
+            sample_fp = GetData.get_sorted_fps_U(self.settings.DATA_FP)[0]
+            out_fp_ref = self.settings.INTERMEDIATE_FP + "ref_MAE.vtu"
+            out_fp_DA =  self.settings.INTERMEDIATE_FP + "DA_MAE.vtu"
 
             VtkSave.save_vtu_file(ref_MAE, "ref_MAE", out_fp_ref, sample_fp)
             VtkSave.save_vtu_file(da_MAE, "DA_MAE", out_fp_DA, sample_fp)
         if return_stats:
+            assert return_stats == True, "return_stats must be of type boolean. Here it is type {}".format(type(return_stats))
             stats = {}
             stats["Percent_improvement"] = 100*(ref_MAE_mean - da_MAE_mean)/ref_MAE_mean
             stats["ref_MAE_mean"] = ref_MAE_mean
             stats["da_MAE_mean"] = da_MAE_mean
             return w_opt, stats
+        print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+        print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
+        print("W-opt", w_opt)
+        print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+
         return w_opt
 
 
@@ -348,10 +351,10 @@ class DAPipeline():
 
 if __name__ == "__main__":
 
-
-    DA = DAPipeline()
     settings = config.Config()
-    DA.Var_DA_routine(settings)
+
+    DA = DAPipeline(settings)
+    DA.run()
     exit()
 
     #create X:

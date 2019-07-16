@@ -4,12 +4,13 @@ from pipeline.settings import config
 
 
 def main():
-    DA = DataAssimilation.DAPipeline()
-    settings = config.ToyAEConfig()
 
+    settings = config.ToyAEConfig()
+    DA = DataAssimilation.DAPipeline(settings)
+    
     #settings = config.Config()
     print(settings.COMPRESSION_METHOD)
-    DA.Var_DA_routine(settings)
+    DA.run()
 
 
 if __name__ == "__main__":

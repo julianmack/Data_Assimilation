@@ -6,7 +6,7 @@ from pipeline.VarDA import VDAInit
 import numpy.random as random
 
 
-DA = DAPipeline()
+
 import os
 
 class TestSetup():
@@ -242,6 +242,7 @@ class TestMinimizeJ():
         #Now check for normalized system
         normalize = False
         settings = self.__settings(tmpdir, normalize, force_init=True)
+        DA = DAPipeline(settings)
 
         w_1 = np.array([1, 2])
         data = self.data
@@ -271,9 +272,11 @@ class TestMinimizeJ():
         normalize = True
         settings = self.__settings(tmpdir, normalize, force_init=True)
 
-        alpha = settings.ALPHA
 
-        w_opt_ret = DA.Var_DA_routine(settings)
+        alpha = settings.ALPHA
+        DA = DAPipeline(settings)
+
+        w_opt_ret = DA.run()
 
         prefix = self.V.T @ self.H_0.T @ self.R_inv
 
@@ -288,9 +291,10 @@ class TestMinimizeJ():
         #Now check for normalized system
         normalize = False
         settings = self.__settings(tmpdir, normalize, force_init=True)
+        DA = DAPipeline(settings)
 
         alpha = settings.ALPHA
-        w_opt_ret = DA.Var_DA_routine(settings)
+        w_opt_ret = DA.run()
         #w_opt_ret = 0.25 * np.array([-1, 1]) #This is value we want
 
         prefix = self.V.T @ self.H_0.T @ self.R_inv

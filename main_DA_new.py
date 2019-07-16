@@ -24,7 +24,7 @@ def main():
     settings.OBS_VARIANCE = 0.01
     settings.AE_MODEL_FP = model_fp
     da = DAPipeline(settings)
-    w_opt = da.Var_DA_routine(settings)
+    w_opt = da.run()
 
 
 
