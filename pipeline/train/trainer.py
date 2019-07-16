@@ -11,6 +11,7 @@ from pipeline import settings
 from pipeline import DAPipeline
 from pipeline import ML_utils
 from pipeline.AEs import Jacobian
+from pipeline.VarDA import VDAInit
 from pipeline import GetData, SplitData
 import os
 
@@ -267,9 +268,9 @@ class TrainAE():
                 raise ValueError("Can only evaluate DA_MAE on 'test' or 'train'")
 
             if not hasattr(self, "DA_data"):
-                DA = DAPipeline(self.settings)
-                data, std, mean = DA.vda_setup(self.settings)
-                self.DA_data = data
+                vda_initilizer = VDAInit(self.settings)
+                self.DA_data, std, mean = vda_initilizer.run()
+
                 self.__da_data_wipe_some_values()
 
             #update control state:

@@ -2,23 +2,30 @@ from pipeline import DAPipeline
 from pipeline.settings import config
 import pytest
 import numpy as np
+from pipeline.VarDA import VDAInit
+import numpy.random as random
 
-DA = DAPipeline(config.Config())
+
+DA = DAPipeline()
 import os
 
 class TestSetup():
     def test_check_import(self):
-        DA = DAPipeline()
-        method = DA.vda_setup
+        initializer = VDAInit(config.Config())
+
+        method = initializer.run
         assert callable(method), "Should be able to import DA method"
 
 
     def test_select_obs1(self):
-        import numpy.random as random
-        mode = "rand"
+        settings = config.Config()
+        settings.OBS_MODE = "rand"
+        settings.OBS_FRAC =  1.0/3.0
+
+        initializer = VDAInit(settings)
         u_c = random.rand(10,)
-        frac =  1.0/3.0
-        observations, obs_idx, nobs = DA.select_obs(mode, u_c, frac)
+
+        observations, obs_idx, nobs = initializer.select_obs(u_c)
 
         for idx, obs_idx in enumerate(obs_idx):
             assert u_c[obs_idx] == observations[idx]
@@ -26,31 +33,36 @@ class TestSetup():
         assert nobs == 3, "nobs should be 3"
 
     def test_select_obs2(self):
-        import numpy.random as random
-        mode = "single_max"
+        settings = config.Config()
+        settings.OBS_MODE = "single_max"
+        initializer = VDAInit(settings)
         u_c = random.rand(10,) - 1
         u_c[3] = 1 #this will be max value
 
-        observations, obs_idx, nobs = DA.select_obs(mode, u_c)
+        observations, obs_idx, nobs = initializer.select_obs(u_c)
         assert nobs == 1
         assert obs_idx == [3]
         assert observations == [1]
 
     def test_create_H(self):
-        import numpy.random as random
-        mode = "single_max"
+        settings = config.Config()
+        settings.OBS_MODE = "single_max"
+        initializer = VDAInit(settings)
         n = 3
         u_c = random.rand(n,) - 1
         u_c[2] = 1 #this will be max value
 
-        observations, obs_idx, nobs = DA.select_obs(mode, u_c)
-        H = DA.create_H(obs_idx, n, nobs)
+        initializer = VDAInit(settings)
+
+        observations, obs_idx, nobs = initializer.select_obs(u_c)
+
+        H = VDAInit.create_H(obs_idx, n, nobs)
         assert H @ u_c == [1]
         assert H.shape == (1, 3)
         assert np.array_equal(H, np.array([[0, 0, 1]]))
 
 
-    def test_vda_setup_notnormalized(self, tmpdir):
+    def test_vda_init_notnormalized(self, tmpdir):
         """End-to-end setup test"""
         X = np.zeros((3, 4))
         X[:,:2] = np.arange(6).reshape((3, 2))
@@ -75,7 +87,10 @@ class TestSetup():
 
         settings.NORMALIZE = False
 
-        data,  std, mean = DA.vda_setup(settings)
+        vda_initilizer = VDAInit(settings)
+        data,  std, mean = vda_initilizer.run()
+
+
         X_ret = data.get("X")
         V = data.get("V")
         n, M = X_ret.shape
@@ -104,7 +119,7 @@ class TestSetup():
         assert np.array_equal(mean_exp, mean)
 
 
-    def test_vda_setup_normalized(self, tmpdir):
+    def test_vda_init_normalized(self, tmpdir):
         """End-to-end setup test"""
         X = np.zeros((3, 4))
         X[:,:2] = np.arange(6).reshape((3, 2))
@@ -127,7 +142,9 @@ class TestSetup():
         settings.SHUFFLE_DATA = False
         settings.NORMALIZE = True
 
-        data,  std, mean = DA.vda_setup(settings)
+        vda_initilizer = VDAInit(settings)
+        data,  std, mean = vda_initilizer.run()
+
         X_ret = data.get("X")
         X_train = data.get("train_X")
         V = data.get("V")
@@ -202,7 +219,9 @@ class TestMinimizeJ():
             settings.NORMALIZE = normalize
             settings.SHUFFLE_DATA = False
 
-            data,  std, mean = DA.vda_setup(settings)
+            vda_initilizer = VDAInit(settings)
+            data,  std, mean = vda_initilizer.run()
+
 
 
             self.u_0 = data.get("u_0")
