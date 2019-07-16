@@ -1,5 +1,5 @@
 import torch
-from pipeline.utils import ML_utils as ML
+from pipeline import ML_utils as ML
 from pipeline.settings import config
 from pipeline import TrainAE
 import pytest

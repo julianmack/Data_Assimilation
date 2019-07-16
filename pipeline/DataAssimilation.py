@@ -7,8 +7,7 @@ import torch
 from scipy.optimize import minimize
 
 
-from pipeline import utils
-from pipeline.utils import ML_utils
+from pipeline import ML_utils
 from pipeline.AEs import Jacobian
 from pipeline.settings import config
 from pipeline.fluidity import VtkSave
@@ -139,7 +138,7 @@ class DAPipeline():
         d = observations - H_0 @ u_0 #'d' in literature
         #R_inv = self.create_R_inv(OBS_VARIANCE, nobs)
 
-        device = utils.ML_utils.get_device(False)
+        device = ML_utils.get_device(False)
 
         data = {"d": d, "G": H_0, "V": V,
                 "observations": observations,

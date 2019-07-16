@@ -1,5 +1,5 @@
 import torch
-from pipeline.utils import ML_utils as ML
+from pipeline import ML_utils as ML
 from pipeline.AEs import Jacobian
 from pipeline.settings import config
 from pipeline.AEs import ToyAE, VanillaAE, CAE_3D

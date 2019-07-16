@@ -1,7 +1,7 @@
 import numpy as np
 import random
 
-from pipeline.utils import ML_utils
+from pipeline import ML_utils
 
 class SplitData:
 

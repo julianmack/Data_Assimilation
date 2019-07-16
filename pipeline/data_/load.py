@@ -3,7 +3,6 @@ import random
 
 import os
 
-from pipeline.utils import ML_utils
 from pipeline.fluidity import VtkSave, vtktools
 
 class GetData():

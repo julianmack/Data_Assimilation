@@ -4,7 +4,7 @@ User can create new classes that inherit from class Config and override class va
 in order to create new combinations of config options. Alternatively, individual config
 options can be altered one at a time on an ad-hoc basis."""
 from pipeline.AEs import VanillaAE, ToyAE, CAE_3D
-from pipeline import utils
+from pipeline import ML_utils
 from pipeline.settings import helpers as setting_helpers
 
 
@@ -139,7 +139,7 @@ class CAEConfig(ConfigAE):
 
     def get_kwargs(self):
         conv_data = self.get_conv_schedule()
-        init_data = utils.ConvScheduler.get_init_data_from_schedule(conv_data)
+        init_data = ML_utils.ConvScheduler.get_init_data_from_schedule(conv_data)
         channels = self.get_channels()
         latent_sz = self.__get_latent_sz(conv_data, channels)
         kwargs =   {"layer_data": init_data, "channels": channels,
@@ -164,7 +164,7 @@ class CAEConfig(ConfigAE):
         else:
             changeover_out_def = 10
 
-        return utils.ConvScheduler.conv_scheduler3D(self.get_n(), changeovers, 1, False, changeover_out_def=changeover_out_def )
+        return ML_utils.ConvScheduler.conv_scheduler3D(self.get_n(), changeovers, 1, False, changeover_out_def=changeover_out_def )
 
     def get_channels(self):
         if self.CHANNELS != None and hasattr(self, "CHANNELS"):

@@ -11,8 +11,8 @@ import pickle
 from pipeline import settings
 
 
-from pipeline import utils, DAPipeline
-from pipeline.utils import ML_utils
+from pipeline import DAPipeline
+from pipeline import ML_utils
 from pipeline.AEs import Jacobian
 from pipeline import GetData, SplitData
 import os

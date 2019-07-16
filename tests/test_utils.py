@@ -1,5 +1,4 @@
-from pipeline import utils, AEs
-from pipeline.utils import ML_utils
+from pipeline import ML_utils, AEs
 from pipeline.settings import config
 import os
 import pytest
