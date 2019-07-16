@@ -1,6 +1,5 @@
 """Run training for AE"""
 import torch
-import torch.nn.functional as F
 import torch.optim as optim
 from torch.utils.data import TensorDataset, DataLoader
 import numpy as np
@@ -9,8 +8,6 @@ import pandas as pd
 import pickle
 
 from pipeline import settings
-
-
 from pipeline import DAPipeline
 from pipeline import ML_utils
 from pipeline.AEs import Jacobian

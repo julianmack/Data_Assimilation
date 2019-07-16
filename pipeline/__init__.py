@@ -3,5 +3,4 @@ from pipeline.data_.load import GetData
 from pipeline.data_.split import SplitData
 
 from pipeline.DataAssimilation import DAPipeline
-from pipeline.AE_train import TrainAE
-
+from pipeline.train.trainer import TrainAE
