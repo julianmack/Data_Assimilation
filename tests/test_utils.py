@@ -1,4 +1,4 @@
-from pipeline import utils
+from pipeline import utils, AEs
 from pipeline.utils import ML_utils
 from pipeline.settings import config
 import os
@@ -25,8 +25,8 @@ class TestSeed():
             ML_utils.set_seeds()
 
 class TestJacSlow():
-    """Tests for jacobian_slow_torch.
-    the util .jacobian_slow_torch() is used to test correctness of
+    """Tests for accumulated_slow.
+    the util .accumulated_slow() is used to test correctness of
     the explicit gradient calculations so the tests here ensure those
     tests are well founded."""
 
@@ -40,7 +40,7 @@ class TestJacSlow():
         b = torch.rand((hidden, ))
         y = W @ x + b
 
-        grad = utils.Jacobian.jacobian_slow_torch(x, y)
+        grad = AEs.Jacobian.accumulated_slow(x, y)
 
         assert np.allclose(W, grad)
 
@@ -55,6 +55,6 @@ class TestJacSlow():
         b = torch.rand((hidden, ))
         y = X @ W.t() + b
         W_stacked = W.expand((batch_sz, -1, -1))
-        grad = utils.Jacobian.jacobian_slow_torch(X, y)
+        grad = AEs.Jacobian.accumulated_slow(X, y)
 
         assert np.allclose(W_stacked, grad)

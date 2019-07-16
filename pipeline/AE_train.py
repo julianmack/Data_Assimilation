@@ -13,6 +13,7 @@ from pipeline import settings
 
 from pipeline import utils, DAPipeline
 from pipeline.utils import ML_utils
+from pipeline.AEs import Jacobian
 import os
 
 BATCH = 16
@@ -298,7 +299,7 @@ class TrainAE():
             return "NO_CALC", "NO_CALC"
 
     def slow_jac_wrapper(self, x):
-        return ML_utils.Jacobian.jac_explicit_slow_model(x, self.model, self.DA_data.get("device"))
+        return Jacobian.accumulated_slow_model(x, self.model, self.DA_data.get("device"))
 
 
 

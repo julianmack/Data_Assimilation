@@ -10,6 +10,7 @@ import vtktools
 
 from pipeline import utils
 from pipeline.utils import ML_utils
+from pipeline.AEs import Jacobian
 from pipeline.settings import config
 
 class DAPipeline():
@@ -206,7 +207,7 @@ class DAPipeline():
         print(self.data["V_grad"])
 
     def slow_jac_wrapper(self, x):
-        return utils.ML_utils.Jacobian.jac_explicit_slow_model(x, self.model, self.data.get("device"))
+        return Jacobian.accumulated_slow_model(x, self.model, self.data.get("device"))
 
     @staticmethod
     def perform_VarDA(data, settings):

@@ -1,6 +1,6 @@
 
 from pipeline.AEs import BaseAE
-
+from pipeline.AEs import Jacobian
 
 class ToyCAE(BaseAE):
     """Creates a simple CAE for which
@@ -16,6 +16,6 @@ class ToyCAE(BaseAE):
         """Generate explicit gradient for decoder
         (from hand calculated expression)"""
 
-        # use ML_utils.jacobian_slow_torch() for now
+        # use Jacobian.accumulated_slow() for now
         raise NotImpelemtedError()
 

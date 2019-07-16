@@ -1,6 +1,6 @@
 import torch
 from pipeline.utils import ML_utils as ML
-from pipeline.utils import Jacobian
+from pipeline.AEs import Jacobian
 from pipeline.settings import config
 from pipeline.AEs import ToyAE, VanillaAE, CAE_3D
 import pytest
@@ -103,7 +103,7 @@ class TestJacExplicit():
         model = ToyAE(input_size, latent_dim, activation, hidden)
         decoder_output = model.decode(decoder_input)
 
-        jac_true = Jacobian.jacobian_slow_torch(decoder_input, decoder_output)
+        jac_true = Jacobian.accumulated_slow(decoder_input, decoder_output)
         jac_expl = model.jac_explicit(decoder_input)
 
 
@@ -122,7 +122,7 @@ class TestJacExplicit():
 
         output = model.decode(decoder_input)
 
-        jac_true = Jacobian.jacobian_slow_torch(decoder_input, output)
+        jac_true = Jacobian.accumulated_slow(decoder_input, output)
         jac_expl = model.jac_explicit(decoder_input)
 
         assert torch.allclose(jac_true, jac_expl, rtol=1e-02), "Two jacobians are not equal"
@@ -139,7 +139,7 @@ class TestJacExplicit():
 
         jac_expl = model.jac_explicit(decoder_input)
 
-        jac_true = Jacobian.jacobian_slow_torch(decoder_input, decoder_output)
+        jac_true = Jacobian.accumulated_slow(decoder_input, decoder_output)
 
         assert torch.allclose(jac_true, jac_expl, rtol=1e-02), "Two jacobians are not equal"
 
@@ -154,7 +154,7 @@ class TestJacExplicit():
         decoder_output = model.decode(decoder_input)
 
         jac_expl = model.jac_explicit(decoder_input)
-        jac_true = Jacobian.jacobian_slow_torch(decoder_input, decoder_output)
+        jac_true = Jacobian.accumulated_slow(decoder_input, decoder_output)
 
 
         assert torch.allclose(jac_true, jac_expl, rtol=1e-02), "Two jacobians are not equal"
