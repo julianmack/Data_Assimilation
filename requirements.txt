@@ -2,3 +2,4 @@ pyevtk
 torch
 numpy
 vtk
+azure-storage-blob
