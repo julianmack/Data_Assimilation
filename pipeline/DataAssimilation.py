@@ -5,13 +5,13 @@ import os
 import random
 import torch
 from scipy.optimize import minimize
-import vtktools
 
 
 from pipeline import utils
 from pipeline.utils import ML_utils
 from pipeline.AEs import Jacobian
 from pipeline.settings import config
+from pipeline.fluidity import VtkSave
 
 class DAPipeline():
     """Class to hold pipeline functions for Variational DA
@@ -75,8 +75,8 @@ class DAPipeline():
             out_fp_ref = settings.INTERMEDIATE_FP + "ref_MAE.vtu"
             out_fp_DA =  settings.INTERMEDIATE_FP + "DA_MAE.vtu"
 
-            utils.FluidityUtils.save_vtu_file(ref_MAE, "ref_MAE", out_fp_ref, sample_fp)
-            utils.FluidityUtils.save_vtu_file(da_MAE, "DA_MAE", out_fp_DA, sample_fp)
+            VtkSave.save_vtu_file(ref_MAE, "ref_MAE", out_fp_ref, sample_fp)
+            VtkSave.save_vtu_file(da_MAE, "DA_MAE", out_fp_DA, sample_fp)
         if return_stats:
             stats = {}
             stats["Percent_improvement"] = 100*(ref_MAE_mean - da_MAE_mean)/ref_MAE_mean
