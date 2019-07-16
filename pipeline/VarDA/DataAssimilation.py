@@ -28,12 +28,59 @@ class DAPipeline():
         vda_initilizer = VDAInit(self.settings)
         self.data, std, mean = vda_initilizer.run()
 
-        self.init_VarDA()
-
+        V = self.data["V"]
         u_0 = self.data.get("u_0")
         u_c = self.data.get("u_c")
-
         w_0 = self.data.get("w_0")
+
+        settings = self.settings
+
+        if settings.COMPRESSION_METHOD == "SVD":
+            V_trunc, U, s, W = self.trunc_SVD(V, settings.get_number_modes())
+
+            V_grad = None
+            #Define intial w_0
+            V_plus_trunc = W.T * (1 / s) @  U.T
+            w_0 = V_plus_trunc @ u_0 #i.e. this is the value given in Rossella et al (2019).
+            #w_0 = np.zeros((W.shape[-1],)) #TODO - I'm not sure about this - can we assume is it 0?
+
+
+        elif settings.COMPRESSION_METHOD == "AE":
+            device = self.data.get("device")
+            self.model = settings.AE_MODEL_TYPE(**settings.get_kwargs())
+            weights = torch.load(settings.AE_MODEL_FP, map_location=device)
+            self.model.load_state_dict(weights)
+
+            self.model.to(device)
+
+            self.data["model"] = self.model
+
+            V_trunc = self.model.decode
+
+            #w_0_v1 = torch.zeros((settings.get_number_modes())).to(device)
+            w_0 = self.model.encode(torch.FloatTensor(self.data.get("u_0_not_flat")).unsqueeze(0))
+
+            # Now access explicit gradient function
+            if not settings.JAC_NOT_IMPLEM:
+                try:
+                    self.data["V_grad"] = self.model.jac_explicit
+                except:
+                    pass
+            else:
+                import warnings
+                warnings.warn("Using **Very** slow method of calculating jacobian. Consider disabling DA", UserWarning)
+                self.data["V_grad"] = self.slow_jac_wrapper
+
+            if self.data.get("V_grad") == None:
+                raise NotImplementedError("This model type does not have a gradient available")
+        else:
+            raise ValueError("COMPRESSION_METHOD must be in {SVD, AE}")
+
+        self.data["V_trunc"] = V_trunc
+        self.data["w_0"] = w_0
+        self.data["V_grad"] = V_grad
+
+
 
         DA_results = self.perform_VarDA(self.data, self.settings)
 
@@ -83,72 +130,9 @@ class DAPipeline():
             stats["ref_MAE_mean"] = ref_MAE_mean
             stats["da_MAE_mean"] = da_MAE_mean
             return w_opt, stats
-        print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-        print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
-        print("W-opt", w_opt)
-        print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
 
         return w_opt
 
-
-
-    def init_VarDA(self):
-        settings = self.settings
-        data = self.data
-        V = self.data["V"]
-
-        if settings.COMPRESSION_METHOD == "SVD":
-            V_trunc, U, s, W = self.trunc_SVD(V, settings.get_number_modes())
-            data["V_trunc"] = V_trunc
-            #Define intial w_0
-            self.data["w_0"] = np.zeros((W.shape[-1],)) #TODO - I'm not sure about this - can we assume is it 0?
-
-            self.data["V_grad"] = None
-            # OR - Alternatively, use the following:
-            # V_plus_trunc = W.T * (1 / s) @  U.T
-            # w_0_v2 = V_plus_trunc @ u_0 #i.e. this is the value given in Rossella et al (2019).
-            #     #I'm not clear if there is any difference - we are minimizing so expect them to
-            #     #be equivalent
-            # w_0 = w_0_v2
-        elif settings.COMPRESSION_METHOD == "AE":
-            kwargs = settings.get_kwargs()
-
-            self.model = settings.AE_MODEL_TYPE(**kwargs)
-            self.model.load_state_dict(torch.load(settings.AE_MODEL_FP))
-            device = self.data.get("device")
-
-            for param in self.model.parameters():
-                param.to(device )
-
-            self.model.to(device)
-
-            self.data["model"] = self.model
-
-            V_trunc = self.model.decode
-            self.data["V_trunc"] = V_trunc
-
-            self.data["w_0"] = torch.zeros((settings.get_number_modes())).to(device)
-
-
-            #u_0 = decoder(w_0).detach().numpy()
-
-            # Now access explicit gradient function
-            if not settings.JAC_NOT_IMPLEM:
-                try:
-                    self.data["V_grad"] = self.model.jac_explicit
-                except:
-                    pass
-            else:
-                import warnings
-                warnings.warn("Using **Very** slow method of calculating jacobian. Consider disabling DA", UserWarning)
-                self.data["V_grad"] = self.slow_jac_wrapper
-
-            if self.data.get("V_grad") == None:
-                raise NotImplementedError("This model type does not have a gradient available")
-        else:
-            raise ValueError("COMPRESSION_METHOD must be in {SVD, AE}")
-
-        print(self.data["V_grad"])
 
     def slow_jac_wrapper(self, x):
         return Jacobian.accumulated_slow_model(x, self.model, self.data.get("device"))

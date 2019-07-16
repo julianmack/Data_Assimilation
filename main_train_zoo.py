@@ -33,8 +33,8 @@ def main():
             settings.CHANGEOVER_DEFAULT = 0
 
             channels = settings.get_channels()
-            final_channel = settings.CHANNELS[-1]
-
+            final_channel = channels[-1]
+            
             for activ in activations:
                 settings.ACTIVATION = activ
                 for sf in chann_sf:

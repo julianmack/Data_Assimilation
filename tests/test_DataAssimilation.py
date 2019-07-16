@@ -6,7 +6,6 @@ from pipeline.VarDA import VDAInit
 import numpy.random as random
 
 
-
 import os
 
 class TestSetup():

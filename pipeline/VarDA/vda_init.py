@@ -52,6 +52,7 @@ class VDAInit:
         u_c = u_c.flatten()
         std = std.flatten()
         mean = mean.flatten()
+        u_0_not_flat = u_0
         u_0 = u_0.flatten()
 
 
@@ -67,7 +68,7 @@ class VDAInit:
 
         data = {"d": d, "G": H_0, "V": V,
                 "observations": observations,
-                "u_c": u_c, "u_0": u_0, "X": X,
+                "u_c": u_c, "u_0": u_0, "u_0_not_flat": u_0_not_flat, "X": X,
                 "train_X": train_X, "test_X":test_X,
                 "std": std, "mean": mean, "device": device}
 
