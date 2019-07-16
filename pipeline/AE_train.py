@@ -14,6 +14,7 @@ from pipeline import settings
 from pipeline import utils, DAPipeline
 from pipeline.utils import ML_utils
 from pipeline.AEs import Jacobian
+from pipeline import GetData, SplitData
 import os
 
 BATCH = 16
@@ -66,10 +67,11 @@ class TrainAE():
             self.model_dir = None
 
         #data
-        loader = utils.DataLoader()
+        loader = GetData()
+        splitter = SplitData()
         X = loader.get_X(settings)
 
-        self.train_X, self.test_X, DA_u_c, X_norm,  mean, std = loader.train_test_DA_split_maybe_normalize(X, settings)
+        self.train_X, self.test_X, DA_u_c, X_norm,  mean, std = splitter.train_test_DA_split_maybe_normalize(X, settings)
 
 
 

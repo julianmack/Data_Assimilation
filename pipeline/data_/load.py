@@ -6,7 +6,7 @@ import os
 from pipeline.utils import ML_utils
 from pipeline.fluidity import VtkSave, vtktools
 
-class DataLoader():
+class GetData():
     """Class to load data from files in preparation for Data Assimilation or AE training"""
     def __init__(self):
         pass
@@ -16,7 +16,7 @@ class DataLoader():
         """Returns X in the M x n format"""
         if not os.path.exists(settings.X_FP) or settings.FORCE_GEN_X:
             if settings.AZURE_DOWNLOAD:
-                X = DataLoader.download_X_azure(settings)
+                X = GetData.download_X_azure(settings)
             else:
                 fps = self.get_sorted_fps_U(settings.DATA_FP)
                 X = self.create_X_from_fps(fps, settings)
@@ -64,9 +64,9 @@ class DataLoader():
             # create array of tracer
             ug = vtktools.vtu(fp)
             if not settings.THREE_DIM:
-                matrix = DataLoader.get_1D_np_from_ug(ug,  settings.FIELD_NAME, field_type)
+                matrix = GetData.get_1D_np_from_ug(ug,  settings.FIELD_NAME, field_type)
             elif settings.THREE_DIM == True:
-                matrix = DataLoader.get_3D_np_from_ug(ug, settings)
+                matrix = GetData.get_3D_np_from_ug(ug, settings)
             else:
                 raise ValueError("<config>.THREE_DIM must be True or eval to False")
             mat_size = matrix.shape
@@ -88,75 +88,13 @@ class DataLoader():
         return output
 
 
-    @staticmethod
-    def train_test_DA_split_maybe_normalize(X, settings):
-        """Returns non-overlapping train/test and DA control state data.
-        This function also deals with normalization (to ensure than only the
-        training data is used for normalization mean and std)"""
-
-
-        M, n = DataLoader.get_dim_X(X, settings)
-
-        hist_idx = int(M * settings.HIST_FRAC)
-        hist_X = X[: hist_idx] #select historical data (i.e. training set in ML terminology)
-                                 # that will be used for normalize
-
-        #use only the training set to calculate mean and std
-        mean = np.mean(hist_X, axis=0)
-        std = np.std(hist_X, axis=0)
-
-        #Some std are zero - set the norm to 1 in this case so that feature is zero post-normalization
-        std = np.where(std <= 0., 1, std)
-
-
-        if settings.NORMALIZE:
-            X = (X - mean)
-            X = (X / std)
-
-
-        # Split X into historical and present data. We will
-        # assimilate "observations" at a single timestep t_DA
-        # which corresponds to the control state u_c
-        # We will take initial condition u_0, as mean of historical data
-
-        t_DA = M - (settings.TDA_IDX_FROM_END + 1) #idx of Data Assimilation
-        assert t_DA >= hist_idx, ("Cannot select observation from historical data."
-                                "Reduce HIST_FRAC or reduce TDA_IDX_FROM_END to prevent overlap.\n"
-                                "t_DA = {} and hist_idx = {}".format(t_DA, hist_idx))
-        assert t_DA > hist_idx, ("Test set cannot have zero size")
-
-        train_X = X[: hist_idx]
-        test_X = X[hist_idx : t_DA]
-        u_c = X[t_DA] #control state (for DA)
-
-
-        if settings.SHUFFLE_DATA:
-            ML_utils.set_seeds()
-            np.random.shuffle(train_X)
-            np.random.shuffle(test_X)
-
-
-        return train_X, test_X, u_c, X, mean, std
-
-    @staticmethod
-    def get_dim_X(X, settings):
-
-        if settings.THREE_DIM:
-            M, nx, ny, nz = X.shape
-            n = (nx, ny, nz)
-        else:
-            M, n = X.shape
-        assert n == settings.get_n(), "dimensions {} must = {}".format(n, settings.get_n())
-        return M, n
-
-
     def download_X_azure(settings):
         fp_azure = settings.X_FP.replace(settings.INTERMEDIATE_FP, "")
         try:
             os.makedirs(settings.INTERMEDIATE_FP)
         except FileExistsError:
             pass
-        DataLoader.__donwload_azure_blob(settings, settings.X_FP, fp_azure)
+        GetData.__donwload_azure_blob(settings, settings.X_FP, fp_azure)
         X = np.load(settings.X_FP, allow_pickle=True)
         return X
 
@@ -193,7 +131,7 @@ class DataLoader():
 
         field_name = settings.FIELD_NAME
 
-        newshape = DataLoader.__get_newshape_3D(ug, settings.get_n(), settings.FACTOR_INCREASE, )
+        newshape = GetData.__get_newshape_3D(ug, settings.get_n(), settings.FACTOR_INCREASE, )
 
         #update settings
         settings.n3d = newshape

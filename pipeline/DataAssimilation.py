@@ -12,6 +12,7 @@ from pipeline.utils import ML_utils
 from pipeline.AEs import Jacobian
 from pipeline.settings import config
 from pipeline.fluidity import VtkSave
+from pipeline import GetData, SplitData
 
 class DAPipeline():
     """Class to hold pipeline functions for Variational DA
@@ -71,7 +72,7 @@ class DAPipeline():
 
         if settings.SAVE:
             #Save .vtu files so that I can look @ in paraview
-            sample_fp = utils.DataLoader.get_sorted_fps_U(settings.DATA_FP)[0]
+            sample_fp = GetData.get_sorted_fps_U(settings.DATA_FP)[0]
             out_fp_ref = settings.INTERMEDIATE_FP + "ref_MAE.vtu"
             out_fp_DA =  settings.INTERMEDIATE_FP + "DA_MAE.vtu"
 
@@ -91,10 +92,11 @@ class DAPipeline():
         (n X M) format (as typical in VarDA) although when
         settings.THREE_DIM = True, some are 4-dimensional"""
         data = {}
-        loader = utils.DataLoader()
+        loader = GetData()
+        splitter = SplitData()
         X = loader.get_X(settings)
 
-        train_X, test_X, u_c, X, mean, std = loader.train_test_DA_split_maybe_normalize(X, settings)
+        train_X, test_X, u_c, X, mean, std = splitter.train_test_DA_split_maybe_normalize(X, settings)
 
         V = self.create_V_from_X(train_X, settings)
 
@@ -266,7 +268,7 @@ class DAPipeline():
         else:
             raise TypeError("X_fp must be a filpath or a numpy.ndarray")
 
-        M, n = utils.DataLoader.get_dim_X(X, settings)
+        M, n = SplitData.get_dim_X(X, settings)
 
         mean = np.mean(X, axis=0)
 
@@ -507,7 +509,7 @@ if __name__ == "__main__":
     exit()
 
     #create X:
-    loader = utils.DataLoader()
+    loader = GetData()
     X = loader.get_X(settings)
     np.save(settings.X_FP, X)
     exit()
