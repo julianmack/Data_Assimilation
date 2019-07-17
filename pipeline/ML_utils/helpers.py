@@ -22,9 +22,11 @@ def set_seeds(seed = None):
 
 def load_AE(ModelClass, path, **kwargs):
     """Loads an encoder and decoder"""
+    device = get_device()
+
     model = ModelClass(**kwargs)
-    model.load_state_dict(torch.load(path))
-    #model.eval()
+    model.load_state_dict(torch.load(path, map_location=device))
+    model.eval()
     encoder = model.encode
     decoder = model.decode
 
