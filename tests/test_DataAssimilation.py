@@ -4,6 +4,8 @@ import pytest
 import numpy as np
 from pipeline.VarDA import VDAInit
 from pipeline.VarDA.SVD import TSVD
+from pipeline.VarDA.cost_fn import cost_fn_J
+
 import numpy.random as random
 
 
@@ -241,7 +243,6 @@ class TestMinimizeJ():
         #Now check for normalized system
         normalize = False
         settings = self.__settings(tmpdir, normalize, force_init=True)
-        DA = DAPipeline(settings)
 
         w_1 = np.array([1, 2])
         data = self.data
@@ -250,10 +251,10 @@ class TestMinimizeJ():
         sigma_2 = settings.OBS_VARIANCE
         R_inv = data.get("R_inv")
         data["R_inv"] = None
-        J_1_sigma = DA.cost_function_J(w_1, data, settings)
+        J_1_sigma = cost_fn_J(w_1, data, settings)
         data["R_inv"] = R_inv
         settings.OBS_VARIANCE = None
-        J_1_R_inv = DA.cost_function_J(w_1, data, settings)
+        J_1_R_inv = cost_fn_J(w_1, data, settings)
 
         assert np.isclose(J_1_sigma, J_1_sigma)
         assert np.isclose(J_1_sigma, 5/2)
@@ -261,7 +262,7 @@ class TestMinimizeJ():
         settings.OBS_VARIANCE = sigma_2
 
         w_2  = np.array([1, 0])
-        J_2 = DA.cost_function_J(w_2, data, settings)
+        J_2 = cost_fn_J(w_2, data, settings)
         assert np.isclose(J_2, 1.5)
 
 

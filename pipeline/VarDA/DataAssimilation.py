@@ -14,6 +14,8 @@ from pipeline.fluidity import VtkSave
 from pipeline import GetData, SplitData
 from pipeline.VarDA import VDAInit
 from pipeline.VarDA.SVD import TSVD
+from pipeline.VarDA.cost_fn import cost_fn_J, grad_J
+
 class DAPipeline():
     """Class to hold pipeline functions for Variational DA
     """
@@ -128,8 +130,8 @@ class DAPipeline():
         """This is a static method so that it can be performed in AE_train with user specified data"""
         args = (data, settings)
 
-        res = minimize(DAPipeline.cost_function_J, data.get("w_0"), args = args, method='L-BFGS-B',
-                jac=DAPipeline.grad_J, tol=settings.TOL)
+        res = minimize(cost_fn_J, data.get("w_0"), args = args, method='L-BFGS-B',
+                jac=grad_J, tol=settings.TOL)
 
         w_opt = res.x
         if settings.COMPRESSION_METHOD == "SVD":
@@ -139,8 +141,6 @@ class DAPipeline():
 
         u_0 = data.get("u_0")
         u_c = data.get("u_c")
-        print(u_c.shape, "NOW")
-
         u_DA = u_0 + delta_u_DA
 
         #Undo normalization
@@ -184,96 +184,6 @@ class DAPipeline():
 
     def slow_jac_wrapper(self, x):
         return Jacobian.accumulated_slow_model(x, self.model, self.data.get("device"))
-
-    @staticmethod
-    def cost_function_J(w, data, settings):
-        """Computes VarDA cost function.
-        NOTE: eventually - implement this by hand as grad_J and J share quantity Q"""
-
-        device = data.get("device")
-        d = data.get("d")
-        G = data.get("G")
-        V_trunc = data.get("V_trunc")
-        V =  V_trunc if V_trunc is not None else data.get("V")
-        V_grad = data.get("V_grad")
-        R_inv = data.get("R_inv")
-
-        sigma_2 = settings.OBS_VARIANCE
-        mode = settings.COMPRESSION_METHOD
-        alpha = settings.ALPHA
-
-        if mode == "SVD":
-            Q = (G @ V @ w - d)
-
-        elif mode == "AE":
-            assert callable(V), "V must be a function if mode=AE is used"
-
-            w_tensor = torch.Tensor(w).to(device)
-
-            V_w = V(w_tensor).detach().cpu().numpy()
-            V_w = V_w.flatten()
-            Q = (G @ V_w - d)
-
-        else:
-            raise ValueError("Invalid mode")
-
-        if sigma_2 and not R_inv:
-            #When R is proportional to identity
-            J_o = 0.5 / sigma_2 * np.dot(Q, Q)
-        elif R_inv:
-            J_o = 0.5 * Q.T @ R_inv @ Q
-        else:
-            raise ValueError("Either R_inv or sigma must be provided")
-
-        J_b = 0.5 * alpha * np.dot(w, w)
-        J = J_b + J_o
-
-        if settings.DEBUG:
-            print("J_b = {:.2f}, J_o = {:.2f}".format(J_b, J_o))
-        return J
-
-
-    @staticmethod
-    def grad_J(w, data, settings):
-        device = data.get("device")
-        d = data.get("d")
-        G = data.get("G")
-        V_trunc = data.get("V_trunc")
-        V =  V_trunc if V_trunc is not None else data.get("V")
-        V_grad = data.get("V_grad")
-        R_inv = data.get("R_inv")
-
-        sigma_2 = settings.OBS_VARIANCE
-        mode = settings.COMPRESSION_METHOD
-        alpha = settings.ALPHA
-
-        if mode == "SVD":
-            Q = (G @ V @ w - d)
-            P = V.T @ G.T
-        elif mode == "AE":
-            assert callable(V_grad), "V_grad must be a function if mode=AE is used"
-            model = data.get("model").to(device)
-
-            w_tensor = torch.Tensor(w).to(device)
-
-
-            V_w = V(w_tensor).detach().cpu().numpy()
-            V_w = V_w.flatten()
-            V_grad_w = V_grad(w_tensor).detach().cpu().numpy()
-
-            Q = (G @ V_w - d)
-            P = V_grad_w.T @ G.T
-        if not R_inv and sigma_2:
-            #When R is proportional to identity
-            grad_o = (1.0 / sigma_2 ) * np.dot(P, Q)
-        elif R_inv:
-            J_o = 1.0 * P @ R_inv @ Q
-        else:
-            raise ValueError("Either R_inv or sigma must be non-zero")
-
-        grad_J = alpha * w + grad_o
-
-        return grad_J
 
 
 if __name__ == "__main__":
