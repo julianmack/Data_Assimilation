@@ -101,24 +101,10 @@ class DAPipeline():
         self.data["w_0"] = self.model.encode(torch.FloatTensor(self.data.get("u_0_not_flat")).unsqueeze(0))
 
         # Now access explicit gradient function
-        if not settings.JAC_NOT_IMPLEM:
-            try:
-                self.data["V_grad"] = self.model.jac_explicit
-            except:
-                pass
-        else:
-            import warnings
-            warnings.warn("Using **Very** slow method of calculating jacobian. Consider disabling DA", UserWarning)
-            self.data["V_grad"] = self.slow_jac_wrapper
-
-        if self.data.get("V_grad") == None:
-            raise NotImplementedError("This model type does not have a gradient available")
+        self.data["V_grad"] = self.__maybe_get_jacobian()
 
         DA_results = self.perform_VarDA(self.data, self.settings)
         return DA_results
-
-    def slow_jac_wrapper(self, x):
-        return Jacobian.accumulated_slow_model(x, self.model, self.data.get("device"))
 
     def DA_SVD(self):
         V_trunc, U, s, W = TSVD(self.data["V"], self.settings, self.settings.get_number_modes())
@@ -180,6 +166,24 @@ class DAPipeline():
                     "w_opt": w_opt}
         return results_data
 
+    def __maybe_get_jacobian(self):
+        jac = None
+        if not self.settings.JAC_NOT_IMPLEM:
+            try:
+                jac = self.model.jac_explicit
+            except:
+                pass
+        else:
+            import warnings
+            warnings.warn("Using **Very** slow method of calculating jacobian. Consider disabling DA", UserWarning)
+            jac = self.slow_jac_wrapper
+
+        if jac == None:
+            raise NotImplementedError("This model type does not have a gradient available")
+        return jac
+
+    def slow_jac_wrapper(self, x):
+        return Jacobian.accumulated_slow_model(x, self.model, self.data.get("device"))
 
     @staticmethod
     def cost_function_J(w, data, settings):
