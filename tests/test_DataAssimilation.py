@@ -3,6 +3,7 @@ from pipeline.settings import config
 import pytest
 import numpy as np
 from pipeline.VarDA import VDAInit
+from pipeline.VarDA.SVD import TSVD
 import numpy.random as random
 
 
@@ -174,16 +175,15 @@ class TestSetup():
 class TestTruncSVD():
 
 
-    def test_trunc_SVD(self):
+    def test_TSVD(self):
         "Test truncated SVD Rossella et al. mode"
-        self.settings = config.Config()
-        self.settings.COMPRESSION_METHOD = "SVD"
-        DA = DAPipeline(self.settings)
+        settings = config.Config()
+        settings.COMPRESSION_METHOD = "SVD"
+        DA = DAPipeline(settings)
         V = np.random.rand(10, 8)
 
-        #There are tests embedded in DA.trunc_SVD:
-        V_trunc, U_trunc, s_trunc, W_trunc = DA.trunc_SVD(V, trunc_idx = 5, test=True)
-        V_trunc, U_trunc, s_trunc, W_trunc = DA.trunc_SVD(V, trunc_idx = None, test=True)
+        V_trunc, U_trunc, s_trunc, W_trunc = TSVD(V, settings, trunc_idx = 5, test=True)
+        V_trunc, U_trunc, s_trunc, W_trunc = TSVD(V, settings, trunc_idx = None, test=True)
 
 
 class TestMinimizeJ():
