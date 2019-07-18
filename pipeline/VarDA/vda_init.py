@@ -59,9 +59,9 @@ class VDAInit:
         u_0_not_flat = u_0 #TODO: get rid of this when nothing is flat
         u_0 = u_0.flatten()
 
-
+        #TODO - the reduced space idea should (maybe) be able to work for SVD too??
+        
         observations, obs_idx, nobs = self.select_obs(u_c) #options are specific for rand
-
 
         #Now define quantities required for 3D-VarDA - see Algorithm 1 in Rossella et al (2019)
         H_0 = self.create_H(obs_idx, settings.get_n(), nobs, settings.THREE_DIM)
@@ -123,6 +123,9 @@ class VDAInit:
             obs_idx = np.argmax(vec)
             obs_idx = [obs_idx]
             observations = np.take(vec, obs_idx)
+        elif self.settings.OBS_MODE == "all":
+            #TODO - work out if OBS mode is how you want to do this (i.e. it might be "REDUCED SPACE")
+            raise NotImplementedError("take all obs not observed")
         else:
             raise ValueError("OBS_MODE = {} is not allowed.".format(self.settings.OBS_MODE))
         return observations, obs_idx, nobs
