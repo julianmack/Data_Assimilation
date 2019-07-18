@@ -22,6 +22,7 @@ class VDAInit:
 
         train_X, test_X, u_c, X, mean, std = splitter.train_test_DA_split_maybe_normalize(X, settings)
 
+        #TODO - is it worth pushing this into later AE/SVD functions?
         V = self.create_V_from_X(train_X, settings)
 
         #Deal with dimensions:
@@ -48,6 +49,9 @@ class VDAInit:
         else:
             u_0 = mean
 
+        #TODO - possible don't flatten these:
+        # i.e. deal with in the SVD fn
+
         #flatten 3D vectors:
         u_c = u_c.flatten()
         std = std.flatten()
@@ -64,7 +68,7 @@ class VDAInit:
         d = observations - H_0 @ u_0 #'d' in literature
         #R_inv = self.create_R_inv(OBS_VARIANCE, nobs)
 
-        device = ML_utils.get_device(False)
+        device = ML_utils.get_device()
 
         data = {"d": d, "G": H_0, "V": V,
                 "observations": observations,
