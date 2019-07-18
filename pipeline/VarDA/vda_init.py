@@ -60,7 +60,10 @@ class VDAInit:
         u_0 = u_0.flatten()
 
         #TODO - the reduced space idea should (maybe) be able to work for SVD too??
-        
+
+        #TODO - selevt obs should be within create H - i.e. we don't need seperate calls 
+
+
         observations, obs_idx, nobs = self.select_obs(u_c) #options are specific for rand
 
         #Now define quantities required for 3D-VarDA - see Algorithm 1 in Rossella et al (2019)
@@ -110,6 +113,9 @@ class VDAInit:
         from vec according to a user selected mode"""
         npoints = self.__get_npoints_from_shape(vec.shape)
 
+        if self.settings.REDUCED_SPACE == True:
+            raise NotImplementedError("Reduced Space method not implemented")
+            #Then go one of three ways (rand, single_max, all)
         if self.settings.OBS_MODE == "rand":
 
             # Define observations as a random subset of the control state.
@@ -123,9 +129,9 @@ class VDAInit:
             obs_idx = np.argmax(vec)
             obs_idx = [obs_idx]
             observations = np.take(vec, obs_idx)
-        elif self.settings.OBS_MODE == "all":
-            #TODO - work out if OBS mode is how you want to do this (i.e. it might be "REDUCED SPACE")
             raise NotImplementedError("take all obs not observed")
+        elif self.settings.OBS_MODE == "all":
+            raise NotImplementedError("select all obs not impelemented")
         else:
             raise ValueError("OBS_MODE = {} is not allowed.".format(self.settings.OBS_MODE))
         return observations, obs_idx, nobs
