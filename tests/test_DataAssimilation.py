@@ -94,7 +94,7 @@ class TestSetup():
 
 
         X_ret = data.get("X")
-        V = data.get("V")
+        V = vda_initilizer.create_V_from_X(X, settings).T
         n, M = X_ret.shape
         u_c = data.get("u_c")
         u_0 = data.get("u_0")
@@ -149,7 +149,7 @@ class TestSetup():
 
         X_ret = data.get("X")
         X_train = data.get("train_X")
-        V = data.get("V")
+        V = vda_initilizer.create_V_from_X(X, settings).T
         n, M = X_ret.shape
         u_c = data.get("u_c")
         u_0 = data.get("u_0")
@@ -223,10 +223,10 @@ class TestMinimizeJ():
             vda_initilizer = VDAInit(settings)
             data,  std, mean = vda_initilizer.run()
 
+            data["V"] = vda_initilizer.create_V_from_X(X, settings).T
 
 
             self.u_0 = data.get("u_0")
-            self.V = data.get("V")
             self.H_0 = data.get("G")
             self.d = data.get("d")
             nobs = len(data["observations"])
@@ -278,10 +278,12 @@ class TestMinimizeJ():
 
         w_opt_ret = DA.run()
 
-        prefix = self.V.T @ self.H_0.T @ self.R_inv
+        V = DA.data.get("V")
+
+        prefix = V.T @ self.H_0.T @ self.R_inv
 
         LHS = prefix @ self.d
-        RHS_ = prefix @ self.H_0 @ self.V + alpha * np.eye(w_opt_ret.shape[0])
+        RHS_ = prefix @ self.H_0 @ V + alpha * np.eye(w_opt_ret.shape[0])
         RHS = RHS_ @ w_opt_ret
 
         assert np.allclose(LHS, RHS)
@@ -296,18 +298,19 @@ class TestMinimizeJ():
         alpha = settings.ALPHA
         w_opt_ret = DA.run()
         #w_opt_ret = 0.25 * np.array([-1, 1]) #This is value we want
+        V = DA.data.get("V")
 
-        prefix = self.V.T @ self.H_0.T @ self.R_inv
+        prefix = V.T @ self.H_0.T @ self.R_inv
 
         LHS = prefix @ self.d
-        RHS_ = prefix @ self.H_0 @ self.V + alpha * np.eye(w_opt_ret.shape[0])
+        RHS_ = prefix @ self.H_0 @ V + alpha * np.eye(w_opt_ret.shape[0])
         RHS = RHS_ @ w_opt_ret
 
-        # print("prefix @ self.H_0 @ self.V\n", prefix @ self.H_0 @ self.V)
+        # print("prefix @ self.H_0 @ V\n", prefix @ self.H_0 @ V = DA.data.get("V"))
         # print("RHS_", RHS_)
         # print("LHS", LHS)
         # print("----------")
-        # print("V", self.V)
+        # print("V", V)
         # print("RHS_", RHS_)
         # print("w_opt", w_opt_ret)
         # print("RHS_ @ w_opt_ret", RHS_ @ w_opt_ret)

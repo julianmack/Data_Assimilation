@@ -15,14 +15,14 @@ def cost_fn_J(w, data, settings):
     R_inv = data.get("R_inv")
 
     sigma_2 = settings.OBS_VARIANCE
-    mode = settings.COMPRESSION_METHOD
     alpha = settings.ALPHA
 
-    if mode == "SVD":
+    if settings.COMPRESSION_METHOD == "SVD":
+        
         Q = (G @ V @ w - d)
 
-    elif mode == "AE":
-        assert callable(V), "V must be a function if mode=AE is used"
+    elif settings.COMPRESSION_METHOD == "AE":
+        assert callable(V), "V must be a function if settings.COMPRESSION_METHOD=AE is used"
 
         w_tensor = torch.Tensor(w).to(device)
 
@@ -31,7 +31,7 @@ def cost_fn_J(w, data, settings):
         Q = (G @ V_w - d)
 
     else:
-        raise ValueError("Invalid mode")
+        raise ValueError("Invalid settings.COMPRESSION_METHOD")
 
     if sigma_2 and not R_inv:
         #When R is proportional to identity
@@ -59,14 +59,13 @@ def grad_J(w, data, settings):
     R_inv = data.get("R_inv")
 
     sigma_2 = settings.OBS_VARIANCE
-    mode = settings.COMPRESSION_METHOD
     alpha = settings.ALPHA
 
-    if mode == "SVD":
+    if settings.COMPRESSION_METHOD == "SVD":
         Q = (G @ V @ w - d)
         P = V.T @ G.T
-    elif mode == "AE":
-        assert callable(V_grad), "V_grad must be a function if mode=AE is used"
+    elif settings.COMPRESSION_METHOD == "AE":
+        assert callable(V_grad), "V_grad must be a function if settings.COMPRESSION_METHOD=AE is used"
         model = data.get("model").to(device)
 
         w_tensor = torch.Tensor(w).to(device)

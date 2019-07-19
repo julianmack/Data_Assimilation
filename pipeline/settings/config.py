@@ -48,6 +48,7 @@ class Config():
         self.ALPHA = 1.0
         self.OBS_VARIANCE = 0.0001 #TODO - CHECK this is specific to the sensors (in this case - the error in model predictions)
 
+        self.REDUCED_SPACE = False
         self.COMPRESSION_METHOD = "SVD" # "SVD"/"AE"
         self.NUMBER_MODES = 2 #Number of modes to retain.
             # If NUMBER_MODES = None (and COMPRESSION_METHOD = "SVD"), we use
@@ -61,6 +62,7 @@ class Config():
         self.AZURE_STORAGE_KEY = "yguh9jwnySH8FsHxX25rPOf4qE3wwdB6G+pqf/spwx/ofYHPBYHzAl32lx1swOETlqC3qorH1JKwJoWOWt4L4Q=="
         self.AZURE_CONTAINER = "x-data"
         self.AZURE_DOWNLOAD = True
+
 
     def get_n(self):
         return self.__n

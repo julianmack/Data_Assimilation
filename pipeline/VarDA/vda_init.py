@@ -22,25 +22,20 @@ class VDAInit:
 
         train_X, test_X, u_c, X, mean, std = splitter.train_test_DA_split_maybe_normalize(X, settings)
 
-        #TODO - is it worth pushing this into later AE/SVD functions?
-        V = self.create_V_from_X(train_X, settings)
-
         #Deal with dimensions:
         #currently dim are: (M x n ) or (M x nx x ny x nz)
         #change to (n x M) or (nx x ny x nz x M)
         if not settings.THREE_DIM:
-            X = X.T
-            train_X = train_X.T
-            test_X = test_X.T
-            V = V.T
+            pass
+            # X = X.T
+            # train_X = train_X.T
+            # test_X = test_X.T
 
         else:
-            # can flatten V as it will only be used for SVD (which ignores 3D location)
-            V = V.reshape((V.shape[0], -1)).T
-
-            X = np.moveaxis(X, 0, 3)
-            train_X = np.moveaxis(train_X, 0, 3)
-            test_X = np.moveaxis(test_X, 0, 3)
+            pass
+            # X = np.moveaxis(X, 0, 3)
+            # train_X = np.moveaxis(train_X, 0, 3)
+            # test_X = np.moveaxis(test_X, 0, 3)
 
 
         # We will take initial condition u_0, as mean of historical data
@@ -61,9 +56,6 @@ class VDAInit:
 
         #TODO - the reduced space idea should (maybe) be able to work for SVD too??
 
-        #TODO - selevt obs should be within create H - i.e. we don't need seperate calls 
-
-
         observations, obs_idx, nobs = self.select_obs(u_c) #options are specific for rand
 
         #Now define quantities required for 3D-VarDA - see Algorithm 1 in Rossella et al (2019)
@@ -76,7 +68,7 @@ class VDAInit:
         #TODO - **maybe** get rid of this monstrosity...:
         #i.e. you could return a class that has these attributes:
 
-        data = {"d": d, "G": H_0, "V": V,
+        data = {"d": d, "G": H_0,
                 "observations": observations,
                 "u_c": u_c, "u_0": u_0, "u_0_not_flat": u_0_not_flat, "X": X,
                 "train_X": train_X, "test_X":test_X,
@@ -129,7 +121,6 @@ class VDAInit:
             obs_idx = np.argmax(vec)
             obs_idx = [obs_idx]
             observations = np.take(vec, obs_idx)
-            raise NotImplementedError("take all obs not observed")
         elif self.settings.OBS_MODE == "all":
             raise NotImplementedError("select all obs not impelemented")
         else:

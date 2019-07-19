@@ -97,19 +97,31 @@ class DAPipeline():
 
         self.data["model"] = self.model
 
-        self.data["V_trunc"] = self.model.decode
+        if self.settings.REDUCED_SPACE:
+            V = VDAInit.create_V_from_X(self.data.get("train_X"), self.settings)
+            raise NotImplementedError()
+            self.data["V_grad"] = None
+        else:
+            self.data["V_trunc"] = self.model.decode
+            # Now access explicit gradient function
+            self.data["V_grad"] = self.__maybe_get_jacobian()
 
         #w_0_v1 = torch.zeros((settings.get_number_modes())).to(device)
         self.data["w_0"] = self.model.encode(torch.FloatTensor(self.data.get("u_0_not_flat")).unsqueeze(0))
-
-        # Now access explicit gradient function
-        self.data["V_grad"] = self.__maybe_get_jacobian()
 
         DA_results = self.perform_VarDA(self.data, self.settings)
         return DA_results
 
     def DA_SVD(self):
-        V_trunc, U, s, W = TSVD(self.data["V"], self.settings, self.settings.get_number_modes())
+        V = VDAInit.create_V_from_X(self.data.get("train_X"), self.settings)
+
+        if self.settings.THREE_DIM:
+            #(M x nx x ny x nz)
+            V = V.reshape((V.shape[0], -1)).T #(n x M)
+        else:
+            #(M x n)
+            V = V.T #(n x M)
+        V_trunc, U, s, W = TSVD(V, self.settings, self.settings.get_number_modes())
 
         #Define intial w_0
         s = np.where(s <= 0., 1, s) #remove any zeros (when choosing init point)
@@ -118,9 +130,10 @@ class DAPipeline():
         #w_0 = np.zeros((W.shape[-1],)) #TODO - I'm not sure about this - can we assume is it 0?
 
         self.data["V_trunc"] = V_trunc
+        self.data["V"] = V
         self.data["w_0"] = w_0
         self.data["V_grad"] = None
-
+        print("self.data[V]", self.data["V"].dtype)
         DA_results = self.perform_VarDA(self.data, self.settings)
         return DA_results
 
@@ -137,7 +150,10 @@ class DAPipeline():
         if settings.COMPRESSION_METHOD == "SVD":
             delta_u_DA = data.get("V_trunc") @ w_opt
         elif settings.COMPRESSION_METHOD == "AE":
-            delta_u_DA = data.get("V_trunc")(torch.Tensor(w_opt)).detach().numpy().flatten()
+            if settings.REDUCED_SPACE:
+                raise NotImplementedError()
+            else:
+                delta_u_DA = data.get("V_trunc")(torch.Tensor(w_opt)).detach().numpy().flatten()
 
         u_0 = data.get("u_0")
         u_c = data.get("u_c")
