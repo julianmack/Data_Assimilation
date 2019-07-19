@@ -10,8 +10,7 @@ class VDAInit:
 
     def run(self):
         """Generates matrices for VarDA. All returned matrices are in the
-        (n X M) format (as typical in VarDA) although when
-        settings.THREE_DIM = True, some are 4-dimensional"""
+        (M X n) or (M x nx x ny x nz) format """
 
         data = {}
         loader = GetData()
@@ -21,21 +20,6 @@ class VDAInit:
         X = loader.get_X(settings)
 
         train_X, test_X, u_c, X, mean, std = splitter.train_test_DA_split_maybe_normalize(X, settings)
-
-        #Deal with dimensions:
-        #currently dim are: (M x n ) or (M x nx x ny x nz)
-        #change to (n x M) or (nx x ny x nz x M)
-        if not settings.THREE_DIM:
-            pass
-            # X = X.T
-            # train_X = train_X.T
-            # test_X = test_X.T
-
-        else:
-            pass
-            # X = np.moveaxis(X, 0, 3)
-            # train_X = np.moveaxis(train_X, 0, 3)
-            # test_X = np.moveaxis(test_X, 0, 3)
 
 
         # We will take initial condition u_0, as mean of historical data

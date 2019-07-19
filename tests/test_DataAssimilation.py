@@ -94,20 +94,20 @@ class TestSetup():
 
 
         X_ret = data.get("X")
-        V = vda_initilizer.create_V_from_X(X, settings).T
-        n, M = X_ret.shape
+        V = vda_initilizer.create_V_from_X(data["train_X"], settings)
+        M, n = X_ret.shape
         u_c = data.get("u_c")
         u_0 = data.get("u_0")
         nobs = len(data["observations"])
 
-        X_expt = X.T
+        X_expt = X
         mean_exp = np.array([0.5, 2.5, 4.5])
         std_exp = np.array([0.5, 0.5, 0.5])
 
 
-        V_exp = X_expt[:,:2] - mean_exp.reshape((-1, 1))
+        V_exp = X_expt[:2] - mean_exp
 
-        assert np.array_equal(np.array(X_expt[:,:2]), data.get("train_X"))
+        assert np.array_equal(np.array(X_expt[:2]), data.get("train_X"))
         assert np.array_equal(X_expt, X_ret)
         assert (3, 4) == (n, M)
         assert np.array_equal(np.array(X[-1]), u_c)
@@ -127,7 +127,7 @@ class TestSetup():
         X[:,:2] = np.arange(6).reshape((3, 2))
         X[0, 3] = 1
         X = X.T
-
+        #X = (m x n)
         INTERMEDIATE_FP = "inter"
         p = tmpdir.mkdir(INTERMEDIATE_FP).join("X_fp.npy")
         p.dump(X)
@@ -149,23 +149,24 @@ class TestSetup():
 
         X_ret = data.get("X")
         X_train = data.get("train_X")
-        V = vda_initilizer.create_V_from_X(X, settings).T
-        n, M = X_ret.shape
+        V = vda_initilizer.create_V_from_X(data["train_X"], settings)
+        M, n = X_ret.shape
         u_c = data.get("u_c")
         u_0 = data.get("u_0")
         nobs = len(data["observations"])
 
         mean_exp = np.array([0.5, 2.5, 4.5])
         std_exp = np.array([0.5, 0.5, 0.5])
-        X_exp = (( X - mean_exp) * 2).T
+        X_exp = (( X - mean_exp) * 2)
         X_00_exp = -1
-
+        print("X_exp", X_exp.shape)
+        print("X_ret", X_ret.shape)
         assert X_00_exp == X_train[0, 0] and  X_00_exp == X_ret[0, 0]
         assert np.array_equal(X_exp, X_ret)
         assert (3, 4) == (n, M)
-        assert np.array_equal(np.array(X_exp[:, :2]), data.get("train_X"))
-        assert np.array_equal(np.array(X_exp[:,-1]), u_c)
-        assert np.array_equal(X_exp[:, :2], V)
+        assert np.array_equal(np.array(X_exp[:2, :]), data.get("train_X"))
+        assert np.array_equal(np.array(X_exp[-1,:]), u_c)
+        assert np.array_equal(X_exp[:2, :], V)
         assert np.allclose(np.zeros((3)), u_0)
         assert data.get("observations") == [1.]
         assert nobs == 1
@@ -223,7 +224,7 @@ class TestMinimizeJ():
             vda_initilizer = VDAInit(settings)
             data,  std, mean = vda_initilizer.run()
 
-            data["V"] = vda_initilizer.create_V_from_X(X, settings).T
+            data["V"] = vda_initilizer.create_V_from_X(data["train_X"], settings).T
 
 
             self.u_0 = data.get("u_0")
