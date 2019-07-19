@@ -11,7 +11,9 @@ class TestAE_TrainLinear():
         if hasattr(self, "settings") and not force_init:
             return self.settings
         else:
-            X = np.random.rand(10, 15)
+            n = 3
+            M = 6
+            X = np.random.rand(n, M)
             X[0, 3] = 1
             X = X.T
 
@@ -25,7 +27,7 @@ class TestAE_TrainLinear():
             settings.FORCE_GEN_X = False
             settings.calc_DA_MAE = False
             settings.OBS_FRAC = 0.5
-            settings.set_n(10)
+            settings.set_n(n)
             self.settings = settings
             return settings
 
@@ -36,7 +38,7 @@ class TestAE_TrainLinear():
         expdir = tmpdir.mkdir("experiments/")
 
         trainer = TrainAE(settings, str(expdir))
-        model = trainer.train(epochs)
+        model = trainer.train(epochs, num_workers=0)
 
     def test_AE_train_linear_DA(self, tmpdir):
         """Test no exception thrown"""
@@ -47,14 +49,14 @@ class TestAE_TrainLinear():
         calc_DA_MAE = True
 
         trainer = TrainAE(settings, str(expdir), calc_DA_MAE)
-        model = trainer.train(epochs)
+        model = trainer.train(epochs, num_workers=0)
 
 class TestAE_Train3D():
     def __settings(self, tmpdir, force_init=False):
         if hasattr(self, "settings") and not force_init:
             return self.settings
         else:
-            X = np.random.rand(6, 2, 4, 4)
+            X = np.random.rand(6, 2, 2, 2)
 
 
             INTERMEDIATE_FP = "inter"
@@ -80,7 +82,7 @@ class TestAE_Train3D():
         settings = self.__settings(tmpdir)
         expdir = tmpdir.mkdir("experiments/")
         trainer = TrainAE(settings, str(expdir))
-        model = trainer.train(epochs)
+        model = trainer.train(epochs, num_workers=0)
 
     def test_AE_train_3D_DA(self, tmpdir):
         """Test no exception thrown"""
@@ -90,4 +92,4 @@ class TestAE_Train3D():
         calc_DA_MAE = True
 
         trainer = TrainAE(settings, str(expdir), calc_DA_MAE)
-        model = trainer.train(epochs)
+        model = trainer.train(epochs, num_workers=0)

@@ -52,7 +52,7 @@ class TrainAE():
 
 
     def train(self, num_epoch = 100, learning_rate = 0.0025, print_every=2,
-            test_every=5):
+            test_every=5, num_workers=6):
 
         self.learning_rate = learning_rate
         self.num_epochs = num_epoch
@@ -81,7 +81,7 @@ class TrainAE():
 
         #Dataloaders
         train_dataset = TensorDataset(torch.Tensor(self.train_X))
-        self.train_loader = DataLoader(train_dataset, self.batch_sz, shuffle=True, num_workers=6)
+        self.train_loader = DataLoader(train_dataset, self.batch_sz, shuffle=True, num_workers=num_workers)
         test_dataset = TensorDataset(torch.Tensor(self.test_X))
         test_batch_sz = min(self.test_X.shape[0], self.batch_sz)
         self.test_loader = DataLoader(test_dataset, test_batch_sz)
@@ -261,9 +261,9 @@ class TrainAE():
         By default this is the final element of the test or train set"""
         if self.calc_DA_MAE:
             if test_valid == "train":
-                u_c = self.train_X[-1].flatten()
+                u_c = self.train_X[-1]
             elif test_valid == "test":
-                u_c = self.test_X[-1].flatten()
+                u_c = self.test_X[-1]
             else:
                 raise ValueError("Can only evaluate DA_MAE on 'test' or 'train'")
 

@@ -6,6 +6,8 @@ from pipeline.settings import config
 def main():
 
     settings = CAE5()
+    settings.REDUCED_SPACE = True
+
     model_pth = "models/29.pth"
     settings.AE_MODEL_FP = model_pth
 

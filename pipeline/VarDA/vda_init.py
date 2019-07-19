@@ -1,5 +1,6 @@
 import numpy as np
 import random
+import torch
 
 from pipeline import ML_utils
 from pipeline import GetData, SplitData
@@ -24,28 +25,41 @@ class VDAInit:
 
         # We will take initial condition u_0, as mean of historical data
         if settings.NORMALIZE:
-            u_0 = np.zeros(settings.get_n()) #since the data is mean centred
+            u_0 = np.zeros_like(mean) #since the data is mean centred
         else:
             u_0 = mean
 
-        #TODO - possible don't flatten these:
-        # i.e. deal with in the SVD fn
 
-        #flatten 3D vectors:
-        u_c = u_c.flatten()
-        std = std.flatten()
-        mean = mean.flatten()
-        u_0_not_flat = u_0 #TODO: get rid of this when nothing is flat
-        u_0 = u_0.flatten()
+        if self.settings.REDUCED_SPACE == True:
+            self.settings.OBS_MODE = "all"
 
-        #TODO - the reduced space idea should (maybe) be able to work for SVD too??
+            #get encoder
+            device = ML_utils.get_device()
+            model = ML_utils.load_model_from_settings(settings)
 
-        observations, obs_idx, nobs = self.select_obs(u_c) #options are specific for rand
+            encoder = model.encode
 
-        #Now define quantities required for 3D-VarDA - see Algorithm 1 in Rossella et al (2019)
-        H_0 = self.create_H(obs_idx, settings.get_n(), nobs, settings.THREE_DIM)
-        d = observations - H_0 @ u_0 #'d' in literature
-        #R_inv = self.create_R_inv(OBS_VARIANCE, nobs)
+            u_c_tensor = torch.Tensor(u_c).to(device)
+            w_c = encoder(u_c_tensor).detach().cpu().numpy()
+
+            observations, obs_idx, nobs = self.select_obs(w_c)
+            H_0 = np.eye(nobs)
+            assert np.array_equal(H_0, self.create_H(obs_idx, nobs, nobs, settings.THREE_DIM))
+            print("ARRAYS EQUAL - delete line above")
+
+            u_0_tensor =  torch.Tensor(u_0).to(device)
+            w_0 = encoder(u_0_tensor).detach().cpu().numpy()
+
+            d = observations - H_0 @ w_0.flatten()
+            exit()
+            #d = w_c - w_0
+        else:
+
+            observations, obs_idx, nobs = self.select_obs(u_c) #options are specific for rand
+            H_0 = self.create_H(obs_idx, settings.get_n(), nobs, settings.THREE_DIM)
+            d = observations - H_0 @ u_0.flatten() #'d' in literature
+            #R_inv = self.create_R_inv(OBS_VARIANCE, nobs)
+            model = None
 
         device = ML_utils.get_device()
 
@@ -54,7 +68,8 @@ class VDAInit:
 
         data = {"d": d, "G": H_0,
                 "observations": observations,
-                "u_c": u_c, "u_0": u_0, "u_0_not_flat": u_0_not_flat, "X": X,
+                "model": model,
+                "u_c": u_c, "u_0": u_0, "X": X,
                 "train_X": train_X, "test_X":test_X,
                 "std": std, "mean": mean, "device": device}
 
@@ -89,13 +104,13 @@ class VDAInit:
         from vec according to a user selected mode"""
         npoints = self.__get_npoints_from_shape(vec.shape)
 
-        if self.settings.REDUCED_SPACE == True:
-            raise NotImplementedError("Reduced Space method not implemented")
-            #Then go one of three ways (rand, single_max, all)
         if self.settings.OBS_MODE == "rand":
-
             # Define observations as a random subset of the control state.
             nobs = int(self.settings.OBS_FRAC * npoints) #number of observations
+
+            if nobs == npoints: #then we are selecting all points
+                self.settings.OBS_MODE = "all"
+                return self.__select_all_obs(vec)
 
             ML_utils.set_seeds(seed = self.settings.SEED) #set seeds so that the selected subset is the same every time
             obs_idx = random.sample(range(npoints), nobs) #select nobs integers w/o replacement
@@ -106,7 +121,7 @@ class VDAInit:
             obs_idx = [obs_idx]
             observations = np.take(vec, obs_idx)
         elif self.settings.OBS_MODE == "all":
-            raise NotImplementedError("select all obs not impelemented")
+            observations, obs_idx, nobs = self.__select_all_obs(vec)
         else:
             raise ValueError("OBS_MODE = {} is not allowed.".format(self.settings.OBS_MODE))
         return observations, obs_idx, nobs
@@ -152,6 +167,18 @@ class VDAInit:
 
         return R_inv
 
+    @staticmethod
+    def create_V_red(X, encoder, num_modes, settings):
+        V = VDAInit.create_V_from_X(X, settings)
+        V = V[:num_modes]
+
+        print(V.shape)
+        exit()
+        return V_red
+
+    def __select_all_obs(self, vec):
+        nobs = self.__get_npoints_from_shape(vec.shape)
+        return vec, list(range(nobs)), nobs
 
     def __get_npoints_from_shape(self, n):
         if type(n) == tuple:

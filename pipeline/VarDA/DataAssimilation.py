@@ -88,17 +88,19 @@ class DAPipeline():
 
         return w_opt
 
+
+
     def DA_AE(self):
-
-        device = self.data.get("device")
-        self.model = settings.AE_MODEL_TYPE(**settings.get_kwargs())
-        weights = torch.load(settings.AE_MODEL_FP, map_location=device)
-        self.model.load_state_dict(weights)
-
-        self.data["model"] = self.model
+        if self.data.get("model") == None:
+            self.model = ML_utils.load_model_from_settings(settings, self.data.get("device"))
+            self.data["model"] = self.model
+        else:
+            self.model = self.data.get("model")
 
         if self.settings.REDUCED_SPACE:
-            V = VDAInit.create_V_from_X(self.data.get("train_X"), self.settings)
+            V_red = VDAInit.create_V_red(self.data.get("train_X"),
+                                        self.model.encode, settings.get_number_modes(),
+                                        settings)
             raise NotImplementedError()
             self.data["V_grad"] = None
         else:
@@ -107,12 +109,13 @@ class DAPipeline():
             self.data["V_grad"] = self.__maybe_get_jacobian()
 
         #w_0_v1 = torch.zeros((settings.get_number_modes())).to(device)
-        self.data["w_0"] = self.model.encode(torch.FloatTensor(self.data.get("u_0_not_flat")).unsqueeze(0))
+        self.data["w_0"] = self.model.encode(torch.FloatTensor(self.data.get("u_0")).unsqueeze(0))
 
         DA_results = self.perform_VarDA(self.data, self.settings)
         return DA_results
 
     def DA_SVD(self):
+
         V = VDAInit.create_V_from_X(self.data.get("train_X"), self.settings)
 
         if self.settings.THREE_DIM:
@@ -126,14 +129,13 @@ class DAPipeline():
         #Define intial w_0
         s = np.where(s <= 0., 1, s) #remove any zeros (when choosing init point)
         V_plus_trunc = W.T * (1 / s) @  U.T
-        w_0 = V_plus_trunc @ self.data["u_0"] #i.e. this is the value given in Rossella et al (2019).
+        w_0 = V_plus_trunc @ self.data["u_0"].flatten() #i.e. this is the value given in Rossella et al (2019).
         #w_0 = np.zeros((W.shape[-1],)) #TODO - I'm not sure about this - can we assume is it 0?
 
         self.data["V_trunc"] = V_trunc
         self.data["V"] = V
         self.data["w_0"] = w_0
         self.data["V_grad"] = None
-        print("self.data[V]", self.data["V"].dtype)
         DA_results = self.perform_VarDA(self.data, self.settings)
         return DA_results
 
@@ -153,21 +155,42 @@ class DAPipeline():
             if settings.REDUCED_SPACE:
                 raise NotImplementedError()
             else:
-                delta_u_DA = data.get("V_trunc")(torch.Tensor(w_opt)).detach().numpy().flatten()
+                delta_u_DA_tensor = data.get("V_trunc")(torch.Tensor(w_opt))
+
+            if settings.THREE_DIM:
+                delta_u_DA_tensor = delta_u_DA_tensor.squeeze(0)
+            delta_u_DA = delta_u_DA_tensor.detach().numpy()
 
         u_0 = data.get("u_0")
         u_c = data.get("u_c")
         u_DA = u_0 + delta_u_DA
 
+        print("delta_u_DA", delta_u_DA.shape)
+        print("u_0", u_0.shape)
+        print("u_c", u_c.shape)
+        print("u_DA", u_DA.shape)
+        print("std", data.get("std").shape)
+        print("mean",  data.get("mean").shape)
+
+
         #Undo normalization
         if settings.UNDO_NORMALIZE:
             std = data.get("std")
             mean = data.get("mean")
-            u_DA = (u_DA.T * std + mean).T
-            u_c = (u_c.T * std + mean).T
-            u_0 = (u_0.T * std + mean).T
+            u_DA = (u_DA * std + mean)
+            u_c = (u_c * std + mean)
+            u_0 = (u_0 * std + mean)
         elif settings.NORMALIZE:
             print("Normalization not undone")
+
+        print()
+        print("AND AGAIN...")
+        print("delta_u_DA", delta_u_DA.shape)
+        print("u_0", u_0.shape)
+        print("u_c", u_c.shape)
+        print("u_DA", u_DA.shape)
+        print("std", data.get("std").shape)
+        print("mean",  data.get("mean").shape)
 
         ref_MAE = np.abs(u_0 - u_c)
         da_MAE = np.abs(u_DA - u_c)

@@ -20,9 +20,10 @@ def set_seeds(seed = None):
         torch.backends.cudnn.deterministic = True
 
 
-def load_AE(ModelClass, path, **kwargs):
+def load_AE(ModelClass, path, device = None, **kwargs):
     """Loads an encoder and decoder"""
-    device = get_device()
+    if device == None:
+        device = get_device()
 
     model = ModelClass(**kwargs)
     model.load_state_dict(torch.load(path, map_location=device))
@@ -31,6 +32,14 @@ def load_AE(ModelClass, path, **kwargs):
     decoder = model.decode
 
     return encoder, decoder
+
+def load_model_from_settings(settings, device=None):
+    if not device:
+        device = get_device()
+    model = settings.AE_MODEL_TYPE(**settings.get_kwargs())
+    weights = torch.load(settings.AE_MODEL_FP, map_location=device)
+    model.load_state_dict(weights)
+    return model
 
 def get_device(use_gpu=True, device_idx=0):
     """get torch device type"""
