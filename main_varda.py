@@ -15,6 +15,7 @@ def main():
     settings.ACTIVATION = "lrelu"
     settings.CHANGEOVER_DEFAULT = 0
     settings.BATCH_NORM = False
+    settings.SAVE = False
     channels = settings.get_channels()
     final_channel = channels[-1]
     channels[-1] = int(channels[-1] * 0.5)

@@ -42,17 +42,27 @@ class VDAInit:
 
             def __create_encoderOrDecoder(fn):
                 def ret_fn(vec):
-                    dims = len(vec.shape)
                     vec = torch.Tensor(vec).to(device)
 
                     #for 3D case, unsqueeze for channel
                     if self.settings.THREE_DIM:
+                        dims = len(vec.shape)
                         if dims == 3:
                             vec = vec.unsqueeze(0)
-                        elif self.settings.THREE_DIM and dims == 4:
+                        elif dims == 4:
                             #batched input
                             vec = vec.unsqueeze(1)
                     res = fn(vec).detach().cpu().numpy()
+
+                    #for 3D case, squeeze for channel
+                    dims = len(vec.shape)
+                    if self.settings.THREE_DIM and dims > 2:
+                        dims = len(vec.shape)
+                        if dims == 4:
+                            vec = vec.squeeze(0)
+                        elif dims == 5:   #batched input
+                            vec = vec.squeeze(1)
+
                     return res
 
                 return ret_fn
@@ -188,6 +198,7 @@ class VDAInit:
     @staticmethod
     def create_V_red(X, encoder, num_modes, settings):
         V = VDAInit.create_V_from_X(X, settings)
+        
         V = V[:num_modes]
 
         V_red = encoder(V)

@@ -30,7 +30,6 @@ class SplitData:
             X = (X - mean)
             X = (X / std)
 
-
         # Split X into historical and present data. We will
         # assimilate "observations" at a single timestep t_DA
         # which corresponds to the control state u_c

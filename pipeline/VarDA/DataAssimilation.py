@@ -45,27 +45,14 @@ class DAPipeline():
         da_MAE_mean = DA_results["da_MAE_mean"]
         w_opt = DA_results["w_opt"]
 
-
-        if self.settings.DEBUG:
-            size = len(self.data.get("std"))
-            if size > 4:
-                size = 4
-            print("std:    ", self.data.get("std")[-size:])
-            print("mean:   ", self.data.get("mean")[-size:])
-            print("u_0:    ", self.data.get("u_0")[-size:])
-            print("u_c:    ", self.data.get("u_c")[-size:])
-            print("u_DA:   ", u_DA[-size:])
-            print("ref_MAE:", ref_MAE[-size:])
-            print("da_MAE: ", da_MAE[-size:])
-
         counts = (ref_MAE > da_MAE).sum()
 
         print("RESULTS")
 
         print("Reference MAE: ", ref_MAE_mean)
         print("DA MAE: ", da_MAE_mean)
-        print("ref_MAE_mean > da_MAE_mean for {}/{}".format(counts, da_MAE.shape[0]))
-        print("If DA has worked, DA MAE > Ref_MAE")
+        print("If DA has worked, DA MAE < Ref_MAE")
+        print("ref_MAE > da_MAE for {}/{}".format(counts, len(da_MAE.flatten())))
         print("Percentage improvement: {:.2f}%".format(100*(ref_MAE_mean - da_MAE_mean)/ref_MAE_mean))
         #Compare abs(u_0 - u_c).sum() with abs(u_DA - u_c).sum() in paraview
 
@@ -102,7 +89,6 @@ class DAPipeline():
                                         self.settings)
             self.data["V_grad"] = None
             self.data["V_trunc"] = V_red
-
         else:
 
             # Now access explicit gradient function
@@ -152,25 +138,19 @@ class DAPipeline():
         if settings.COMPRESSION_METHOD == "SVD":
             delta_u_DA = data.get("V_trunc") @ w_opt
         elif settings.COMPRESSION_METHOD == "AE":
-            if settings.REDUCED_SPACE:
-                raise NotImplementedError()
-            else:
-                delta_u_DA = data.get("decoder")(w_opt)
+            delta_u_DA = data.get("decoder")(w_opt)
+            if settings.THREE_DIM:
+                delta_u_DA = delta_u_DA.squeeze(0)
 
 
         u_0 = data.get("u_0")
         u_c = data.get("u_c")
         u_DA = u_0 + delta_u_DA
 
-        print("delta_u_DA", delta_u_DA.shape)
-        print("u_0", u_0.shape)
-        print("u_c", u_c.shape)
-        print("u_DA", u_DA.shape)
-        print("std", data.get("std").shape)
-        print("mean",  data.get("mean").shape)
-
 
         #Undo normalization
+        std = data.get("std")
+        mean = data.get("mean")
         if settings.UNDO_NORMALIZE:
             std = data.get("std")
             mean = data.get("mean")
@@ -180,19 +160,36 @@ class DAPipeline():
         elif settings.NORMALIZE:
             print("Normalization not undone")
 
-        print()
-        print("AND AGAIN...")
-        print("delta_u_DA", delta_u_DA.shape)
-        print("u_0", u_0.shape)
-        print("u_c", u_c.shape)
-        print("u_DA", u_DA.shape)
-        print("std", data.get("std").shape)
-        print("mean",  data.get("mean").shape)
-
         ref_MAE = np.abs(u_0 - u_c)
         da_MAE = np.abs(u_DA - u_c)
         ref_MAE_mean = np.mean(ref_MAE)
         da_MAE_mean = np.mean(da_MAE)
+
+        if settings.DEBUG:
+            # u_0 = u_0[:1, :2, :2]
+            # u_c = u_c[:1, :2, :2]
+            # u_DA = u_DA[:1, :2, :2]
+
+            size = len(u_0.flatten())
+            if size > 6:
+                size = 6
+
+            print("SHAPES --------------------")
+            print("std", std.shape)
+            print("mean", mean.shape)
+            print("u_DA", u_DA.shape)
+            print("u_c", u_c.shape)
+            print("u_0", u_0.shape)
+            print("ref_MAE", ref_MAE.shape)
+            print("da_MAE", da_MAE.shape)
+            print("VALUES --------------------")
+            print("std:    ", std.flatten()[:size])
+            print("mean:   ", mean.flatten()[:size])
+            print("u_0:    ", u_0.flatten()[:size])
+            print("u_c:    ", u_c.flatten()[:size])
+            print("u_DA:   ", u_DA.flatten()[:size])
+            print("ref_MAE:", ref_MAE.flatten()[:size])
+            print("da_MAE: ", da_MAE.flatten()[:size])
 
         results_data = {"ref_MAE": ref_MAE,
                     "da_MAE": da_MAE,
