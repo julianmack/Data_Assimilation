@@ -17,21 +17,18 @@ def cost_fn_J(w, data, settings):
     sigma_2 = settings.OBS_VARIANCE
     alpha = settings.ALPHA
 
-    if settings.COMPRESSION_METHOD == "SVD":
-        
-        Q = (G @ V @ w - d)
+    if settings.COMPRESSION_METHOD == "AE" and not settings.REDUCED_SPACE:
+        decoder = data.get("decoder")
 
-    elif settings.COMPRESSION_METHOD == "AE":
-        assert callable(V), "V must be a function if settings.COMPRESSION_METHOD=AE is used"
+        assert callable(decoder), "decoder must be a function if settings.COMPRESSION_METHOD=AE and bool(settings.REDUCED_SPACE) =False"
 
-        w_tensor = torch.Tensor(w).to(device)
-
-        V_w = V(w_tensor).detach().cpu().numpy()
+        V_w = decoder(w)
         V_w = V_w.flatten()
+
         Q = (G @ V_w - d)
 
     else:
-        raise ValueError("Invalid settings.COMPRESSION_METHOD")
+        Q = (G @ V @ w - d)
 
     if sigma_2 and not R_inv:
         #When R is proportional to identity
@@ -61,22 +58,23 @@ def grad_J(w, data, settings):
     sigma_2 = settings.OBS_VARIANCE
     alpha = settings.ALPHA
 
-    if settings.COMPRESSION_METHOD == "SVD":
-        Q = (G @ V @ w - d)
-        P = V.T @ G.T
-    elif settings.COMPRESSION_METHOD == "AE":
+    if settings.COMPRESSION_METHOD == "AE" and not settings.REDUCED_SPACE:
+        decoder = data.get("model").decode
+
         assert callable(V_grad), "V_grad must be a function if settings.COMPRESSION_METHOD=AE is used"
         model = data.get("model").to(device)
 
         w_tensor = torch.Tensor(w).to(device)
-
-
-        V_w = V(w_tensor).detach().cpu().numpy()
+        V_w = decoder(w_tensor).detach().cpu().numpy()
         V_w = V_w.flatten()
         V_grad_w = V_grad(w_tensor).detach().cpu().numpy()
 
         Q = (G @ V_w - d)
         P = V_grad_w.T @ G.T
+    else:
+        Q = (G @ V @ w - d)
+        P = V.T @ G.T
+
     if not R_inv and sigma_2:
         #When R is proportional to identity
         grad_o = (1.0 / sigma_2 ) * np.dot(P, Q)

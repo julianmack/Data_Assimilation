@@ -100,24 +100,17 @@ class DAPipeline():
             V_red = VDAInit.create_V_red(self.data.get("train_X"),
                                         self.data.get("encoder"), self.settings.get_number_modes(),
                                         self.settings)
-
             self.data["V_grad"] = None
-
             self.data["V_trunc"] = V_red
 
-            self.data["V_trunc"] = self.model.decode
-            self.data["V_grad"] = self.__maybe_get_jacobian()
-
         else:
-            self.data["V_trunc"] = self.model.decode
+
             # Now access explicit gradient function
             self.data["V_grad"] = self.__maybe_get_jacobian()
 
         #w_0_v1 = torch.zeros((settings.get_number_modes())).to(device)
         self.data["w_0"] = self.data.get("encoder")(self.data.get("u_0"))
 
-        print("w_0.shape", self.data["w_0"].shape)
-        print("V_trunc:", type(self.data["V_trunc"]))
         DA_results = self.perform_VarDA(self.data, self.settings)
         return DA_results
 
@@ -162,11 +155,8 @@ class DAPipeline():
             if settings.REDUCED_SPACE:
                 raise NotImplementedError()
             else:
-                delta_u_DA_tensor = data.get("V_trunc")(torch.Tensor(w_opt))
+                delta_u_DA = data.get("decoder")(w_opt)
 
-            if settings.THREE_DIM:
-                delta_u_DA_tensor = delta_u_DA_tensor.squeeze(0)
-            delta_u_DA = delta_u_DA_tensor.detach().numpy()
 
         u_0 = data.get("u_0")
         u_c = data.get("u_c")
