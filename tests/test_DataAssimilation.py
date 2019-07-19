@@ -90,7 +90,7 @@ class TestSetup():
         settings.NORMALIZE = False
 
         vda_initilizer = VDAInit(settings)
-        data,  std, mean = vda_initilizer.run()
+        data = vda_initilizer.run()
 
 
         X_ret = data.get("X")
@@ -117,8 +117,8 @@ class TestSetup():
         assert nobs == 1
         assert np.allclose(np.array([1, 0, 0]), data.get("G"))
         assert [0.5] == data.get("d")
-        assert np.array_equal(std_exp, std)
-        assert np.array_equal(mean_exp, mean)
+        assert np.array_equal(std_exp,  data.get("std"))
+        assert np.array_equal(mean_exp, data.get("mean"))
 
 
     def test_vda_init_normalized(self, tmpdir):
@@ -145,7 +145,7 @@ class TestSetup():
         settings.NORMALIZE = True
 
         vda_initilizer = VDAInit(settings)
-        data,  std, mean = vda_initilizer.run()
+        data = vda_initilizer.run()
 
         X_ret = data.get("X")
         X_train = data.get("train_X")
@@ -172,8 +172,8 @@ class TestSetup():
         assert nobs == 1
         assert np.allclose(np.array([1, 0, 0]), data.get("G"))
         assert [1.] == data.get("d")
-        assert np.array_equal(std_exp, std)
-        assert np.array_equal(mean_exp, mean)
+        assert np.array_equal(std_exp, data.get("std"))
+        assert np.array_equal(mean_exp, data.get("mean"))
 
 class TestTruncSVD():
 
@@ -222,7 +222,7 @@ class TestMinimizeJ():
             settings.SHUFFLE_DATA = False
 
             vda_initilizer = VDAInit(settings)
-            data,  std, mean = vda_initilizer.run()
+            data = vda_initilizer.run()
 
             data["V"] = vda_initilizer.create_V_from_X(data["train_X"], settings).T
 

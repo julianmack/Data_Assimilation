@@ -20,15 +20,14 @@ class DAPipeline():
     """Class to hold pipeline functions for Variational DA
     """
 
-    def __init__(self, settings):
+    def __init__(self, settings, AEmodel=None):
         self.settings = settings
+        vda_initilizer = VDAInit(self.settings, AEmodel)
+        self.data = vda_initilizer.run()
 
     def run(self, return_stats=False):
         """Runs the variational DA routine using settings from the passed config class
         (see config.py for example)"""
-
-        vda_initilizer = VDAInit(self.settings)
-        self.data, std, mean = vda_initilizer.run()
 
         settings = self.settings
 
@@ -48,11 +47,11 @@ class DAPipeline():
 
 
         if self.settings.DEBUG:
-            size = len(std)
+            size = len(self.data.get("std"))
             if size > 4:
                 size = 4
-            print("std:    ", std[-size:])
-            print("mean:   ", mean[-size:])
+            print("std:    ", self.data.get("std")[-size:])
+            print("mean:   ", self.data.get("mean")[-size:])
             print("u_0:    ", self.data.get("u_0")[-size:])
             print("u_c:    ", self.data.get("u_c")[-size:])
             print("u_DA:   ", u_DA[-size:])
@@ -99,18 +98,26 @@ class DAPipeline():
 
         if self.settings.REDUCED_SPACE:
             V_red = VDAInit.create_V_red(self.data.get("train_X"),
-                                        self.model.encode, settings.get_number_modes(),
-                                        settings)
-            raise NotImplementedError()
+                                        self.data.get("encoder"), self.settings.get_number_modes(),
+                                        self.settings)
+
             self.data["V_grad"] = None
+
+            self.data["V_trunc"] = V_red
+
+            self.data["V_trunc"] = self.model.decode
+            self.data["V_grad"] = self.__maybe_get_jacobian()
+
         else:
             self.data["V_trunc"] = self.model.decode
             # Now access explicit gradient function
             self.data["V_grad"] = self.__maybe_get_jacobian()
 
         #w_0_v1 = torch.zeros((settings.get_number_modes())).to(device)
-        self.data["w_0"] = self.model.encode(torch.FloatTensor(self.data.get("u_0")).unsqueeze(0))
+        self.data["w_0"] = self.data.get("encoder")(self.data.get("u_0"))
 
+        print("w_0.shape", self.data["w_0"].shape)
+        print("V_trunc:", type(self.data["V_trunc"]))
         DA_results = self.perform_VarDA(self.data, self.settings)
         return DA_results
 

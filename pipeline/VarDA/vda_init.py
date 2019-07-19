@@ -6,7 +6,8 @@ from pipeline import ML_utils
 from pipeline import GetData, SplitData
 
 class VDAInit:
-    def __init__(self, settings):
+    def __init__(self, settings, AEmodel=None):
+        self.AEmodel = AEmodel
         self.settings = settings
 
     def run(self):
@@ -29,37 +30,54 @@ class VDAInit:
         else:
             u_0 = mean
 
+        encoder = None
+        decoder = None
+        model = self.AEmodel
 
-        if self.settings.REDUCED_SPACE == True:
-            self.settings.OBS_MODE = "all"
-
+        if self.settings.COMPRESSION_METHOD == "AE":
             #get encoder
             device = ML_utils.get_device()
-            model = ML_utils.load_model_from_settings(settings)
+            if model == None:
+                model = ML_utils.load_model_from_settings(settings)
 
-            encoder = model.encode
+            def __create_encoderOrDecoder(fn):
+                def ret_fn(vec):
+                    dims = len(vec.shape)
+                    vec = torch.Tensor(vec).to(device)
 
-            u_c_tensor = torch.Tensor(u_c).to(device)
-            w_c = encoder(u_c_tensor).detach().cpu().numpy()
+                    #for 3D case, unsqueeze for channel
+                    if self.settings.THREE_DIM:
+                        if dims == 3:
+                            vec = vec.unsqueeze(0)
+                        elif self.settings.THREE_DIM and dims == 4:
+                            #batched input
+                            vec = vec.unsqueeze(1)
+                    res = fn(vec).detach().cpu().numpy()
+                    return res
 
+                return ret_fn
+
+            encoder = __create_encoderOrDecoder(model.encode)
+            decoder = __create_encoderOrDecoder(model.decode)
+
+
+        if self.settings.REDUCED_SPACE == True:
+            if self.settings.COMPRESSION_METHOD == "SVD":
+                raise NotImplementedError("SVD in reduced space not implemented")
+
+            self.settings.OBS_MODE = "all"
+            w_c = encoder(u_c)
             observations, obs_idx, nobs = self.select_obs(w_c)
             H_0 = np.eye(nobs)
-            assert np.array_equal(H_0, self.create_H(obs_idx, nobs, nobs, settings.THREE_DIM))
-            print("ARRAYS EQUAL - delete line above")
-
-            u_0_tensor =  torch.Tensor(u_0).to(device)
-            w_0 = encoder(u_0_tensor).detach().cpu().numpy()
-
+            w_0 = encoder(u_0)
             d = observations - H_0 @ w_0.flatten()
-            exit()
-            #d = w_c - w_0
+
         else:
 
             observations, obs_idx, nobs = self.select_obs(u_c) #options are specific for rand
             H_0 = self.create_H(obs_idx, settings.get_n(), nobs, settings.THREE_DIM)
             d = observations - H_0 @ u_0.flatten() #'d' in literature
             #R_inv = self.create_R_inv(OBS_VARIANCE, nobs)
-            model = None
 
         device = ML_utils.get_device()
 
@@ -69,12 +87,12 @@ class VDAInit:
         data = {"d": d, "G": H_0,
                 "observations": observations,
                 "model": model,
+                "encoder": encoder, "decoder": decoder,
                 "u_c": u_c, "u_0": u_0, "X": X,
                 "train_X": train_X, "test_X":test_X,
                 "std": std, "mean": mean, "device": device}
 
-        #TODO - if you keep data, get rid of std and mean
-        return data, std, mean
+        return data
 
     @staticmethod
     def create_V_from_X(X_fp, settings):
@@ -172,8 +190,8 @@ class VDAInit:
         V = VDAInit.create_V_from_X(X, settings)
         V = V[:num_modes]
 
-        print(V.shape)
-        exit()
+        V_red = encoder(V)
+
         return V_red
 
     def __select_all_obs(self, vec):

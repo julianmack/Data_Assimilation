@@ -267,28 +267,19 @@ class TrainAE():
             else:
                 raise ValueError("Can only evaluate DA_MAE on 'test' or 'train'")
 
-            if not hasattr(self, "DA_data"):
-                vda_initilizer = VDAInit(self.settings)
-                self.DA_data, std, mean = vda_initilizer.run()
+            if not hasattr(self, "DA_pipeline"):
+                self.DA_pipeline = DAPipeline(self.settings, self.model)
+                self.DA_data = self.DA_pipeline.data
 
                 self.__da_data_wipe_some_values()
 
-            #update control state:
+            #TODO: will this have wrong dims for the reduced space version?
             self.DA_data["u_c"] = u_c
+            #TODO: EDIT THIS - should be encoded state
             self.DA_data["w_0"] = torch.zeros((self.settings.get_number_modes())).flatten()
-            self.DA_data["V_trunc"] = self.model.decode
-            self.DA_data["model"] = self.model
-            if self.settings.JAC_NOT_IMPLEM:
-                import warnings
-                warnings.warn("Using **Very** slow method of calculating jacobian. Consider disabling DA", UserWarning)
-                self.DA_data["V_grad"] = self.slow_jac_wrapper
-            else:
-                self.DA_data["V_grad"] = self.model.jac_explicit
 
+            DA_results = self.DA_pipeline.DA_AE()
 
-            DA = DAPipeline(self.settings)
-
-            DA_results = DA.perform_VarDA(self.DA_data, self.settings)
             ref_mae = DA_results["ref_MAE_mean"]
             mae = DA_results["da_MAE_mean"]
 
@@ -308,7 +299,6 @@ class TrainAE():
         #successive calls to maybe_eval_DA_MAE()
         self.DA_data["u_c"] = None
         self.DA_data["w_0"] = None
-        self.DA_data["V_trunc"] = None
 
     def to_csv(self, np_array, fp):
         df = pd.DataFrame(np_array, columns = ["epoch","reconstruction_err","DA_MAE", "DA_ratio_improve_MAE"])
