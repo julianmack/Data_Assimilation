@@ -4,6 +4,8 @@ import random
 import os
 
 from pipeline.fluidity import VtkSave, vtktools
+from vtk.util import numpy_support as nps
+
 
 class GetData():
     """Class to load data from files in preparation for Data Assimilation or AE training"""

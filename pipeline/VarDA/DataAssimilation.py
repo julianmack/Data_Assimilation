@@ -116,7 +116,7 @@ class DAPipeline():
         s = np.where(s <= 0., 1, s) #remove any zeros (when choosing init point)
         V_plus_trunc = W.T * (1 / s) @  U.T
         w_0 = V_plus_trunc @ self.data["u_0"].flatten() #i.e. this is the value given in Rossella et al (2019).
-        #w_0 = np.zeros((W.shape[-1],)) #TODO - I'm not sure about this - can we assume is it 0?
+        w_0 = np.zeros((W.shape[-1],)) #TODO - I'm not sure about this - can we assume is it 0?
 
         self.data["V_trunc"] = V_trunc
         self.data["V"] = V
@@ -135,22 +135,29 @@ class DAPipeline():
                 jac=grad_J, tol=settings.TOL)
 
         w_opt = res.x
+        u_0 = data.get("u_0")
+        u_c = data.get("u_c")
+        std = data.get("std")
+        mean = data.get("mean")
+
         if settings.COMPRESSION_METHOD == "SVD":
             delta_u_DA = data.get("V_trunc") @ w_opt
+            u_0 = u_0.flatten()
+            u_c = u_c.flatten()
+            std = std.flatten()
+            mean = mean.flatten()
+            
         elif settings.COMPRESSION_METHOD == "AE":
             delta_u_DA = data.get("decoder")(w_opt)
             if settings.THREE_DIM:
                 delta_u_DA = delta_u_DA.squeeze(0)
 
 
-        u_0 = data.get("u_0")
-        u_c = data.get("u_c")
         u_DA = u_0 + delta_u_DA
 
 
         #Undo normalization
-        std = data.get("std")
-        mean = data.get("mean")
+
         if settings.UNDO_NORMALIZE:
             std = data.get("std")
             mean = data.get("mean")

@@ -46,7 +46,7 @@ class Config():
 
         #VarDA hyperparams
         self.ALPHA = 1.0
-        self.OBS_VARIANCE = 0.0001 #TODO - CHECK this is specific to the sensors (in this case - the error in model predictions)
+        self.OBS_VARIANCE = 0.5 #TODO - CHECK this is specific to the sensors (in this case - the error in model predictions)
 
         self.REDUCED_SPACE = False
         self.COMPRESSION_METHOD = "SVD" # "SVD"/"AE"
@@ -68,6 +68,7 @@ class Config():
         return self.__n
     def set_n(self, n):
         self.__n = n
+
     def get_number_modes(self):
         return self.NUMBER_MODES
 

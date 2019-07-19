@@ -23,6 +23,10 @@ class VDAInit:
 
         train_X, test_X, u_c, X, mean, std = splitter.train_test_DA_split_maybe_normalize(X, settings)
 
+        ##############
+        #TODO
+        u_c = test_X[90]
+        ##############
 
         # We will take initial condition u_0, as mean of historical data
         if settings.NORMALIZE:
@@ -131,7 +135,6 @@ class VDAInit:
         """Selects and return a subset of observations and their indexes
         from vec according to a user selected mode"""
         npoints = self.__get_npoints_from_shape(vec.shape)
-
         if self.settings.OBS_MODE == "rand":
             # Define observations as a random subset of the control state.
             nobs = int(self.settings.OBS_FRAC * npoints) #number of observations
@@ -198,10 +201,12 @@ class VDAInit:
     @staticmethod
     def create_V_red(X, encoder, num_modes, settings):
         V = VDAInit.create_V_from_X(X, settings)
-        
-        V = V[:num_modes]
+        assert V.shape[0] >= num_modes
 
-        V_red = encoder(V)
+        #take random selection of V
+        idxs = random.sample(range(V.shape[0]), num_modes)
+        V_selected = V[idxs]
+        V_red = encoder(V_selected)
 
         return V_red
 

@@ -16,6 +16,13 @@ def main():
     settings.CHANGEOVER_DEFAULT = 0
     settings.BATCH_NORM = False
     settings.SAVE = False
+
+    settings.NORMALIZE = False
+    settings.UNDO_NORMALIZE = False
+    settings.SHUFFLE_DATA = False
+    settings.OBS_VARIANCE = 10
+
+
     channels = settings.get_channels()
     final_channel = channels[-1]
     channels[-1] = int(channels[-1] * 0.5)
