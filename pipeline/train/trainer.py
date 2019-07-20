@@ -51,7 +51,7 @@ class TrainAE():
         self.device = ML_utils.get_device()
 
 
-    def train(self, num_epoch = 100, learning_rate = 0.0025, print_every=2,
+    def train(self, num_epoch = 100, learning_rate = 0.001, print_every=2,
             test_every=5, num_epochs_cv=8, num_workers=6, small_debug=False):
 
         self.learning_rate = learning_rate
@@ -92,8 +92,8 @@ class TrainAE():
         device = ML_utils.get_device()
 
 
-        self.loss_fn = torch.nn.L1Loss(reduction='sum')
-        #self.loss_fn = torch.nn.MSELoss(reduction="sum")
+        #self.loss_fn = torch.nn.L1Loss(reduction='sum')
+        self.loss_fn = torch.nn.MSELoss(reduction="sum")
 
 
         lr_res = self.__maybe_cross_val_lr(test_every=test_every, num_epochs_cv=num_epochs_cv)

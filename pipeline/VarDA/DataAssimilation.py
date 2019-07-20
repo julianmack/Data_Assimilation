@@ -38,7 +38,7 @@ class DAPipeline():
         else:
             raise ValueError("COMPRESSION_METHOD must be in {SVD, AE}")
         w_opt = DA_results["w_opt"]
-        
+
         self.print_DA_results(DA_results)
 
         if self.settings.SAVE:
@@ -222,11 +222,10 @@ class DAPipeline():
         da_MAE_mean = DA_results["da_MAE_mean"]
         w_opt = DA_results["w_opt"]
 
-        counts = (ref_MAE > da_MAE).sum()
+        counts = (da_MAE < ref_MAE).sum()
         print("Reference MAE: ", ref_MAE_mean)
-        print("DA MAE: ", da_MAE_mean)
-        print("If DA has worked, DA MAE < Ref_MAE")
-        print("ref_MAE > da_MAE for {}/{}".format(counts, len(da_MAE.flatten())))
+        print("DA MAE: ", da_MAE_mean, "(NOTE: If DA has worked, DA MAE < Ref_MAE)")
+        print("DA_MAE < ref_MAE for {}/{} points".format(counts, len(da_MAE.flatten())))
         print("Percentage improvement: {:.2f}%".format(100*(ref_MAE_mean - da_MAE_mean)/ref_MAE_mean))
         #Compare abs(u_0 - u_c).sum() with abs(u_DA - u_c).sum() in paraview
 
