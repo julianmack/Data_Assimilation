@@ -2,11 +2,13 @@
 from pipeline.settings import config
 from pipeline import TrainAE
 from pipeline.settings.CAE7 import CAE7
+from pipeline.settings.CAE8 import CAE8
+
 import shutil
 
 def main():
 
-    settings = CAE7()
+    settings = CAE8()
     settings.BATCH_NORM = False
     settings.CHANGEOVER_DEFAULT = 0
     settings.REDUCED_SPACE = True
@@ -20,11 +22,11 @@ def main():
     num_epochs_cv = 0
     small_debug = True
     print_every = 1
-
+    lr = 0.01
     trainer = TrainAE(settings, expdir, calc_DA_MAE)
     num_encode = len(trainer.model.layers_encode)
 
-    model = trainer.train(epochs, test_every=1, num_epochs_cv=num_epochs_cv,
+    model = trainer.train(epochs, learning_rate=lr, test_every=1, num_epochs_cv=num_epochs_cv,
                             print_every=print_every, small_debug=small_debug)
 
     #Uncomment line below if you want to automatically delete expdir (useful during testing)
