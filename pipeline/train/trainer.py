@@ -52,7 +52,7 @@ class TrainAE():
 
 
     def train(self, num_epoch = 100, learning_rate = 0.0025, print_every=2,
-            test_every=5, num_workers=6):
+            test_every=5, num_epochs_cv=8, num_workers=6):
 
         self.learning_rate = learning_rate
         self.num_epochs = num_epoch
@@ -93,11 +93,20 @@ class TrainAE():
         self.loss_fn = torch.nn.L1Loss(reduction='sum')
 
 
-        self.learning_rate, train_losses, test_losses = self.__maybe_cross_val_lr(test_every=test_every)
+        lr_res = self.__maybe_cross_val_lr(test_every=test_every, num_epochs_cv=num_epochs_cv)
+
+        #unpack results from __maybe_cross_val_lr()
+        if isinstance(lr_res, float):
+            self.learning_rate = lr_res
+            #if only lr was returned, no model/optimizers were selected. Init:
+            self.model =  self.settings.AE_MODEL_TYPE(**self.settings.get_kwargs())
+            self.optimizer = optim.Adam(self.model.parameters(), self.learning_rate)
+        else:
+            self.learning_rate, train_losses, test_losses = lr_res
+
+
 
         settings.learning_rate = self.learning_rate #for logging
-
-
 
         train_losses_, test_losses_ = self.training_loop_AE(self.num_epochs_cv, self.num_epochs, device,
                                         print_every=print_every, test_every=test_every,
@@ -219,7 +228,6 @@ class TrainAE():
 
 
         for idx, lr in enumerate(lrs):
-            print("lr:", lr)
 
             ML_utils.set_seeds() #set seeds before init model
             self.model =  self.settings.AE_MODEL_TYPE(**self.settings.get_kwargs())
