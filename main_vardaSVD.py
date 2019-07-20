@@ -10,7 +10,7 @@ def main():
     settings.NORMALIZE = False
     settings.UNDO_NORMALIZE = False
     settings.SHUFFLE_DATA = False
-    settings.OBS_VARIANCE = 10000000000000000000
+    settings.OBS_VARIANCE = 10
     settings.SAVE = False
     settings.THREE_DIM = True
     settings.set_X_fp(settings.INTERMEDIATE_FP + "X_3D_{}.npy".format(settings.FIELD_NAME))
