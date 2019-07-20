@@ -23,7 +23,7 @@ class TestAE_TrainLinear():
             p.allow_pickel = True
 
             settings = config.ToyAEConfig()
-            settings.X_FP = str(p)
+            settings.set_X_fp(str(p))
             settings.FORCE_GEN_X = False
             settings.calc_DA_MAE = False
             settings.OBS_FRAC = 0.5
@@ -66,7 +66,7 @@ class TestAE_Train3D():
 
             settings = config.CAEConfig()
             settings.CHANGEOVERS = (7, 7, 7)
-            settings.X_FP = str(p)
+            settings.set_X_fp(str(p))
             settings.FORCE_GEN_X = False
             settings.n3d = tuple(X.shape[1:])
             settings.OBS_FRAC = 1 / 6.0

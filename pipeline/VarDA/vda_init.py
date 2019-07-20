@@ -24,8 +24,8 @@ class VDAInit:
         train_X, test_X, u_c, X, mean, std = splitter.train_test_DA_split_maybe_normalize(X, settings)
 
         ##############
-        #TODO
-        u_c = test_X[90]
+        #TODO - remove this?
+        #u_c = test_X[90]
         ##############
 
         # We will take initial condition u_0, as mean of historical data

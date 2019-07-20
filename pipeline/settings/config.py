@@ -19,7 +19,6 @@ class Config():
         self.DATA_FP = self.HOME_DIR + "data/small3DLSBU/"
         self.INTERMEDIATE_FP = self.HOME_DIR + "data/small3D_intermediate/"
         self.FIELD_NAME = "Pressure"
-        self.X_FP = self.INTERMEDIATE_FP + "X_1D_{}.npy".format(self.FIELD_NAME)
         self.FORCE_GEN_X = False
         self.__n = 100040
         self.THREE_DIM = False # i.e. is representation in 3D tensor or 1D array
@@ -63,6 +62,18 @@ class Config():
         self.AZURE_CONTAINER = "x-data"
         self.AZURE_DOWNLOAD = True
 
+    def get_X_fp(self):
+        if hasattr(self, "X_FP_hid"):
+            return self.X_FP_hid
+        else:
+            if self.THREE_DIM:
+                dim = 3
+            else:
+                dim = 1
+            self.X_FP_hid = self.INTERMEDIATE_FP + "X_{}D_{}.npy".format(dim, self.FIELD_NAME)
+            return self.X_FP_hid
+    def set_X_fp(self, fp):
+        self.X_FP_hid = fp
 
     def get_n(self):
         return self.__n
@@ -126,7 +137,6 @@ class CAEConfig(ConfigAE):
         self.__n = self.n3d #This overrides FACTOR_INCREASE
         self.CHANNELS = None
         self.THREE_DIM = True
-        self.X_FP = self.INTERMEDIATE_FP + "X_3D_{}.npy".format(self.FIELD_NAME)
         model_name  = self.__class__.__name__
         #self.AE_MODEL_FP = self.HOME_DIR + "models/{}_{}.pth".format(model_name, self.NUMBER_MODES)
         self.SAVE = True
@@ -201,7 +211,7 @@ class SmallTestDomain(Config):
         self.SAVE = False
         self.DEBUG = True
         self.NORMALIZE = True
-        self.X_FP = self.INTERMEDIATE_FP + "X_small3D_{}_TINY.npy".format(self.FIELD_NAME)
+        self.X_FP_hid = self.INTERMEDIATE_FP + "X_small3D_{}_TINY.npy".format(self.FIELD_NAME)
         self.__n = 4
         self.OBS_FRAC = 0.3
         self.NUMBER_MODES = 3

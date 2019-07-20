@@ -15,14 +15,18 @@ class GetData():
 
     def get_X(self, settings):
         """Returns X in the M x n format"""
-        if not os.path.exists(settings.X_FP) or settings.FORCE_GEN_X:
+        if not os.path.exists(settings.get_X_fp()) or settings.FORCE_GEN_X:
+            X = None
             if settings.AZURE_DOWNLOAD:
-                X = GetData.download_X_azure(settings)
-            else:
+                try:
+                    X = GetData.download_X_azure(settings)
+                except:
+                    pass
+            if not X:
                 fps = self.get_sorted_fps_U(settings.DATA_FP)
                 X = self.create_X_from_fps(fps, settings)
         else:
-            X = np.load(settings.X_FP,  allow_pickle=True)
+            X = np.load(settings.get_X_fp(),  allow_pickle=True)
 
         return X
 
@@ -84,19 +88,19 @@ class GetData():
 
         #return (M x nx x ny x nz) or (M x n)
         if settings.SAVE:
-            np.save(settings.X_FP, output, allow_pickle=True)
+            np.save(settings.get_X_fp(), output, allow_pickle=True)
 
         return output
 
 
     def download_X_azure(settings):
-        fp_azure = settings.X_FP.replace(settings.INTERMEDIATE_FP, "")
+        fp_azure = settings.get_X_fp().replace(settings.INTERMEDIATE_FP, "")
         try:
             os.makedirs(settings.INTERMEDIATE_FP)
         except FileExistsError:
             pass
-        GetData.__donwload_azure_blob(settings, settings.X_FP, fp_azure)
-        X = np.load(settings.X_FP, allow_pickle=True)
+        GetData.__donwload_azure_blob(settings, settings.get_X_fp(), fp_azure)
+        X = np.load(settings.get_X_fp(), allow_pickle=True)
         return X
 
     def __donwload_azure_blob(settings, fp_save, fp_to_access):

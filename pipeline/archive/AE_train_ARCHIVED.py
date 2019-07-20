@@ -52,7 +52,7 @@ class TrainAE():
         self.device = ML_utils.get_device()
 
 
-    def train(self, num_epoch = 100, learning_rate = 0.0025, print_every=2,
+    def train(self, num_epoch = 100, learning_rate = 0.00025, print_every=2,
             test_every=5):
 
         self.learning_rate = learning_rate
@@ -190,7 +190,7 @@ class TrainAE():
                 loss = self.loss_fn(y_test, x_test)
                 test_loss += loss.item()
             test_DA_MAE, test_DA_ratio = self.maybe_eval_DA_MAE("test")
-            out_str = "epoch [{}/{}], valid: -loss:{:.4f}".format(epoch + 1, num_epoch, test_loss / len(self.test_loader.dataset))
+            out_str = "epoch [{}/{}], test: -loss:{:.4f}".format(epoch + 1, num_epoch, test_loss / len(self.test_loader.dataset))
             if self.calc_DA_MAE:
                 out_str +  ", -DA_MAE:{:.4f}".format(test_DA_MAE)
             print(out_str)

@@ -78,7 +78,7 @@ class TestSetup():
         p.allow_pickel = True
 
         settings = config.Config()
-        settings.X_FP = str(p)
+        settings.set_X_fp(str(p))
         settings.set_n(3)
         settings.FORCE_GEN_X = False
         settings.OBS_MODE = "single_max"
@@ -134,7 +134,7 @@ class TestSetup():
         p.allow_pickel = True
 
         settings = config.Config()
-        settings.X_FP = str(p)
+        settings.set_X_fp(str(p))
         settings.set_n(3)
         settings.FORCE_GEN_X = False
         settings.OBS_MODE = "single_max"
@@ -205,9 +205,10 @@ class TestMinimizeJ():
             p.dump(X)
             p.allow_pickel = True
 
-
             settings = config.Config()
-            settings.X_FP = str(p)
+            settings.set_X_fp(str(p))
+            print(str(p))
+            print(settings.get_X_fp())
             settings.set_n(3)
             settings.FORCE_GEN_X = False
             settings.OBS_MODE = "single_max"

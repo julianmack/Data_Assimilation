@@ -52,7 +52,7 @@ class TrainAE():
 
 
     def train(self, num_epoch = 100, learning_rate = 0.0025, print_every=2,
-            test_every=5, num_epochs_cv=8, num_workers=6):
+            test_every=5, num_epochs_cv=8, num_workers=6, small_debug=False):
 
         self.learning_rate = learning_rate
         self.num_epochs = num_epoch
@@ -71,7 +71,9 @@ class TrainAE():
 
         self.train_X, self.test_X, DA_u_c, X_norm,  mean, std = splitter.train_test_DA_split_maybe_normalize(X, settings)
 
-
+        if small_debug: #take v. small subset of test and train (for speed)
+            self.train_X = self.train_X[-8:]
+            self.test_X = self.test_X[:8]
 
         #Add Channel if we are in 3D case
         if settings.THREE_DIM:
@@ -91,18 +93,21 @@ class TrainAE():
 
 
         self.loss_fn = torch.nn.L1Loss(reduction='sum')
+        #self.loss_fn = torch.nn.MSELoss(reduction="sum")
 
 
         lr_res = self.__maybe_cross_val_lr(test_every=test_every, num_epochs_cv=num_epochs_cv)
 
-        #unpack results from __maybe_cross_val_lr()
-        if isinstance(lr_res, float):
+
+        if not isinstance(lr_res, float):
+            #unpack results from __maybe_cross_val_lr()
+            self.learning_rate, train_losses, test_losses = lr_res
+        else:
             self.learning_rate = lr_res
+            train_losses, test_losses = [], []
             #if only lr was returned, no model/optimizers were selected. Init:
             self.model =  self.settings.AE_MODEL_TYPE(**self.settings.get_kwargs())
             self.optimizer = optim.Adam(self.model.parameters(), self.learning_rate)
-        else:
-            self.learning_rate, train_losses, test_losses = lr_res
 
 
 
@@ -287,6 +292,10 @@ class TrainAE():
             self.DA_data["w_0"] = torch.zeros((self.settings.get_number_modes())).flatten()
 
             DA_results = self.DA_pipeline.DA_AE()
+
+            print()
+            print(test_valid)
+            self.DA_pipeline.print_DA_results(DA_results)
 
             ref_mae = DA_results["ref_MAE_mean"]
             mae = DA_results["da_MAE_mean"]

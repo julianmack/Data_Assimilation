@@ -13,7 +13,7 @@ def main():
     settings.OBS_VARIANCE = 10000000000000000000
     settings.SAVE = False
     settings.THREE_DIM = True
-    settings.X_FP = settings.INTERMEDIATE_FP + "X_3D_{}.npy".format(settings.FIELD_NAME)
+    settings.set_X_fp(settings.INTERMEDIATE_FP + "X_3D_{}.npy".format(settings.FIELD_NAME))
     settings.set_n( (91, 85, 32))
 
     print(settings.get_n())

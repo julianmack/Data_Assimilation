@@ -37,24 +37,9 @@ class DAPipeline():
             DA_results = self.DA_AE()
         else:
             raise ValueError("COMPRESSION_METHOD must be in {SVD, AE}")
-
-        ref_MAE = DA_results["ref_MAE"]
-        da_MAE = DA_results["da_MAE"]
-        u_DA = DA_results["u_DA"]
-        ref_MAE_mean = DA_results["ref_MAE_mean"]
-        da_MAE_mean = DA_results["da_MAE_mean"]
         w_opt = DA_results["w_opt"]
-
-        counts = (ref_MAE > da_MAE).sum()
-
-        print("RESULTS")
-
-        print("Reference MAE: ", ref_MAE_mean)
-        print("DA MAE: ", da_MAE_mean)
-        print("If DA has worked, DA MAE < Ref_MAE")
-        print("ref_MAE > da_MAE for {}/{}".format(counts, len(da_MAE.flatten())))
-        print("Percentage improvement: {:.2f}%".format(100*(ref_MAE_mean - da_MAE_mean)/ref_MAE_mean))
-        #Compare abs(u_0 - u_c).sum() with abs(u_DA - u_c).sum() in paraview
+        
+        self.print_DA_results(DA_results)
 
         if self.settings.SAVE:
             #Save .vtu files so that I can look @ in paraview
@@ -64,12 +49,14 @@ class DAPipeline():
 
             VtkSave.save_vtu_file(ref_MAE, "ref_MAE", out_fp_ref, sample_fp)
             VtkSave.save_vtu_file(da_MAE, "DA_MAE", out_fp_DA, sample_fp)
+
+
         if return_stats:
             assert return_stats == True, "return_stats must be of type boolean. Here it is type {}".format(type(return_stats))
             stats = {}
-            stats["Percent_improvement"] = 100*(ref_MAE_mean - da_MAE_mean)/ref_MAE_mean
-            stats["ref_MAE_mean"] = ref_MAE_mean
-            stats["da_MAE_mean"] = da_MAE_mean
+            stats["Percent_improvement"] = 100*(DA_results["ref_MAE"] - DA_results["da_MAE_mean"])/DA_results["ref_MAE_mean"]
+            stats["ref_MAE_mean"] = DA_results["ref_MAE_mean"]
+            stats["da_MAE_mean"] = DA_results["da_MAE_mean"]
             return w_opt, stats
 
         return w_opt
@@ -146,7 +133,7 @@ class DAPipeline():
             u_c = u_c.flatten()
             std = std.flatten()
             mean = mean.flatten()
-            
+
         elif settings.COMPRESSION_METHOD == "AE":
             delta_u_DA = data.get("decoder")(w_opt)
             if settings.THREE_DIM:
@@ -225,6 +212,23 @@ class DAPipeline():
     def slow_jac_wrapper(self, x):
         return Jacobian.accumulated_slow_model(x, self.model, self.data.get("device"))
 
+    @staticmethod
+    def print_DA_results(DA_results):
+
+        ref_MAE = DA_results["ref_MAE"]
+        da_MAE = DA_results["da_MAE"]
+        u_DA = DA_results["u_DA"]
+        ref_MAE_mean = DA_results["ref_MAE_mean"]
+        da_MAE_mean = DA_results["da_MAE_mean"]
+        w_opt = DA_results["w_opt"]
+
+        counts = (ref_MAE > da_MAE).sum()
+        print("Reference MAE: ", ref_MAE_mean)
+        print("DA MAE: ", da_MAE_mean)
+        print("If DA has worked, DA MAE < Ref_MAE")
+        print("ref_MAE > da_MAE for {}/{}".format(counts, len(da_MAE.flatten())))
+        print("Percentage improvement: {:.2f}%".format(100*(ref_MAE_mean - da_MAE_mean)/ref_MAE_mean))
+        #Compare abs(u_0 - u_c).sum() with abs(u_DA - u_c).sum() in paraview
 
 if __name__ == "__main__":
 
@@ -237,4 +241,4 @@ if __name__ == "__main__":
     #create X:
     loader = GetData()
     X = loader.get_X(settings)
-    np.save(settings.X_FP, X)
+    np.save(settings.get_X_fp(), X)
