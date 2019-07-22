@@ -2,19 +2,18 @@
 from pipeline.settings import config
 from pipeline import TrainAE
 from pipeline.settings.CAE7 import CAE7
-from pipeline.settings.CAE8 import CAE8
 
 import shutil
 
 def main():
 
-    settings = CAE8()
+    settings = CAE7(2)
     settings.BATCH_NORM = False
     settings.CHANGEOVER_DEFAULT = 0
     settings.REDUCED_SPACE = True
     settings.DEBUG = False
     settings.SHUFFLE_DATA = True #Set this =False for harder test and train set
-    settings.FIELD_NAME = "Tracer"
+    settings.FIELD_NAME = "Pressure"
 
     expdir = "experiments/train_DA_{}".format(settings.FIELD_NAME)
     epochs = 40
@@ -22,7 +21,7 @@ def main():
     num_epochs_cv = 0
     small_debug = True
     print_every = 1
-    lr = 0.01
+    lr = 0.001
     trainer = TrainAE(settings, expdir, calc_DA_MAE)
     num_encode = len(trainer.model.layers_encode)
 

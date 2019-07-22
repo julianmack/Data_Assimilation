@@ -89,8 +89,6 @@ class TrainAE():
         self.test_loader = DataLoader(test_dataset, test_batch_sz)
 
 
-        device = ML_utils.get_device()
-
 
         #self.loss_fn = torch.nn.L1Loss(reduction='sum')
         self.loss_fn = torch.nn.MSELoss(reduction="sum")
@@ -113,7 +111,7 @@ class TrainAE():
 
         settings.learning_rate = self.learning_rate #for logging
 
-        train_losses_, test_losses_ = self.training_loop_AE(self.num_epochs_cv, self.num_epochs, device,
+        train_losses_, test_losses_ = self.training_loop_AE(self.num_epochs_cv, self.num_epochs, self.device,
                                         print_every=print_every, test_every=test_every,
                                         model_dir = self.model_dir)
         if train_losses_:
@@ -171,6 +169,10 @@ class TrainAE():
         train_loss = 0
 
         self.model.to(self.device)
+        ###############
+        L1 = torch.nn.L1Loss(reduction='sum')
+        L1_loss =0
+        ###############
 
         for batch_idx, data in enumerate(self.train_loader):
             self.model.train()
@@ -183,12 +185,21 @@ class TrainAE():
             train_loss += loss.item()
             self.optimizer.step()
 
+            ##############
+            self.model.eval()
+            loss1 = L1(y, x)
+            L1_loss += loss1.item()
+            ##############
+
 
 
         train_DA_MAE, train_DA_ratio = self.maybe_eval_DA_MAE("train")
         train_loss_res = (epoch, train_loss / len(self.train_loader.dataset), train_DA_MAE, train_DA_ratio)
         if epoch % print_every == 0 or epoch in [0, num_epoch - 1]:
-            out_str = 'epoch [{}/{}], loss:{:.4f}'.format(epoch + 1, num_epoch, train_loss / len(self.train_loader.dataset))
+            out_str = 'epoch [{}/{}], loss:{:.4f} '.format(epoch + 1, num_epoch, train_loss / len(self.train_loader.dataset))
+            ############
+            out_str += "L1 loss:{:.4f}".format(L1_loss / len(self.train_loader.dataset))
+            ############
             if self.calc_DA_MAE:
                 out_str +  ", DA_MAE:{:.4f}".format(train_DA_MAE)
             print(out_str)
