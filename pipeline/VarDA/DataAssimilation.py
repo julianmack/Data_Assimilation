@@ -54,7 +54,7 @@ class DAPipeline():
         if return_stats:
             assert return_stats == True, "return_stats must be of type boolean. Here it is type {}".format(type(return_stats))
             stats = {}
-            stats["Percent_improvement"] = 100*(DA_results["ref_MAE"] - DA_results["da_MAE_mean"])/DA_results["ref_MAE_mean"]
+            stats["Percent_improvement"] = 100*(DA_results["ref_MAE_mean"] - DA_results["da_MAE_mean"])/DA_results["ref_MAE_mean"]
             stats["ref_MAE_mean"] = DA_results["ref_MAE_mean"]
             stats["da_MAE_mean"] = DA_results["da_MAE_mean"]
             return w_opt, stats
@@ -128,7 +128,7 @@ class DAPipeline():
         mean = data.get("mean")
 
         if settings.COMPRESSION_METHOD == "SVD":
-            delta_u_DA = data.get("V_trunc") @ w_opt
+            delta_u_DA = (data.get("V_trunc") @ w_opt).flatten()
             u_0 = u_0.flatten()
             u_c = u_c.flatten()
             std = std.flatten()
@@ -144,8 +144,7 @@ class DAPipeline():
 
 
         if settings.UNDO_NORMALIZE:
-            std = data.get("std")
-            mean = data.get("mean")
+
             u_DA = (u_DA * std + mean)
             u_c = (u_c * std + mean)
             u_0 = (u_0 * std + mean)
@@ -156,8 +155,9 @@ class DAPipeline():
         da_MAE = np.abs(u_DA - u_c)
         ref_MAE_mean = np.mean(ref_MAE)
         da_MAE_mean = np.mean(da_MAE)
-
+        percent_improve = 100*(ref_MAE_mean - da_MAE_mean)/ref_MAE_mean)
         if settings.DEBUG:
+
             # u_0 = u_0[:1, :2, :2]
             # u_c = u_c[:1, :2, :2]
             # u_DA = u_DA[:1, :2, :2]
@@ -179,6 +179,7 @@ class DAPipeline():
                     "u_DA": u_DA,
                     "ref_MAE_mean": ref_MAE_mean,
                     "da_MAE_mean": da_MAE_mean,
+                    "percent_improve": percent_improve,
                     "w_opt": w_opt}
         return results_data
 

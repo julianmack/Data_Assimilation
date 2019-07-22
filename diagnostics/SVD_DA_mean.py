@@ -9,7 +9,6 @@ from pipeline.VarDA import SVD
 from pipeline.settings import config
 from pipeline import SplitData, GetData
 from pipeline import DAPipeline
-DA_results = self.DA_pipeline.DA_AE()
 import torch
 
 import operator
@@ -39,10 +38,10 @@ def main():
 
     modes = [-1, 500, 100, 50, 30, 20, 10, 8, 6, 4, 3, 2, 1]
 
-    obs_fracs = [0.001, 0.01, 0.03]
+    obs_fracs = [0.0005, 0.001, 0.003]
 
-    modes = [-1]
-    obs_fracs = [0.001]
+    modes = [2]
+    obs_fracs = [0.0005]
 
 
     L1 = torch.nn.L1Loss(reduction='sum')
@@ -54,14 +53,14 @@ def main():
                 "u_c": u_c,
                 "mean": mean,
                 "u_0": np.zeros_like(u_c)}
-    datasets = {"train1": train_X[:1],
+    datasets = {
                 "train2": train_X[:2] }
 
-    DA_pipeline = DAPipeline(settings)
 
     for name, data in datasets.items():
         for obs_frac in obs_fracs:
             settings.OBS_FRAC = obs_frac
+            DA_pipeline = DAPipeline(settings)
 
             if len(data.shape) in [1, 3]:
                 num_states = 1
@@ -69,39 +68,41 @@ def main():
                 num_states = data.shape[0]
 
             for mode in modes:
-                totals = {"ref_MAE": np.zeros_like(u_c),
-                        "da_MAE": np.zeros_like(u_c),
+                totals = {
                         "ref_MAE_mean": 0,
                         "da_MAE_mean": 0,
                         "counts": 0}
+
+                V_trunc = SVD.SVD_V_trunc(U, s, W, modes=mode)
+                DA_data = DA_pipeline.data
+                DA_data["V_trunc"] = V_trunc
+                DA_data["V"] = None
+                DA_data["w_0"] = np.zeros((W.shape[-1],))
+                DA_data["V_grad"] = None
+
                 for idx in range(num_states):
 
-                    data = DA_pipeline.data
-                    V_trunc = SVD.SVD_V_trunc(U, s, W, modes=mode)
-                    data["V_trunc"] = V_trunc
-                    data["V"] = None
-                    data["V_grad"] = None
+                    DA_data["u_c"] = data[idx]
 
-                    DA_results = DA_pipeline.perform_VarDA(data, settings)
+                    DA_results = DA_pipeline.perform_VarDA(DA_data, settings)
 
-                    # ref_MAE = DA_results["ref_MAE"]
-                    # da_MAE = DA_results["da_MAE"]
+                    #########DELETE:
+                    DA_pipeline.print_DA_results(DA_results)
+
                     ref_MAE_mean = DA_results["ref_MAE_mean"]
                     da_MAE_mean = DA_results["da_MAE_mean"]
                     counts = (DA_results["da_MAE"] < DA_results["ref_MAE"]).sum()
 
                     #add to dict results
-                    # totals["ref_MAE"] += ref_MAE
-                    # totals["da_MAE"] += da_MAE
                     totals["ref_MAE_mean"] += ref_MAE_mean
                     totals["da_MAE_mean"] += da_MAE_mean
                     totals["counts"] += counts
 
                 print(name.upper(), ": obs_frac:", obs_frac, "number_modes:", mode)
-                for k, v in totals:
+                for k, v in totals.items():
                     print(k, v / num_states)
+                print()
 
-        print()
 
 
 
