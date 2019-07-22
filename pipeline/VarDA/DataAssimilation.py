@@ -13,7 +13,7 @@ from pipeline.settings import config
 from pipeline.fluidity import VtkSave
 from pipeline import GetData, SplitData
 from pipeline.VarDA import VDAInit
-from pipeline.VarDA.SVD import TSVD
+from pipeline.VarDA import SVD
 from pipeline.VarDA.cost_fn import cost_fn_J, grad_J
 
 class DAPipeline():
@@ -97,13 +97,13 @@ class DAPipeline():
         else:
             #(M x n)
             V = V.T #(n x M)
-        V_trunc, U, s, W = TSVD(V, self.settings, self.settings.get_number_modes())
+        V_trunc, U, s, W = SVD.TSVD(V, self.settings, self.settings.get_number_modes())
 
         #Define intial w_0
         s = np.where(s <= 0., 1, s) #remove any zeros (when choosing init point)
         V_plus_trunc = W.T * (1 / s) @  U.T
         w_0 = V_plus_trunc @ self.data["u_0"].flatten() #i.e. this is the value given in Rossella et al (2019).
-        w_0 = np.zeros((W.shape[-1],)) #TODO - I'm not sure about this - can we assume is it 0?
+        #w_0 = np.zeros((W.shape[-1],)) #TODO - I'm not sure about this - can we assume is it 0?
 
         self.data["V_trunc"] = V_trunc
         self.data["V"] = V
@@ -143,8 +143,6 @@ class DAPipeline():
         u_DA = u_0 + delta_u_DA
 
 
-        #Undo normalization
-
         if settings.UNDO_NORMALIZE:
             std = data.get("std")
             mean = data.get("mean")
@@ -165,18 +163,9 @@ class DAPipeline():
             # u_DA = u_DA[:1, :2, :2]
 
             size = len(u_0.flatten())
-            if size > 6:
-                size = 6
+            if size > 5:
+                size = 5
 
-            print("SHAPES --------------------")
-            print("std", std.shape)
-            print("mean", mean.shape)
-            print("u_DA", u_DA.shape)
-            print("u_c", u_c.shape)
-            print("u_0", u_0.shape)
-            print("ref_MAE", ref_MAE.shape)
-            print("da_MAE", da_MAE.shape)
-            print("VALUES --------------------")
             print("std:    ", std.flatten()[:size])
             print("mean:   ", mean.flatten()[:size])
             print("u_0:    ", u_0.flatten()[:size])
@@ -223,10 +212,8 @@ class DAPipeline():
         w_opt = DA_results["w_opt"]
 
         counts = (da_MAE < ref_MAE).sum()
-        print("Reference MAE: ", ref_MAE_mean)
-        print("DA MAE: ", da_MAE_mean, "(NOTE: If DA has worked, DA MAE < Ref_MAE)")
+        print("Ref MAE: {:.4f}, DA MAE: {:.4f},".format(ref_MAE_mean, da_MAE_mean), "% improvement: {:.2f}%".format(100*(ref_MAE_mean - da_MAE_mean)/ref_MAE_mean))
         print("DA_MAE < ref_MAE for {}/{} points".format(counts, len(da_MAE.flatten())))
-        print("Percentage improvement: {:.2f}%".format(100*(ref_MAE_mean - da_MAE_mean)/ref_MAE_mean))
         #Compare abs(u_0 - u_c).sum() with abs(u_DA - u_c).sum() in paraview
 
 if __name__ == "__main__":

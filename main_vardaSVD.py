@@ -11,12 +11,15 @@ def main():
     settings.UNDO_NORMALIZE = False
     settings.SHUFFLE_DATA = False
     settings.OBS_VARIANCE = 10
-    settings.SAVE = False
+    settings.SAVE = True
+    settings.FORCE_GEN_X = False
+    settings.AZURE_DOWNLOAD = False
+
     settings.THREE_DIM = True
     settings.set_X_fp(settings.INTERMEDIATE_FP + "X_3D_{}.npy".format(settings.FIELD_NAME))
     settings.set_n( (91, 85, 32))
-
     print(settings.get_n())
+
     DA = DAPipeline(settings)
 
     print(settings.COMPRESSION_METHOD)

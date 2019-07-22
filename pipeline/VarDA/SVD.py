@@ -17,10 +17,14 @@ def TSVD(V, settings, trunc_idx=None, test=False):
     """
     U, s, W = np.linalg.svd(V, False)
 
+
     if settings.SAVE:
-        np.save(settings.INTERMEDIATE_FP + "U.npy", U)
-        np.save(settings.INTERMEDIATE_FP + "s.npy", s)
-        np.save(settings.INTERMEDIATE_FP + "W.npy", W)
+
+        fp_base = settings.get_X_fp().split("/")[-1][1:]
+
+        np.save(settings.INTERMEDIATE_FP + "U" + fp_base, U)
+        np.save(settings.INTERMEDIATE_FP + "s" + fp_base, s)
+        np.save(settings.INTERMEDIATE_FP + "W"  + fp_base, W)
     #first singular value
     sing_1 = s[0]
     threshold = np.sqrt(sing_1)
@@ -41,6 +45,7 @@ def TSVD(V, settings, trunc_idx=None, test=False):
     s_trunc = s[:trunc_idx]
     V_trunc = U_trunc * s_trunc @ W_trunc
 
+
     if test:
         #1) Check generalized inverses
         V_plus = W.T * (1 / s) @  U.T #Equivalent to W.T @ np.diag(1 / s) @  U.T
@@ -58,3 +63,52 @@ def TSVD(V, settings, trunc_idx=None, test=False):
 
 
     return V_trunc, U_trunc, s_trunc, W_trunc
+
+def SVD_V_trunc(U, s, W, modes=-1):
+    """helper function to calc V_trunc when U, s, W are known"""
+
+    if not modes == -1: #all modes
+        U = U[:, :modes]
+        W = W[:modes, :]
+        s = s[:modes]
+
+    return U * s @ W
+
+def SVD_reconstruction_trunc(input, U, s, W, modes=-1):
+    """Performs SVD reconstruction for an input of dimension:
+            i) n, returns n
+            ii) M x n, returns M x n
+            iii) nx x ny x nz, returns nx x ny x nz
+            iv) M x nx x ny x nz, returns M x nx x ny x nz"""
+
+    if not modes == -1: #all modes
+        U = U[:, :modes]
+        W = W[:modes, :]
+        s = s[:modes]
+
+    output = SVD_reconstruction(input, U, s, W)
+
+    return output
+
+def SVD_reconstruction(input, U, s, W):
+    batched = False
+    shpe = input.shape
+    #input can be 1D or 3D - if 2D or 4D then this is batched
+    if len(shpe) in [2, 4]:
+        batched = True
+        input = input.reshape((shpe[0], -1)) #flatten
+        input = input.T #transpose
+    else:
+        input = input.flatten()
+
+    V = U * s @ W
+    V_plus =  W.T * (1 / s) @  U.T
+
+
+    output = V @ (V_plus @ input)
+
+    if batched:
+        output = output.T
+
+    output = output.reshape(shpe)
+    return output
