@@ -23,6 +23,7 @@ def main():
     settings.THREE_DIM = True
     settings.set_X_fp(settings.INTERMEDIATE_FP + "X_3D_{}.npy".format(settings.FIELD_NAME))
     settings.set_n( (91, 85, 32))
+    settings.DEBUG = False
 
     #LOAD U, s, W
     fp_base = settings.get_X_fp().split("/")[-1][1:]
@@ -53,6 +54,8 @@ def main():
                 "u_c": u_c,
                 "mean": mean,
                 "u_0": np.zeros_like(u_c)}
+    datasets = {"train1": train_X[:1],
+                "train2": train_X[:2] }
 
     DA_pipeline = DAPipeline(settings)
 
@@ -66,7 +69,11 @@ def main():
                 num_states = data.shape[0]
 
             for mode in modes:
-
+                totals = {"ref_MAE": np.zeros_like(u_c),
+                        "da_MAE": np.zeros_like(u_c),
+                        "ref_MAE_mean": 0,
+                        "da_MAE_mean": 0,
+                        "counts": 0}
                 for idx in range(num_states):
 
                     data = DA_pipeline.data
@@ -77,13 +84,22 @@ def main():
 
                     DA_results = DA_pipeline.perform_VarDA(data, settings)
 
-                    ref_MAE = DA_results["ref_MAE"]
-                    da_MAE = DA_results["da_MAE"]
-                    u_DA = DA_results["u_DA"]
+                    # ref_MAE = DA_results["ref_MAE"]
+                    # da_MAE = DA_results["da_MAE"]
                     ref_MAE_mean = DA_results["ref_MAE_mean"]
                     da_MAE_mean = DA_results["da_MAE_mean"]
-                    w_opt = DA_results["w_opt"]
+                    counts = (DA_results["da_MAE"] < DA_results["ref_MAE"]).sum()
 
+                    #add to dict results
+                    # totals["ref_MAE"] += ref_MAE
+                    # totals["da_MAE"] += da_MAE
+                    totals["ref_MAE_mean"] += ref_MAE_mean
+                    totals["da_MAE_mean"] += da_MAE_mean
+                    totals["counts"] += counts
+
+                print(name.upper(), ": obs_frac:", obs_frac, "number_modes:", mode)
+                for k, v in totals:
+                    print(k, v / num_states)
 
         print()
 
