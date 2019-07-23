@@ -57,7 +57,7 @@ def main():
     #             "train6": train_X[:6],
     #             "train7": train_X[:7],
     #             }
-    
+
     for name, data in datasets.items():
 
         if len(data.shape) in [1, 3]:
