@@ -14,9 +14,6 @@ def cost_fn_J(w, data, settings):
     V_grad = data.get("V_grad")
     R_inv = data.get("R_inv")
 
-    sigma_2 = settings.OBS_VARIANCE
-    alpha = settings.ALPHA
-
     if settings.COMPRESSION_METHOD == "AE" and not settings.REDUCED_SPACE:
         decoder = data.get("decoder")
 
@@ -28,18 +25,18 @@ def cost_fn_J(w, data, settings):
         Q = (G @ V_w - d)
 
     else:
-        
+
         Q = (G @ V @ w - d)
 
-    if sigma_2 and not R_inv:
+    if settings.OBS_VARIANCE and not R_inv:
         #When R is proportional to identity
-        J_o = 0.5 / sigma_2 * np.dot(Q, Q)
+        J_o = 0.5 / settings.OBS_VARIANCE * np.dot(Q, Q)
     elif R_inv:
         J_o = 0.5 * Q.T @ R_inv @ Q
     else:
         raise ValueError("Either R_inv or sigma must be provided")
 
-    J_b = 0.5 * alpha * np.dot(w, w)
+    J_b = 0.5 * settings.ALPHA * np.dot(w, w)
     J = J_b + J_o
 
     if settings.DEBUG:
@@ -55,9 +52,6 @@ def grad_J(w, data, settings):
     V =  V_trunc if V_trunc is not None else data.get("V")
     V_grad = data.get("V_grad")
     R_inv = data.get("R_inv")
-
-    sigma_2 = settings.OBS_VARIANCE
-    alpha = settings.ALPHA
 
     if settings.COMPRESSION_METHOD == "AE" and not settings.REDUCED_SPACE:
         decoder = data.get("model").decode
@@ -76,14 +70,14 @@ def grad_J(w, data, settings):
         Q = (G @ V @ w - d)
         P = V.T @ G.T
 
-    if not R_inv and sigma_2:
+    if not R_inv and settings.OBS_VARIANCE:
         #When R is proportional to identity
-        grad_o = (1.0 / sigma_2 ) * np.dot(P, Q)
+        grad_o = (1.0 / settings.OBS_VARIANCE ) * np.dot(P, Q)
     elif R_inv:
         J_o = 1.0 * P @ R_inv @ Q
     else:
         raise ValueError("Either R_inv or sigma must be non-zero")
 
-    grad_J = alpha * w + grad_o
+    grad_J = settings.ALPHA * w + grad_o
 
     return grad_J
