@@ -16,12 +16,12 @@ def main():
     settings.FIELD_NAME = "Pressure"
 
     expdir = "experiments/new_try"
-    epochs = 1
+    epochs = 5
     calc_DA_MAE = True
     num_epochs_cv = 0
     small_debug = True
     print_every = 1
-    lr = 0.001
+    lr = 0.0001
     trainer = TrainAE(settings, expdir, calc_DA_MAE)
     num_encode = len(trainer.model.layers_encode)
 

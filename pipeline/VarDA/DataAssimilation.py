@@ -86,28 +86,28 @@ class DAPipeline():
         DA_results = self.perform_VarDA(self.data, self.settings)
         return DA_results
 
-    def DA_SVD(self):
+    def DA_SVD(self, force_init=False):
+        if self.data.get("V") is None or force_init:
+            V = VDAInit.create_V_from_X(self.data.get("train_X"), self.settings)
 
-        V = VDAInit.create_V_from_X(self.data.get("train_X"), self.settings)
+            if self.settings.THREE_DIM:
+                #(M x nx x ny x nz)
+                V = V.reshape((V.shape[0], -1)).T #(n x M)
+            else:
+                #(M x n)
+                V = V.T #(n x M)
+            V_trunc, U, s, W = SVD.TSVD(V, self.settings, self.settings.get_number_modes())
 
-        if self.settings.THREE_DIM:
-            #(M x nx x ny x nz)
-            V = V.reshape((V.shape[0], -1)).T #(n x M)
-        else:
-            #(M x n)
-            V = V.T #(n x M)
-        V_trunc, U, s, W = SVD.TSVD(V, self.settings, self.settings.get_number_modes())
+            #Define intial w_0
+            V_trunc_plus = SVD.SVD_V_trunc_plus(U, s, W, self.settings.get_number_modes())
+            w_0 = V_trunc_plus @ self.data["u_0"].flatten() #i.e. this is the value given in Rossella et al (2019).
+            #w_0 = np.zeros((W.shape[-1],)) #TODO - I'm not sure about this - can we assume is it 0?
 
-        #Define intial w_0
-        s = np.where(s <= 0., 1, s) #remove any zeros (when choosing init point)
-        V_plus_trunc = W.T * (1 / s) @  U.T
-        w_0 = V_plus_trunc @ self.data["u_0"].flatten() #i.e. this is the value given in Rossella et al (2019).
-        #w_0 = np.zeros((W.shape[-1],)) #TODO - I'm not sure about this - can we assume is it 0?
+            self.data["V_trunc"] = V_trunc
+            self.data["V"] = V
+            self.data["w_0"] = w_0
+            self.data["V_grad"] = None
 
-        self.data["V_trunc"] = V_trunc
-        self.data["V"] = V
-        self.data["w_0"] = w_0
-        self.data["V_grad"] = None
         DA_results = self.perform_VarDA(self.data, self.settings)
         return DA_results
 

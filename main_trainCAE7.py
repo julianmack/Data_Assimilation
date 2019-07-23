@@ -7,7 +7,7 @@ from pipeline.settings.CAE7 import CAE7
 def main():
     mults = [1, 2, 4, 8]
     latent_mults = [2, 4]
-    BNs = [ False]
+    BNs = [False]
     for latent in latent_mults:
         for mult in mults:
             for BN in BNs:
@@ -37,14 +37,15 @@ def main():
 
                     model = trainer.train(epochs, learning_rate=lr, test_every=test_every, num_epochs_cv=num_epochs_cv,
                                             print_every=print_every, small_debug=small_debug)
-                except:
+                except Exception as e:
                     try:
+                        print (str(e))
                         trainer = TrainAE(settings, expdir, calc_DA_MAE, batch_sz=8)
 
                         model = trainer.train(epochs, learning_rate=lr, test_every=test_every, num_epochs_cv=num_epochs_cv,
                                                 print_every=print_every, small_debug=small_debug)
-                    except:
-                        pass
+                    except Exception as e:
+                        print (str(e))
 
 
 if __name__ == "__main__":

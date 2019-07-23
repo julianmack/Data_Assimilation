@@ -1,3 +1,6 @@
+#This should be run from DA directory:
+#```python3 diagnostics/SVD_DA_mean.py
+
 import numpy as np
 import os, sys
 #import pipeline
@@ -5,7 +8,7 @@ parent_dir = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
 sys.path.append(os.getcwd()) #to import pipeline
 import pipeline
 
-from pipeline.VarDA import SVD
+from pipeline.VarDA import SVD, VDAInit
 from pipeline.settings import config
 from pipeline import SplitData, GetData
 from pipeline import DAPipeline
@@ -23,6 +26,7 @@ def main():
     settings.set_X_fp(settings.INTERMEDIATE_FP + "X_3D_{}.npy".format(settings.FIELD_NAME))
     settings.set_n( (91, 85, 32))
     settings.DEBUG = False
+    settings.NORMALIZE = True
 
     #LOAD U, s, W
     fp_base = settings.get_X_fp().split("/")[-1][1:]
@@ -35,6 +39,8 @@ def main():
     loader, splitter = GetData(), SplitData()
     X = loader.get_X(settings)
     train_X, test_X, u_c, X, mean, std = splitter.train_test_DA_split_maybe_normalize(X, settings)
+
+    u_0 = np.zeros_like(u_c) #since normalize is True
 
     modes = [-1, 500, 100, 50, 30, 20, 10, 8, 6, 4, 3, 2, 1]
 
@@ -53,7 +59,8 @@ def main():
                 "u_c": u_c,
                 "mean": mean,
                 "u_0": np.zeros_like(u_c)}
-
+    datasets = {"train": train_X[:2],
+                "test": test_X[:2],}
     for name, data in datasets.items():
         for obs_frac in obs_fracs:
             settings.OBS_FRAC = obs_frac
@@ -71,17 +78,18 @@ def main():
                         "counts": 0}
 
                 V_trunc = SVD.SVD_V_trunc(U, s, W, modes=mode)
+                V_trunc_plus = SVD.SVD_V_trunc_plus(U, s, W, modes=mode)
                 DA_data = DA_pipeline.data
                 DA_data["V_trunc"] = V_trunc
                 DA_data["V"] = None
-                DA_data["w_0"] = np.zeros((W.shape[-1],))
+                DA_data["w_0"] = V_plus_trunc @ u_0.flatten()
                 DA_data["V_grad"] = None
 
                 for idx in range(num_states):
 
                     DA_data["u_c"] = data[idx]
-
-                    DA_results = DA_pipeline.perform_VarDA(DA_data, settings)
+                    DA_data = VDAInit.provide_u_c_update_data_not_reduced_AE(DA_data, settings, DA_data["u_c"])
+                    DA_results = DA_pipeline.DA_SVD()
 
                     ref_MAE_mean = DA_results["ref_MAE_mean"]
                     da_MAE_mean = DA_results["da_MAE_mean"]

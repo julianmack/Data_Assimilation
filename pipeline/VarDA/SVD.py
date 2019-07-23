@@ -74,6 +74,17 @@ def SVD_V_trunc(U, s, W, modes=-1):
 
     return U * s @ W
 
+def SVD_V_trunc_plus(U, s, W, modes=-1):
+    if not modes == -1: #all modes
+        U = U[:, :modes]
+        W = W[:modes, :]
+        s = s[:modes]
+    s = np.where(s <= 0., 1, s) #remove any zeros (when choosing init point)
+    V_trunc_plus = W.T * (1 / s) @  U.T
+
+    return V_trunc_plus
+
+
 def SVD_reconstruction_trunc(input, U, s, W, modes=-1):
     """Performs SVD reconstruction for an input of dimension:
             i) n, returns n

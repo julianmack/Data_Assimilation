@@ -234,7 +234,10 @@ class VDAInit:
         observations, H_0, w_0, d = VDAInit.__get_obs_and_d_not_reduced(settings, u_c, u_0, encoder)
         data["observations"] = observations
         data["G"] = H_0
-        data["w_0"] = w_0
+
+        if w_0 is not None: #i.e. don't update if no result was returned
+            data["w_0"] = w_0
+
         data["d"] = d
         data["u_c"] = u_c
         return data
