@@ -43,7 +43,7 @@ class VDAInit:
             device = ML_utils.get_device()
             if model == None:
                 model = ML_utils.load_model_from_settings(settings)
-            model.eval()
+
 
             def __create_encoderOrDecoder(fn):
                 """This returns a function that deals with encoder/decoder
@@ -99,6 +99,9 @@ class VDAInit:
                 "u_c": self.u_c, "u_0": u_0, "X": X,
                 "train_X": train_X, "test_X":test_X,
                 "std": std, "mean": mean, "device": device}
+
+        if w_0 is not None:
+            data["w_0"] = w_0
 
         return data
 

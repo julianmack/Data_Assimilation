@@ -44,7 +44,7 @@ class Config():
 
 
         #VarDA hyperparams
-        self.ALPHA = 1.0
+        self.ALPHA = 1e-8
         self.OBS_VARIANCE = 0.5 #TODO - CHECK this is specific to the sensors (in this case - the error in model predictions)
 
         self.REDUCED_SPACE = False

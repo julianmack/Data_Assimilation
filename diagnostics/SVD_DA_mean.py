@@ -59,8 +59,6 @@ def main():
                 "u_c": u_c,
                 "mean": mean,
                 "u_0": np.zeros_like(u_c)}
-    datasets = {"train": train_X[:2],
-                "test": test_X[:2],}
     for name, data in datasets.items():
         for obs_frac in obs_fracs:
             settings.OBS_FRAC = obs_frac
@@ -82,7 +80,7 @@ def main():
                 DA_data = DA_pipeline.data
                 DA_data["V_trunc"] = V_trunc
                 DA_data["V"] = None
-                DA_data["w_0"] = V_plus_trunc @ u_0.flatten()
+                DA_data["w_0"] = V_trunc_plus @ u_0.flatten()
                 DA_data["V_grad"] = None
 
                 for idx in range(num_states):
@@ -101,10 +99,18 @@ def main():
                     totals["da_MAE_mean"] += da_MAE_mean
                     totals["counts"] += counts
 
-                print(name.upper(), ": obs_frac:", obs_frac, ", number_modes:", mode)
-                for k, v in totals.items():
-                    print(k, "{:.2f}".format(v / num_states))
-                print()
+                    if idx % 10 == 0:
+                        print("idx:", idx)
+                        print_(totals, name, obs_frac, mode, idx)
+                print("------------")
+                print_(totals, name, obs_frac, mode, num_states)
+                print("------------")
+
+def print_(totals, name, obs_frac, mode, num_states):
+    print(name.upper(), ": obs_frac:", obs_frac, ", number_modes:", mode)
+    for k, v in totals.items():
+        print(k, "{:.2f}".format(v / num_states))
+    print()
 
 
 

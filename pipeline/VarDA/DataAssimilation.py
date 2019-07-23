@@ -116,6 +116,9 @@ class DAPipeline():
     def perform_VarDA(data, settings):
         """This is a static method so that it can be performed in AE_train with user specified data"""
         args = (data, settings)
+        w_0 = data.get("w_0")
+        if w_0 is None:
+            raise ValueError("w_0 was not initialized")
 
         res = minimize(cost_fn_J, data.get("w_0"), args = args, method='L-BFGS-B',
                 jac=grad_J, tol=settings.TOL)

@@ -1,17 +1,19 @@
 """File to run elements of pipeline module from"""
 from pipeline import DAPipeline
-from pipeline.settings.CAE_configs import CAE5
+from pipeline.settings.CAE7 import CAE7
 from pipeline.settings import config
 
 def main():
 
-    settings = CAE5()
+
+
+
+    model_pth = "/data/home/jfm1118/DA/experiments/train_DA_Pressure/2-l4NBN/299.pth"
+    settings = CAE7(2, 4) #see path above
     settings.REDUCED_SPACE = True
-
-    model_pth = "models/29.pth"
     settings.AE_MODEL_FP = model_pth
+    settings.TOL = 1e-3
 
-    #CAE5-7-lrelu-0-0.5-NBN
     settings.ACTIVATION = "lrelu"
     settings.CHANGEOVER_DEFAULT = 0
     settings.BATCH_NORM = False
@@ -22,10 +24,6 @@ def main():
     settings.SHUFFLE_DATA = False
     settings.OBS_VARIANCE = 10
 
-
-    channels = settings.get_channels()
-    final_channel = channels[-1]
-    channels[-1] = int(channels[-1] * 0.5)
 
     #settings = config.Config()
     DA = DAPipeline(settings)

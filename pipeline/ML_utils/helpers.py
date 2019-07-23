@@ -39,6 +39,8 @@ def load_model_from_settings(settings, device=None):
     model = settings.AE_MODEL_TYPE(**settings.get_kwargs())
     weights = torch.load(settings.AE_MODEL_FP, map_location=device)
     model.load_state_dict(weights)
+    model.to(device)
+    model.eval()
     return model
 
 def get_device(use_gpu=True, device_idx=0):
