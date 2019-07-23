@@ -20,9 +20,9 @@ class DAPipeline():
     """Class to hold pipeline functions for Variational DA
     """
 
-    def __init__(self, settings, AEmodel=None):
+    def __init__(self, settings, AEmodel=None, u_c=None):
         self.settings = settings
-        vda_initilizer = VDAInit(self.settings, AEmodel)
+        vda_initilizer = VDAInit(self.settings, AEmodel, u_c=u_c)
         self.data = vda_initilizer.run()
 
     def run(self, return_stats=False):
@@ -63,26 +63,25 @@ class DAPipeline():
 
 
 
-    def DA_AE(self):
-        if self.data.get("model") == None:
+    def DA_AE(self, force_init=False):
+        if self.data.get("model") == None or force_init:
             self.model = ML_utils.load_model_from_settings(settings, self.data.get("device"))
             self.data["model"] = self.model
         else:
             self.model = self.data.get("model")
 
         if self.settings.REDUCED_SPACE:
-            V_red = VDAInit.create_V_red(self.data.get("train_X"),
-                                        self.data.get("encoder"), self.settings.get_number_modes(),
-                                        self.settings)
+            if self.data.get("V_trunc") is None or force_init: #only init if not already init
+                V_red = VDAInit.create_V_red(self.data.get("train_X"),
+                                            self.data.get("encoder"), self.settings.get_number_modes(),
+                                            self.settings)
+                self.data["V_trunc"] = V_red
+                print("HERE - should only print once")
             self.data["V_grad"] = None
-            self.data["V_trunc"] = V_red
         else:
 
             # Now access explicit gradient function
             self.data["V_grad"] = self.__maybe_get_jacobian()
-
-        #w_0_v1 = torch.zeros((settings.get_number_modes())).to(device)
-        self.data["w_0"] = self.data.get("encoder")(self.data.get("u_0"))
 
         DA_results = self.perform_VarDA(self.data, self.settings)
         return DA_results
@@ -136,7 +135,7 @@ class DAPipeline():
 
         elif settings.COMPRESSION_METHOD == "AE":
             delta_u_DA = data.get("decoder")(w_opt)
-            if settings.THREE_DIM:
+            if settings.THREE_DIM and len(delta_u_DA.shape) != 3:
                 delta_u_DA = delta_u_DA.squeeze(0)
 
 
@@ -155,7 +154,8 @@ class DAPipeline():
         da_MAE = np.abs(u_DA - u_c)
         ref_MAE_mean = np.mean(ref_MAE)
         da_MAE_mean = np.mean(da_MAE)
-        percent_improve = 100*(ref_MAE_mean - da_MAE_mean)/ref_MAE_mean)
+        percent_improvement = 100*(ref_MAE_mean - da_MAE_mean)/ref_MAE_mean
+
         if settings.DEBUG:
 
             # u_0 = u_0[:1, :2, :2]
@@ -179,7 +179,7 @@ class DAPipeline():
                     "u_DA": u_DA,
                     "ref_MAE_mean": ref_MAE_mean,
                     "da_MAE_mean": da_MAE_mean,
-                    "percent_improve": percent_improve,
+                    "percent_improvement": percent_improvement,
                     "w_opt": w_opt}
         return results_data
 
@@ -213,7 +213,7 @@ class DAPipeline():
         w_opt = DA_results["w_opt"]
 
         counts = (da_MAE < ref_MAE).sum()
-        print("Ref MAE: {:.4f}, DA MAE: {:.4f},".format(ref_MAE_mean, da_MAE_mean), "% improvement: {:.2f}%".format(100*(ref_MAE_mean - da_MAE_mean)/ref_MAE_mean))
+        print("Ref MAE: {:.4f}, DA MAE: {:.4f},".format(ref_MAE_mean, da_MAE_mean), "% improvement: {:.2f}%".format(DA_results["percent_improvement"]))
         print("DA_MAE < ref_MAE for {}/{} points".format(counts, len(da_MAE.flatten())))
         #Compare abs(u_0 - u_c).sum() with abs(u_DA - u_c).sum() in paraview
 

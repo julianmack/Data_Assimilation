@@ -92,10 +92,11 @@ class BaseAE(nn.Module):
         dims = len(x.shape)
         if dims in [2, 5]:
             self.batch = True
-        else:
+        elif dims in [1, 4]:
             self.batch = False
             x = x.unsqueeze(0)
-
+        else:
+            raise ValueError("AE does not accept input with dimensions {}".format(dims))
 
         self.batch_sz = x.shape[0]
 

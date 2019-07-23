@@ -6,9 +6,10 @@ from pipeline import ML_utils
 from pipeline import GetData, SplitData
 
 class VDAInit:
-    def __init__(self, settings, AEmodel=None):
+    def __init__(self, settings, AEmodel=None, u_c=None):
         self.AEmodel = AEmodel
         self.settings = settings
+        self.u_c = u_c #user can pass their own u_c
 
     def run(self):
         """Generates matrices for VarDA. All returned matrices are in the
@@ -21,12 +22,11 @@ class VDAInit:
 
         X = loader.get_X(settings)
 
-        train_X, test_X, u_c, X, mean, std = splitter.train_test_DA_split_maybe_normalize(X, settings)
+        train_X, test_X, u_c_std, X, mean, std = splitter.train_test_DA_split_maybe_normalize(X, settings)
 
-        ##############
-        #TODO - remove this?
-        #u_c = test_X[90]
-        ##############
+        if self.u_c is None:
+            self.u_c = u_c_std
+
 
         # We will take initial condition u_0, as mean of historical data
         if settings.NORMALIZE:
@@ -43,8 +43,11 @@ class VDAInit:
             device = ML_utils.get_device()
             if model == None:
                 model = ML_utils.load_model_from_settings(settings)
+            model.eval()
 
             def __create_encoderOrDecoder(fn):
+                """This returns a function that deals with encoder/decoder
+                input dimensions (e.g. adds channel dim for 3D case)"""
                 def ret_fn(vec):
                     vec = torch.Tensor(vec).to(device)
 
@@ -52,21 +55,19 @@ class VDAInit:
                     if self.settings.THREE_DIM:
                         dims = len(vec.shape)
                         if dims == 3:
+
                             vec = vec.unsqueeze(0)
                         elif dims == 4:
                             #batched input
                             vec = vec.unsqueeze(1)
                     res = fn(vec).detach().cpu().numpy()
-
                     #for 3D case, squeeze for channel
-                    dims = len(vec.shape)
+                    dims = len(res.shape)
                     if self.settings.THREE_DIM and dims > 2:
-                        dims = len(vec.shape)
                         if dims == 4:
-                            vec = vec.squeeze(0)
+                            res = res.squeeze(0)
                         elif dims == 5:   #batched input
-                            vec = vec.squeeze(1)
-
+                            res = res.squeeze(1)
                     return res
 
                 return ret_fn
@@ -80,18 +81,11 @@ class VDAInit:
                 raise NotImplementedError("SVD in reduced space not implemented")
 
             self.settings.OBS_MODE = "all"
-            w_c = encoder(u_c)
-            observations, obs_idx, nobs = self.select_obs(w_c)
-            H_0 = np.eye(nobs)
-            w_0 = encoder(u_0)
-            d = observations - H_0 @ w_0.flatten()
+
+            observations, H_0, w_0, d = self.__get_obs_and_d_reduced_space(self.settings, self.u_c, u_0, encoder)
 
         else:
-
-            observations, obs_idx, nobs = self.select_obs(u_c) #options are specific for rand
-            H_0 = self.create_H(obs_idx, settings.get_n(), nobs, settings.THREE_DIM)
-            d = observations - H_0 @ u_0.flatten() #'d' in literature
-            #R_inv = self.create_R_inv(OBS_VARIANCE, nobs)
+            observations, H_0, w_0, d = self.__get_obs_and_d_not_reduced(self.settings, self.u_c, u_0, encoder)
 
         device = ML_utils.get_device()
 
@@ -102,7 +96,7 @@ class VDAInit:
                 "observations": observations,
                 "model": model,
                 "encoder": encoder, "decoder": decoder,
-                "u_c": u_c, "u_0": u_0, "X": X,
+                "u_c": self.u_c, "u_0": u_0, "X": X,
                 "train_X": train_X, "test_X":test_X,
                 "std": std, "mean": mean, "device": device}
 
@@ -131,30 +125,31 @@ class VDAInit:
 
         return V
 
-    def select_obs(self, vec):
+    @staticmethod
+    def select_obs(settings, vec):
         """Selects and return a subset of observations and their indexes
         from vec according to a user selected mode"""
-        npoints = self.__get_npoints_from_shape(vec.shape)
-        if self.settings.OBS_MODE == "rand":
+        npoints = VDAInit.__get_npoints_from_shape(vec.shape)
+        if settings.OBS_MODE == "rand":
             # Define observations as a random subset of the control state.
-            nobs = int(self.settings.OBS_FRAC * npoints) #number of observations
+            nobs = int(settings.OBS_FRAC * npoints) #number of observations
 
             if nobs == npoints: #then we are selecting all points
-                self.settings.OBS_MODE = "all"
-                return self.__select_all_obs(vec)
+                settings.OBS_MODE = "all"
+                return VDAInit.__select_all_obs(vec)
 
-            ML_utils.set_seeds(seed = self.settings.SEED) #set seeds so that the selected subset is the same every time
+            ML_utils.set_seeds(seed = settings.SEED) #set seeds so that the selected subset is the same every time
             obs_idx = random.sample(range(npoints), nobs) #select nobs integers w/o replacement
             observations = np.take(vec, obs_idx)
-        elif self.settings.OBS_MODE == "single_max":
+        elif settings.OBS_MODE == "single_max":
             nobs = 1
             obs_idx = np.argmax(vec)
             obs_idx = [obs_idx]
             observations = np.take(vec, obs_idx)
-        elif self.settings.OBS_MODE == "all":
-            observations, obs_idx, nobs = self.__select_all_obs(vec)
+        elif settings.OBS_MODE == "all":
+            observations, obs_idx, nobs = VDAInit.__select_all_obs(vec)
         else:
-            raise ValueError("OBS_MODE = {} is not allowed.".format(self.settings.OBS_MODE))
+            raise ValueError("OBS_MODE = {} is not allowed.".format(settings.OBS_MODE))
         return observations, obs_idx, nobs
 
     @staticmethod
@@ -199,6 +194,72 @@ class VDAInit:
         return R_inv
 
     @staticmethod
+    def __get_obs_and_d_not_reduced(settings, u_c, u_0, encoder=None):
+        if settings.COMPRESSION_METHOD == "AE":
+            if encoder is None:
+                raise ValueError("Encoder must be provided if settings.COMPRESSION_METHOD == `AE` ")
+            w_0 = encoder(u_0)
+            #w_0_v1 = torch.zeros((settings.get_number_modes())).to(device)
+        else:
+            w_0 = None #this will be initialized in SVD_DA()
+        observations, obs_idx, nobs = VDAInit.select_obs(settings, u_c) #options are specific for rand
+        H_0 = VDAInit.create_H(obs_idx, settings.get_n(), nobs, settings.THREE_DIM)
+        d = observations - H_0 @ u_0.flatten() #'d' in literature
+        #R_inv = self.create_R_inv(OBS_VARIANCE, nobs)
+        return observations, H_0, w_0, d
+
+    @staticmethod
+    def __get_obs_and_d_reduced_space(settings, u_c, u_0, encoder):
+        """helper function to get observations and H_0 and d in reduced space"""
+        if len(u_c.shape) not in [1, 3]:
+            raise ValueError("This function does not accept batched input with {} dimensions".format(len(u_c.shape)))
+        w_c = encoder(u_c)
+        observations, _, nobs = VDAInit.select_obs(settings, w_c)
+        H_0 = np.eye(nobs) #i.e. using all observations
+        w_0 = encoder(u_0)
+
+        d = observations - H_0 @ w_0.flatten()
+        return observations, H_0, w_0, d
+
+    @staticmethod
+    def provide_u_c_update_data_not_reduced_AE(data, settings, u_c):
+        assert settings.REDUCED_SPACE == False, "This function only works in reduced space"
+        encoder = data.get("encoder")
+        u_0 = data.get("u_0")
+        if encoder is None and settings.COMPRESSION_METHOD == "AE":
+            raise ValueError("Encoder must be initialized in `data` dict")
+        if u_0 is None:
+            raise ValueError("u_0 must be initialized in `data` dict")
+
+        observations, H_0, w_0, d = VDAInit.__get_obs_and_d_not_reduced(settings, u_c, u_0, encoder)
+        data["observations"] = observations
+        data["G"] = H_0
+        data["w_0"] = w_0
+        data["d"] = d
+        data["u_c"] = u_c
+        return data
+
+
+    @staticmethod
+    def provide_u_c_update_data_reduced_AE(data, settings, u_c):
+        assert settings.REDUCED_SPACE == True, "This function only works in reduced space"
+        assert settings.COMPRESSION_METHOD == "AE", "This function only works for AE"
+        encoder = data.get("encoder")
+        u_0 = data.get("u_0")
+        if encoder is None:
+            raise ValueError("Encoder must be initialized in `data` dict")
+        if u_0 is None:
+            raise ValueError("u_0 must be initialized in `data` dict")
+
+        observations, H_0, w_0, d = VDAInit.__get_obs_and_d_reduced_space(settings, u_c, u_0, encoder)
+        data["observations"] = observations
+        data["G"] = H_0
+        data["w_0"] = w_0
+        data["d"] = d
+        data["u_c"] = u_c
+        return data
+
+    @staticmethod
     def create_V_red(X, encoder, num_modes, settings):
         V = VDAInit.create_V_from_X(X, settings)
         assert V.shape[0] >= num_modes
@@ -210,11 +271,13 @@ class VDAInit:
 
         return V_red
 
-    def __select_all_obs(self, vec):
-        nobs = self.__get_npoints_from_shape(vec.shape)
+    @staticmethod
+    def __select_all_obs(vec):
+        nobs = VDAInit.__get_npoints_from_shape(vec.shape)
         return vec, list(range(nobs)), nobs
 
-    def __get_npoints_from_shape(self, n):
+    @staticmethod
+    def __get_npoints_from_shape(n):
         if type(n) == tuple:
             npoints = 1
             for val in n:

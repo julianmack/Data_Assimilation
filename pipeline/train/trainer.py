@@ -7,7 +7,7 @@ import pandas as pd
 
 import pickle
 
-from pipeline import settings
+import pipeline
 from pipeline import DAPipeline
 from pipeline import ML_utils
 from pipeline.AEs import Jacobian
@@ -171,7 +171,7 @@ class TrainAE():
         self.model.to(self.device)
         ###############
         L1 = torch.nn.L1Loss(reduction='sum')
-        L1_loss =0
+        L1_loss = 0
         ###############
 
         for batch_idx, data in enumerate(self.train_loader):
@@ -291,16 +291,20 @@ class TrainAE():
             else:
                 raise ValueError("Can only evaluate DA_MAE on 'test' or 'train'")
 
-            if not hasattr(self, "DA_pipeline"):
-                self.DA_pipeline = DAPipeline(self.settings, self.model)
-                self.DA_data = self.DA_pipeline.data
+            if self.settings.THREE_DIM:
+                u_c = u_c.squeeze(0)
 
+            if not hasattr(self, "DA_pipeline"):
+                self.DA_pipeline = DAPipeline(self.settings, self.model, u_c=u_c)
+                self.DA_data = self.DA_pipeline.data
                 self.__da_data_wipe_some_values()
 
-            #TODO: will this have wrong dims for the reduced space version?
-            self.DA_data["u_c"] = u_c
-            #TODO: EDIT THIS - should be encoded state
-            self.DA_data["w_0"] = torch.zeros((self.settings.get_number_modes())).flatten()
+            if self.settings.REDUCED_SPACE:
+                self.DA_pipeline.data = VDAInit.provide_u_c_update_data_reduced_AE(self.DA_data,
+                                                                                    self.settings, u_c)
+            else:
+                self.DA_pipeline.data = VDAInit.provide_u_c_update_data_not_reduced_AE(self.DA_data,
+                                                                                        self.settings, u_c)
 
             DA_results = self.DA_pipeline.DA_AE()
 
@@ -327,6 +331,7 @@ class TrainAE():
         #successive calls to maybe_eval_DA_MAE()
         self.DA_data["u_c"] = None
         self.DA_data["w_0"] = None
+        self.DA_data["d"] = None
 
     def to_csv(self, np_array, fp):
         df = pd.DataFrame(np_array, columns = ["epoch","reconstruction_err","DA_MAE", "DA_ratio_improve_MAE"])
@@ -334,8 +339,8 @@ class TrainAE():
 
 
     def __init_expdir(self, expdir):
-        expdir = settings.helpers.win_to_unix_fp(expdir)
-        wd = settings.helpers.get_home_dir()
+        expdir = pipeline.settings.helpers.win_to_unix_fp(expdir)
+        wd = pipeline.settings.helpers.get_home_dir()
         try:
             dir_ls = expdir.split("/")
             assert "experiments" in dir_ls

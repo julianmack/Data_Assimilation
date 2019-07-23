@@ -53,9 +53,6 @@ def main():
                 "u_c": u_c,
                 "mean": mean,
                 "u_0": np.zeros_like(u_c)}
-    datasets = {
-                "train2": train_X[:2] }
-
 
     for name, data in datasets.items():
         for obs_frac in obs_fracs:
@@ -68,7 +65,7 @@ def main():
                 num_states = data.shape[0]
 
             for mode in modes:
-                totals = {
+                totals = {"percent_improvement": 0,
                         "ref_MAE_mean": 0,
                         "da_MAE_mean": 0,
                         "counts": 0}
@@ -86,21 +83,19 @@ def main():
 
                     DA_results = DA_pipeline.perform_VarDA(DA_data, settings)
 
-                    #########DELETE:
-                    DA_pipeline.print_DA_results(DA_results)
-
                     ref_MAE_mean = DA_results["ref_MAE_mean"]
                     da_MAE_mean = DA_results["da_MAE_mean"]
                     counts = (DA_results["da_MAE"] < DA_results["ref_MAE"]).sum()
 
                     #add to dict results
+                    totals["percent_improvement"] += DA_results["percent_improvement"]
                     totals["ref_MAE_mean"] += ref_MAE_mean
                     totals["da_MAE_mean"] += da_MAE_mean
                     totals["counts"] += counts
 
-                print(name.upper(), ": obs_frac:", obs_frac, "number_modes:", mode)
+                print(name.upper(), ": obs_frac:", obs_frac, ", number_modes:", mode)
                 for k, v in totals.items():
-                    print(k, v / num_states)
+                    print(k, "{:.2f}".format(v / num_states))
                 print()
 
 

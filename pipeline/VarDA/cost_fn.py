@@ -28,6 +28,10 @@ def cost_fn_J(w, data, settings):
         Q = (G @ V_w - d)
 
     else:
+        print("H_0", G.shape)
+        print("V", V.shape)
+        print("w", w.shape)
+        print("d", d.shape)
         Q = (G @ V @ w - d)
 
     if sigma_2 and not R_inv:

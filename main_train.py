@@ -7,7 +7,7 @@ import shutil
 
 def main():
 
-    settings = CAE7(2)
+    settings = CAE7(1)
     settings.BATCH_NORM = False
     settings.CHANGEOVER_DEFAULT = 0
     settings.REDUCED_SPACE = True
@@ -15,8 +15,8 @@ def main():
     settings.SHUFFLE_DATA = True #Set this =False for harder test and train set
     settings.FIELD_NAME = "Pressure"
 
-    expdir = "experiments/train_DA_{}".format(settings.FIELD_NAME)
-    epochs = 40
+    expdir = "experiments/new_try"
+    epochs = 1
     calc_DA_MAE = True
     num_epochs_cv = 0
     small_debug = True

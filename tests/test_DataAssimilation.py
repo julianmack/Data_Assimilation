@@ -27,7 +27,7 @@ class TestSetup():
         initializer = VDAInit(settings)
         u_c = random.rand(10,)
 
-        observations, obs_idx, nobs = initializer.select_obs(u_c)
+        observations, obs_idx, nobs = initializer.select_obs(settings, u_c)
 
         for idx, obs_idx in enumerate(obs_idx):
             assert u_c[obs_idx] == observations[idx]
@@ -41,7 +41,7 @@ class TestSetup():
         u_c = random.rand(10,) - 1
         u_c[3] = 1 #this will be max value
 
-        observations, obs_idx, nobs = initializer.select_obs(u_c)
+        observations, obs_idx, nobs = initializer.select_obs(settings, u_c)
         assert nobs == 1
         assert obs_idx == [3]
         assert observations == [1]
@@ -56,7 +56,7 @@ class TestSetup():
 
         initializer = VDAInit(settings)
 
-        observations, obs_idx, nobs = initializer.select_obs(u_c)
+        observations, obs_idx, nobs = initializer.select_obs(settings, u_c)
 
         H = VDAInit.create_H(obs_idx, n, nobs)
         assert H @ u_c == [1]
