@@ -3,7 +3,7 @@ import numpy as np
 import random
 
 import os
-
+import pickle
 
 def set_seeds(seed = None):
     "Fix all seeds"
@@ -34,6 +34,7 @@ def load_AE(ModelClass, path, device = None, **kwargs):
     return encoder, decoder
 
 def load_model_from_settings(settings, device=None):
+
     if not device:
         device = get_device()
     model = settings.AE_MODEL_TYPE(**settings.get_kwargs())
@@ -42,6 +43,34 @@ def load_model_from_settings(settings, device=None):
     model.to(device)
     model.eval()
     return model
+
+def load_model_and_settings_from_dir(dir):
+    #get files
+    model, settings = None, None
+
+    max_epoch = 0
+    best_fp = None
+    for path, subdirs, files in os.walk(dir):
+        for file in files:
+            if file == "settings.txt":
+                with open(path + file, "rb") as f:
+                    settings = pickle.load(f)
+            if file[-4:] == ".pth":
+                if "-" in file:
+                    continue
+                epoch = int(file.replace(".pth", ""))
+                if epoch > max_epoch:
+                    max_epoch = epoch
+                    best_fp = path + file
+
+    if not settings:
+        raise ValueError("No settings.txt file in dir")
+
+    settings.AE_MODEL_FP = best_fp
+    model = load_model_from_settings(settings)
+
+    return model, settings
+
 
 def get_device(use_gpu=True, device_idx=0):
     """get torch device type"""

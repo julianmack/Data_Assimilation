@@ -54,12 +54,13 @@ def main():
     L2 = torch.nn.MSELoss(reduction="sum")
 
 
-    datasets = {"train": train_X,
-                "test": test_X,
-                "u_c": u_c,
-                "mean": mean,
-                "u_0": np.zeros_like(u_c)}
+    datasets = {#"train": train_X,
+               "test": test_X,
+                "u_c": np.expand_dims(u_c, 0),
+                "mean": np.expand_dims(mean, 0),
+                "u_0": np.expand_dims(u_0, 0)}
     for name, data in datasets.items():
+
         for obs_frac in obs_fracs:
             settings.OBS_FRAC = obs_frac
             DA_pipeline = DAPipeline(settings)
@@ -84,8 +85,12 @@ def main():
                 DA_data["V_grad"] = None
 
                 for idx in range(num_states):
+                    if num_states == 1:
+                        DA_data["u_c"] = data
+                    else:
+                        DA_data["u_c"] = data[idx]
 
-                    DA_data["u_c"] = data[idx]
+
                     DA_data = VDAInit.provide_u_c_update_data_not_reduced_AE(DA_data, settings, DA_data["u_c"])
                     DA_results = DA_pipeline.DA_SVD()
 
@@ -101,7 +106,7 @@ def main():
 
                     if idx % 10 == 0:
                         print("idx:", idx)
-                        print_(totals, name, obs_frac, mode, idx)
+                        print_(totals, name, obs_frac, mode, idx + 1)
                 print("------------")
                 print_(totals, name, obs_frac, mode, num_states)
                 print("------------")

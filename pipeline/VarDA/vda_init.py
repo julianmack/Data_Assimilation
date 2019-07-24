@@ -27,6 +27,8 @@ class VDAInit:
         if self.u_c is None:
             self.u_c = u_c_std
 
+        #self.u_c = train_X[62] #good
+        #self.u_c = train_X[-1] #bad
 
         # We will take initial condition u_0, as mean of historical data
         if settings.NORMALIZE:
@@ -41,7 +43,7 @@ class VDAInit:
         if self.settings.COMPRESSION_METHOD == "AE":
             #get encoder
             device = ML_utils.get_device()
-            if model == None:
+            if model is None:
                 model = ML_utils.load_model_from_settings(settings)
 
 
@@ -60,7 +62,7 @@ class VDAInit:
                         elif dims == 4:
                             #batched input
                             vec = vec.unsqueeze(1)
-                    res = fn(vec).detach().cpu().numpy()
+                    res = fn(vec).detach().cpu()
                     #for 3D case, squeeze for channel
                     dims = len(res.shape)
                     if self.settings.THREE_DIM and dims > 2:
@@ -68,7 +70,7 @@ class VDAInit:
                             res = res.squeeze(0)
                         elif dims == 5:   #batched input
                             res = res.squeeze(1)
-                    return res
+                    return res.numpy()
 
                 return ret_fn
 
@@ -270,9 +272,17 @@ class VDAInit:
         V = VDAInit.create_V_from_X(X, settings)
         assert V.shape[0] >= num_modes
 
-        #take random selection of V
-        idxs = random.sample(range(V.shape[0]), num_modes)
+        #take random selection of V:
+        #idxs = random.sample(range(V.shape[0]), num_modes)
+
+        #take evenly spaced states
+        step = V.shape[0] / num_modes
+        idxs = [int(x * step) for x in range(num_modes)]
+
+        assert len(idxs) == num_modes
+
         V_selected = V[idxs]
+
         V_red = encoder(V_selected)
 
         return V_red

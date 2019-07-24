@@ -14,7 +14,6 @@ class BaseAE(nn.Module):
                         latent_size = (Cout, nx, ny, nz)
     """
     def forward(self, x):
-
         self.__check_instance_vars()
         x = self.encode(x)
         x = self.decode(x)

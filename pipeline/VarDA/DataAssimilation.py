@@ -28,7 +28,6 @@ class DAPipeline():
     def run(self, return_stats=False):
         """Runs the variational DA routine using settings from the passed config class
         (see config.py for example)"""
-
         settings = self.settings
 
         if settings.COMPRESSION_METHOD == "SVD":
@@ -38,7 +37,6 @@ class DAPipeline():
         else:
             raise ValueError("COMPRESSION_METHOD must be in {SVD, AE}")
         w_opt = DA_results["w_opt"]
-
         self.print_DA_results(DA_results)
 
         if self.settings.SAVE:
@@ -143,6 +141,14 @@ class DAPipeline():
 
 
         u_DA = u_0 + delta_u_DA
+
+        if False:
+            print("std:    ", std.shape)
+            print("mean:   ", mean.shape)
+            print("u_0:    ", u_0.shape)
+            print("u_c:    ", u_c.shape)
+            print("u_DA:   ", u_DA.shape)
+            print("delta_u_DA:   ", delta_u_DA.shape)
 
 
         if settings.UNDO_NORMALIZE:
