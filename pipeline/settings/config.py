@@ -62,8 +62,8 @@ class Config():
         self.AZURE_CONTAINER = "x-data"
         self.AZURE_DOWNLOAD = True
 
-    def get_X_fp(self, force_init=True):
-        if hasattr(self, "X_FP_hid"):
+    def get_X_fp(self, force_init=False):
+        if hasattr(self, "X_FP_hid") and not force_init:
             return self.X_FP_hid
         else:
             if self.THREE_DIM:
