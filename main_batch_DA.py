@@ -11,23 +11,24 @@ def main():
     #Load data
     loader, splitter = GetData(), SplitData()
     X = loader.get_X(init_settings)
+
     train_X, test_X, u_c_std, X, mean, std = splitter.train_test_DA_split_maybe_normalize(X, init_settings)
 
     #set control_states
-    NUM_STATES = 3
+    NUM_STATES = 2
     START = 30
     control_states = train_X[START:NUM_STATES + START]
 
 
     #AE
-    dir_azure = "/data/home/jfm1118/DA/experiments/train_DA_Pressure/2-l4NBN/" # 299.pth"
-    dir = "/Users/julia/Documents/Imperial/DA_project/experiments/azure/train_DA_Pressure/2-l4NBN/" # 299.pth"
+    dir = "/data/home/jfm1118/DA/experiments/train_DA_Pressure/2-l4NBN/2-l4NBN/" # 299.pth"
+    #dir = "/Users/julia/Documents/Imperial/DA_project/experiments/azure/train_DA_Pressure/2-l4NBN/" # 299.pth"
 
     model, settings = ML_utils.load_model_and_settings_from_dir(dir)
     settings.HOME_DIR = init_settings.HOME_DIR
     settings.INTERMEDIATE_FP = init_settings.INTERMEDIATE_FP
     x_fp = settings.get_X_fp(True) #force init X_FP
-    
+
     out_fp = save_fp + "AE.csv"
     batch_DA_AE = BatchDA(settings, control_states, csv_fp= out_fp, AEModel=model,
                         reconstruction=True, plot=False)
@@ -38,6 +39,7 @@ def main():
 
     #SVD
     settings = config.Config3D()
+    settings.DEBUG = False
     out_fp = save_fp + "SVD.csv"
     batch_DA_SVD = BatchDA(settings, control_states,  csv_fp= out_fp, AEModel=None,
                         reconstruction=True, plot=False)

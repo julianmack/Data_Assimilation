@@ -2,10 +2,13 @@ import torch
 
 from pipeline import ML_utils, DAPipeline
 from pipeline.VarDA import SVD, VDAInit
+from pipeline.utils.expdir import init_expdir
+
 import pandas as pd
+import numpy as np
 
 class BatchDA():
-    def __init__(self, settings, control_states, csv_fp=None, AEModel=None, reconstruction=True, plot=True):
+    def __init__(self, settings, control_states, csv_fp=None, AEModel=None, reconstruction=True, plot=False):
 
         self.settings = settings
         self.control_states = control_states
@@ -14,27 +17,39 @@ class BatchDA():
         self.model = AEModel
         self.csv_fp = csv_fp
 
+        if self.csv_fp:
+            fps = self.csv_fp.split("/")
+            dir = fps[:-1]
+            dir = "/".join(fps[:-1])
+            self.expdir = init_expdir(dir, True)
+            self.file_name = fps[-1]
+
+
+
+
     def run(self, print_every=10):
 
 
         if self.settings.COMPRESSION_METHOD == "SVD":
-            if settings.REDUCED_SPACE:
+            if self.settings.REDUCED_SPACE:
                 raise NotImplementedError("Cannot have reduced space SVD")
 
-            fp_base = settings.get_X_fp().split("/")[-1][1:]
+            fp_base = self.settings.get_X_fp().split("/")[-1][1:]
 
             U = np.load(self.settings.INTERMEDIATE_FP  + "U" + fp_base)
             s = np.load(self.settings.INTERMEDIATE_FP  + "s" + fp_base)
             W = np.load(self.settings.INTERMEDIATE_FP  + "W" + fp_base)
 
-            V_trunc = SVD.SVD_V_trunc(U, s, W, modes=mode)
-            V_trunc_plus = SVD.SVD_V_trunc_plus(U, s, W, modes=mode)
+            num_modes = self.settings.get_number_modes()
+
+            V_trunc = SVD.SVD_V_trunc(U, s, W, modes=num_modes)
+            V_trunc_plus = SVD.SVD_V_trunc_plus(U, s, W, modes=num_modes)
 
             self.DA_pipeline = DAPipeline(self.settings)
-            DA_data = DA_pipeline.data
+            DA_data = self.DA_pipeline.data
             DA_data["V_trunc"] = V_trunc
             DA_data["V"] = None
-            DA_data["w_0"] = V_trunc_plus @ u_0.flatten()
+            DA_data["w_0"] = V_trunc_plus @ DA_data.get("u_0").flatten()
             DA_data["V_grad"] = None
 
         elif self.settings.COMPRESSION_METHOD == "AE":
@@ -85,10 +100,10 @@ class BatchDA():
                 DA_results = self.DA_pipeline.DA_SVD()
 
             if self.reconstruction:
-
+                data_tensor = torch.Tensor(u_c)
                 if self.settings.COMPRESSION_METHOD == "AE":
                     device = ML_utils.get_device()
-                    data_tensor = torch.Tensor(u_c)
+
                     data_tensor = data_tensor.to(device)
 
                     data_hat = decoder(encoder(u_c))
@@ -96,13 +111,13 @@ class BatchDA():
                     data_hat = data_hat.to(device)
 
                 elif self.settings.COMPRESSION_METHOD == "SVD":
-                    num_modes = self.settings.get_number_modes()
+
                     data_hat = SVD.SVD_reconstruction_trunc(u_c, U, s, W, num_modes)
 
                     data_hat = torch.Tensor(data_hat)
-
-                l1 = L1(data_hat, data_tensor)
-                l2 = L2(data_hat, data_tensor)
+                with torch.no_grad():
+                    l1 = L1(data_hat, data_tensor)
+                    l2 = L2(data_hat, data_tensor)
             else:
                 l1, l2 = None, None
 
@@ -112,8 +127,8 @@ class BatchDA():
             result["ref_MAE_mean"] =  DA_results["ref_MAE_mean"]
             result["da_MAE_mean"] = DA_results["da_MAE_mean"]
             result["counts"] = DA_results["counts"]
-            result["l1_loss"] = l1
-            result["l2_loss"] = l2
+            result["l1_loss"] = l1.detach().cpu().numpy()
+            result["l2_loss"] = l2.detach().cpu().numpy()
 
             #add to results list (that will become a .csv)
             results.append(result)
@@ -133,7 +148,7 @@ class BatchDA():
         results_df = pd.DataFrame(results)
         #save to csv
         if self.csv_fp:
-            pd.to_csv(results_df)
+            results_df.to_csv(self.expdir + self.file_name)
 
         if self.plot:
             raise NotImplementedError("plotting functionality not implemented yet")
@@ -143,6 +158,7 @@ class BatchDA():
     def __add_result_to_totals(result, totals):
         for k, v in result.items():
             totals[k] += v
+        return totals
 
     @staticmethod
     def __print_totals(totals, num_states):

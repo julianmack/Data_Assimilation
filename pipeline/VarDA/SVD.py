@@ -39,12 +39,14 @@ def TSVD(V, settings, trunc_idx=None, test=False):
     else:
         assert type(trunc_idx) == int, "trunc_idx must be an integer"
 
-    print("# modes kept: ", trunc_idx)
+
     U_trunc = U[:, :trunc_idx]
     W_trunc = W[:trunc_idx, :]
     s_trunc = s[:trunc_idx]
     V_trunc = U_trunc * s_trunc @ W_trunc
 
+    if settings.DEBUG:
+        print("# modes kept: ", trunc_idx)
 
     if test:
         #1) Check generalized inverses

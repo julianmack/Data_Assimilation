@@ -13,6 +13,8 @@ from pipeline import ML_utils
 from pipeline.AEs import Jacobian
 from pipeline.VarDA import VDAInit
 from pipeline import GetData, SplitData
+from pipeline.utils.expdir import init_expdir
+
 import os
 
 BATCH = 16
@@ -32,7 +34,7 @@ class TrainAE():
         err_msg = """AE_settings must be an AE configuration class"""
         assert self.settings.COMPRESSION_METHOD == "AE", err_msg
 
-        self.expdir = self.__init_expdir(expdir)
+        self.expdir = init_expdir(expdir)
 
 
         self.test_fp = self.expdir + "test.csv"
@@ -338,29 +340,6 @@ class TrainAE():
         df.to_csv(fp)
 
 
-    def __init_expdir(self, expdir):
-        expdir = pipeline.settings.helpers.win_to_unix_fp(expdir)
-        wd = pipeline.settings.helpers.get_home_dir()
-        try:
-            dir_ls = expdir.split("/")
-            assert "experiments" in dir_ls
-        except (AssertionError, KeyError, AttributeError) as e:
-            print("~~~~~~~~{}~~~~~~~~~".format(str(e)))
-            raise ValueError("expdir must be in the experiments/ directory")
-
-        if expdir[0] == "/":
-            expdir = expdir[1:]
-        if not expdir[-1] == "/":
-            expdir += "/"
-
-        expdir = wd + expdir
-
-        if os.path.isdir(expdir):
-            if len(os.listdir(expdir)) > 0:
-                raise ValueError("Cannot overwrite files in expdir. Exit-ing.")
-        else:
-            os.makedirs(expdir)
-        return expdir
 
 
 if __name__ == "__main__":
