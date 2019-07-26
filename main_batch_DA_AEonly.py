@@ -39,26 +39,7 @@ def main():
     print(res_AE)
 
 
-    #SVD
-    settings = config.Config3D()
-    settings.DEBUG = False
-    out_fp = save_fp + "SVD.csv"
-    batch_DA_SVD = BatchDA(settings, control_states,  csv_fp= out_fp, AEModel=None,
-                        reconstruction=True, plot=False)
-    res_SVD = batch_DA_SVD.run()
-    print(res_SVD)
-
-    print("AE")
-    print(res_AE)
-    print()
-    print("SVD")
-    print(res_SVD)
-    print()
-
-
-
 
 
 if __name__ == "__main__":
     main()
-
