@@ -3,7 +3,8 @@ from pipeline import ML_utils, GetData, SplitData
 from pipeline.VarDA.batch_DA import BatchDA
 from pipeline.settings import config
 
-ALL_DATA = True
+ALL_DATA = False
+SAVE = False
 def main():
     save_fp = "/experiments/batch_DA/2/"
     init_settings =  config.Config3D()
@@ -18,7 +19,7 @@ def main():
     if ALL_DATA:
         control_states = X
     else:
-        NUM_STATES = 25
+        NUM_STATES = 30
         START = 50
         control_states = train_X[START:NUM_STATES + START]
 
@@ -32,11 +33,16 @@ def main():
     x_fp = settings.get_X_fp(True) #force init X_FP
 
     out_fp = save_fp + "AE.csv"
+    if SAVE:
+        out_fp = save_fp + "AE.csv"
+    else:
+        out_fp = None
+
     batch_DA_AE = BatchDA(settings, control_states, csv_fp= out_fp, AEModel=model,
                         reconstruction=True, plot=False)
 
     res_AE = batch_DA_AE.run(print_every=10)
-    print(res_AE)
+    
 
 
 
