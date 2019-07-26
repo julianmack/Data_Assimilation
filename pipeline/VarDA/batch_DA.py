@@ -17,7 +17,7 @@ class BatchDA():
     def run(self, print_every=10):
 
 
-        if settings.COMPRESSION_METHOD == "SVD":
+        if self.settings.COMPRESSION_METHOD == "SVD":
             if settings.REDUCED_SPACE:
                 raise NotImplementedError("Cannot have reduced space SVD")
 
@@ -37,12 +37,12 @@ class BatchDA():
             DA_data["w_0"] = V_trunc_plus @ u_0.flatten()
             DA_data["V_grad"] = None
 
-        elif settings.COMPRESSION_METHOD == "AE":
+        elif self.settings.COMPRESSION_METHOD == "AE":
             if self.model is None:
                 raise ValueError("Must provide an AE torch.nn model if settings.COMPRESSION_METHOD == 'AE'")
 
             self.DA_pipeline = DAPipeline(self.settings, self.model)
-            DA_data = DA_pipeline.data
+            DA_data = self.DA_pipeline.data
 
             if self.reconstruction:
                 encoder = DA_data.get("encoder")
@@ -59,27 +59,24 @@ class BatchDA():
                 "ref_MAE_mean": 0,
                 "da_MAE_mean": 0,
                 "counts": 0,
-                "l1": 0,
-                "l2": 0}
+                "l1_loss": 0,
+                "l2_loss": 0}
 
         results = []
 
-        for u_c in INSERT_W:
+        if len(self.control_states.shape) in [1, 3]:
+            raise ValueError("This is not batched control_state input")
+        else:
+            num_states = self.control_states.shape[0]
 
-            # if self.settings.THREE_DIM: ???
-            #     u_c = u_c.squeeze(0)
-
-            # for idx in range(num_states):
-            #     if num_states == 1:
-            #         DA_data["u_c"] = data
-            #     else:
-            #         DA_data["u_c"] = data[idx]
+        for idx in range(num_states):
+            u_c = self.control_states[idx]
 
             if self.settings.REDUCED_SPACE:
-                self.DA_pipeline.data = VDAInit.provide_u_c_update_data_reduced_AE(self.DA_data,
+                self.DA_pipeline.data = VDAInit.provide_u_c_update_data_reduced_AE(DA_data,
                                                                                     self.settings, u_c)
             else:
-                self.DA_pipeline.data = VDAInit.provide_u_c_update_data_full_space(self.DA_data,
+                self.DA_pipeline.data = VDAInit.provide_u_c_update_data_full_space(DA_data,
                                                                                         self.settings, u_c)
 
             if self.settings.COMPRESSION_METHOD == "AE":
@@ -94,13 +91,13 @@ class BatchDA():
                     data_tensor = torch.Tensor(u_c)
                     data_tensor = data_tensor.to(device)
 
-                    data_hat = decoder(encoder(data))
+                    data_hat = decoder(encoder(u_c))
                     data_hat = torch.Tensor(data_hat)
                     data_hat = data_hat.to(device)
 
                 elif self.settings.COMPRESSION_METHOD == "SVD":
                     num_modes = self.settings.get_number_modes()
-                    data_hat = SVD.SVD_reconstruction_trunc(data, U, s, W, num_modes)
+                    data_hat = SVD.SVD_reconstruction_trunc(u_c, U, s, W, num_modes)
 
                     data_hat = torch.Tensor(data_hat)
 

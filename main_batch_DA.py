@@ -20,8 +20,14 @@ def main():
 
 
     #AE
-    dir = "/data/home/jfm1118/DA/experiments/azure/train_DA_Pressure/2-l4NBN/" # 299.pth"
+    dir_azure = "/data/home/jfm1118/DA/experiments/train_DA_Pressure/2-l4NBN/" # 299.pth"
+    dir = "/Users/julia/Documents/Imperial/DA_project/experiments/azure/train_DA_Pressure/2-l4NBN/" # 299.pth"
+
     model, settings = ML_utils.load_model_and_settings_from_dir(dir)
+    settings.HOME_DIR = init_settings.HOME_DIR
+    settings.INTERMEDIATE_FP = init_settings.INTERMEDIATE_FP
+    x_fp = settings.get_X_fp(True) #force init X_FP
+    
     out_fp = save_fp + "AE.csv"
     batch_DA_AE = BatchDA(settings, control_states, csv_fp= out_fp, AEModel=model,
                         reconstruction=True, plot=False)
