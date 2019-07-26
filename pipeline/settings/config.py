@@ -93,11 +93,11 @@ class Config():
 class Config3D(Config):
     def __init__(self):
         super(Config3D, self).__init__()
-        settings.THREE_DIM = True
+        self.THREE_DIM = True
 
-        settings.get_X_fp(True) #force init X_fp
-        settings.set_n( (91, 85, 32))
-        
+        self.get_X_fp(True) #force init X_fp
+        self.set_n( (91, 85, 32))
+
 
 class ConfigExample(Config):
     """Override and add relevant configuration options."""

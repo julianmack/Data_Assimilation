@@ -25,11 +25,10 @@ def cost_fn_J(w, data, settings):
         Q = (G @ V_w - d)
 
     else:
-        print("H", G.shape)
-        print("V", V.shape)
-        print("d", d.shape)
-        print("w", w.shape)
-        exit()
+        # print("H", G.shape)
+        # print("V", V.shape)
+        # print("d", d.shape)
+        # print("w", w.shape)
         Q = (G @ V @ w - d)
 
     if settings.OBS_VARIANCE and not R_inv:

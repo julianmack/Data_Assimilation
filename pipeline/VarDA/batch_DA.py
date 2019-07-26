@@ -1,6 +1,6 @@
 import torch
 
-from pipeline import ML_utils, DA_pipeline
+from pipeline import ML_utils, DAPipeline
 from pipeline.VarDA import SVD, VDAInit
 import pandas as pd
 
@@ -64,7 +64,7 @@ class BatchDA():
 
         results = []
 
-        for u_c in INSERT:
+        for u_c in INSERT_W:
 
             # if self.settings.THREE_DIM: ???
             #     u_c = u_c.squeeze(0)

@@ -190,7 +190,7 @@ class DAPipeline():
                     "ref_MAE_mean": ref_MAE_mean,
                     "da_MAE_mean": da_MAE_mean,
                     "percent_improvement": percent_improvement,
-                    "counts", counts,
+                    "counts": counts,
                     "w_opt": w_opt}
         return results_data
 
