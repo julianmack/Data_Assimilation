@@ -7,52 +7,70 @@ import sys
 import matplotlib.pyplot as plt
 plt.style.use('seaborn-white')
 
+
+
 #Extract results files from sub directories
 def extract_res_from_files(exp_dir_base):
-    """Takes a directory and searches recursively for 
-    subdirs that have a test train and settings file 
+    """Takes a directory (or directories) and searches recursively for
+    subdirs that have a test train and settings file
     (meaning a complete experiment was conducted).
     Returns:
-        A list of dictionaries where each element in the list 
+        A list of dictionaries where each element in the list
         is an experiment and the dictionary has the following form:
-        
-        data_dict = {"train_df": df1, "test_df":df2, 
+
+        data_dict = {"train_df": df1, "test_df":df2,
                     "settings":settings, "path": path}
 """
-    
+
+    if isinstance(exp_dir_base, str):
+        exp_dirs = [exp_dir_base]
+
+    elif isinstance(exp_dir_base, list):
+        exp_dirs = exp_dir_base
+    else:
+        raise ValueError("exp_dir_base must be a string or a list")
+
+
     TEST = "test.csv"
     TRAIN = "train.csv"
     SETTINGS = "settings.txt"
     results = []
-    for path, subdirs, files in os.walk(exp_dir_base):
-        test, train, settings = None, None, None
-        
-        for name in files:
-            if fnmatch(name, TEST):
-                test = os.path.join(path, name)
-            elif fnmatch(name, TRAIN):
-                train = os.path.join(path, name)
-            elif fnmatch(name, SETTINGS):
-                settings = os.path.join(path, name)
 
-        if test and train and settings:
-            dftest = pd.read_csv(test)
-            dftrain = pd.read_csv(train)
-            with open(settings, "rb") as f:
-                stt = pickle.load(f)
-            data_dict = {"train_df": dftrain, "test_df":dftest, "settings":stt, "path": path}
-            results.append(data_dict)
+
+    for exp_dir_base in exp_dirs:
+        for path, subdirs, files in os.walk(exp_dir_base):
+            test, train, settings = None, None, None
+
+            for name in files:
+                if fnmatch(name, TEST):
+                    test = os.path.join(path, name)
+                elif fnmatch(name, TRAIN):
+                    train = os.path.join(path, name)
+                elif fnmatch(name, SETTINGS):
+                    settings = os.path.join(path, name)
+
+            if test and train and settings:
+                dftest = pd.read_csv(test)
+                dftrain = pd.read_csv(train)
+                with open(settings, "rb") as f:
+                    stt = pickle.load(f)
+                data_dict = {"train_df": dftrain, "test_df":dftest, "settings":stt, "path": path}
+                results.append(data_dict)
+
     print("{} experiments conducted".format(len(results)))
     return results
 
-def plot_results_loss_epochs(results):
+def plot_results_loss_epochs(results, ylim = None):
     """Plots subplot with train/valid loss vs number epochs"""
-    
+
     nx = 3
     ny = int(np.ceil(len(results) / nx))
     fig, axs = plt.subplots(ny, nx,  sharey=True)
-    fig.set_size_inches(nx * 5, ny * 4) 
+    fig.set_size_inches(nx * 5, ny * 4)
     print(axs.shape)
+    if ylim:
+        plt.ylim(ylim[0], ylim[1])
+
     for idx, ax in enumerate(axs.flatten()):
         try:
             test_df = results[idx]["test_df"]
@@ -64,25 +82,26 @@ def plot_results_loss_epochs(results):
         ax.plot(train_df.epoch, train_df.reconstruction_err, 'g+-')
         ax.grid(True)
 
+
         model_name = sttn.__class__.__name__
         latent = sttn.get_number_modes()
         activation = sttn.ACTIVATION
-        
+
         if hasattr(sttn, "BATCH_NORM"):
             BN = sttn.BATCH_NORM
-            if BN: 
-                BN = "BN" 
-            else: 
+            if BN:
+                BN = "BN"
+            else:
                 BN = "NBN"
         else:
             BN = "NBN"
-        
-        
+
+
         if hasattr(sttn, "learning_rate"):
             lr = sttn.learning_rate
         else:
             lr = "??"
-            
+
         num_layers = sttn.get_num_layers_decode()
 
         #ax.set_title(idx)
@@ -93,7 +112,7 @@ def extract(res):
     test_df = res["test_df"]
     train_df = res["train_df"]
     sttn = res["settings"]
-    
+
     valid_loss = min(test_df.reconstruction_err)
     model_name = sttn.__class__.__name__
     latent = sttn.get_number_modes()
@@ -103,32 +122,43 @@ def extract(res):
     num_channels = sum(channels)
     chan_layer = num_channels/num_layers
     first_channel = channels[1] #get the input channel (this may be a bottleneck)
-    
+
     if hasattr(sttn, "CHANGEOVER_DEFAULT"):
         conv_changeover = sttn.CHANGEOVER_DEFAULT
     else:
         conv_changeover = 10
-    
+
     if hasattr(sttn, "BATCH_NORM"):
         BN = bool(sttn.BATCH_NORM)
     else:
         BN = False
-        
+
     if hasattr(sttn, "learning_rate"):
         lr = sttn.learning_rate
     else:
         lr = "??"
-        
-    data = {"model":model_name, "valid_loss":valid_loss, "activation":activation, 
-            "latent_dims": latent, "num_layers":num_layers, "total_channels":num_channels, 
-            "channels/layer":chan_layer, "conv_changeover": conv_changeover, 
+
+    data = {"model":model_name, "valid_loss":valid_loss, "activation":activation,
+            "latent_dims": latent, "num_layers":num_layers, "total_channels":num_channels,
+            "channels/layer":chan_layer, "conv_changeover": conv_changeover,
             "path": res["path"], "first_channel": first_channel, "batch_norm": BN,
             "channels": channels, "learning_rate": lr}
     return data
 
-def create_res_df(results):
+def create_res_df(results, remove_duplicates=False):
     df_res = pd.DataFrame(columns=["model", "valid_loss", "activation", "latent_dims", "num_layers", "total_channels", "channels/layer"])
     for idx, res in enumerate(results):
         data = extract(res)
         df_res = df_res.append(data, ignore_index=True)
+
+    if remove_duplicates:
+        df_res_original = df_res.copy() #save original (in case you substitute out)
+        columns = list(df_res_original.columns)
+        columns.remove("model")
+        columns.remove("path")
+        df_res_new = df_res_original.loc[df_res_original.astype(str).drop_duplicates(subset=columns, keep="last").index]
+        #df_res_new = df_res_original.drop_duplicates(subset=columns, keep="last")
+        df_res_new.shape
+        df_res = df_res_new
+
     return df_res

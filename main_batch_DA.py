@@ -1,7 +1,6 @@
 """File to run elements of pipeline module from"""
-
-from pipeline.VarDA import BatchDA
 from pipeline import ML_utils, GetData, SplitData
+from pipeline.VarDA import BatchDA
 from pipeline.settings import config
 
 
