@@ -15,7 +15,7 @@ def main():
     train_X, test_X, u_c_std, X, mean, std = splitter.train_test_DA_split_maybe_normalize(X, init_settings)
 
     #set control_states
-    NUM_STATES = 2
+    NUM_STATES = 25
     START = 30
     control_states = train_X[START:NUM_STATES + START]
 

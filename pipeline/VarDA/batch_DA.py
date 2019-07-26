@@ -24,7 +24,7 @@ class BatchDA():
             self.expdir = init_expdir(dir, True)
             self.file_name = fps[-1]
 
-
+        #TODO - add timing
 
 
     def run(self, print_every=10):
