@@ -5,7 +5,7 @@ from pipeline.settings import config
 
 
 def main():
-    save_fp = "/experiments/batch_DA/"
+    save_fp = "/experiments/batch_DA/2/"
     init_settings =  config.Config3D()
 
     #Load data
@@ -16,7 +16,7 @@ def main():
 
     #set control_states
     NUM_STATES = 25
-    START = 30
+    START = 50
     control_states = train_X[START:NUM_STATES + START]
 
 
@@ -33,8 +33,8 @@ def main():
     batch_DA_AE = BatchDA(settings, control_states, csv_fp= out_fp, AEModel=model,
                         reconstruction=True, plot=False)
 
-    res = batch_DA_AE.run(print_every=1)
-    print(res)
+    res_AE = batch_DA_AE.run(print_every=10)
+    print(res_AE)
 
 
     #SVD
@@ -43,8 +43,15 @@ def main():
     out_fp = save_fp + "SVD.csv"
     batch_DA_SVD = BatchDA(settings, control_states,  csv_fp= out_fp, AEModel=None,
                         reconstruction=True, plot=False)
-    res = batch_DA_SVD.run()
-    print(res)
+    res_SVD = batch_DA_SVD.run()
+    print(res_SVD)
+
+    print("AE")
+    print(res_AE)
+    print()
+    print("SVD")
+    print(res_SVD)
+    print()
 
 
 
