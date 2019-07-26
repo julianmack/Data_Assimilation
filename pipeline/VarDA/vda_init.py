@@ -227,7 +227,7 @@ class VDAInit:
         return observations, H_0, w_0, d
 
     @staticmethod
-    def provide_u_c_update_data_not_reduced_AE(data, settings, u_c):
+    def provide_u_c_update_data_full_space(data, settings, u_c):
         assert settings.REDUCED_SPACE == False, "This function only works in reduced space"
         encoder = data.get("encoder")
         u_0 = data.get("u_0")

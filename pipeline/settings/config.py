@@ -62,7 +62,7 @@ class Config():
         self.AZURE_CONTAINER = "x-data"
         self.AZURE_DOWNLOAD = True
 
-    def get_X_fp(self):
+    def get_X_fp(self, force_init=True):
         if hasattr(self, "X_FP_hid"):
             return self.X_FP_hid
         else:
@@ -90,7 +90,14 @@ class Config():
         for k, v in self.env_vars.items():
             env[str(k)] = str(v)
 
+class Config3D(Config):
+    def __init__(self):
+        super(Config3D, self).__init__()
+        settings.THREE_DIM = True
 
+        settings.get_X_fp(True) #force init X_fp
+        settings.set_n( (91, 85, 32))
+        
 
 class ConfigExample(Config):
     """Override and add relevant configuration options."""

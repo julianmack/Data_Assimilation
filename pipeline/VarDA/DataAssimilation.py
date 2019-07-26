@@ -164,6 +164,7 @@ class DAPipeline():
         ref_MAE_mean = np.mean(ref_MAE)
         da_MAE_mean = np.mean(da_MAE)
         percent_improvement = 100*(ref_MAE_mean - da_MAE_mean)/ref_MAE_mean
+        counts = (da_MAE < ref_MAE).sum()
 
         if settings.DEBUG:
 
@@ -189,6 +190,7 @@ class DAPipeline():
                     "ref_MAE_mean": ref_MAE_mean,
                     "da_MAE_mean": da_MAE_mean,
                     "percent_improvement": percent_improvement,
+                    "counts", counts,
                     "w_opt": w_opt}
         return results_data
 
@@ -220,8 +222,8 @@ class DAPipeline():
         ref_MAE_mean = DA_results["ref_MAE_mean"]
         da_MAE_mean = DA_results["da_MAE_mean"]
         w_opt = DA_results["w_opt"]
+        counts = DA_results["counts"]
 
-        counts = (da_MAE < ref_MAE).sum()
         print("Ref MAE: {:.4f}, DA MAE: {:.4f},".format(ref_MAE_mean, da_MAE_mean), "% improvement: {:.2f}%".format(DA_results["percent_improvement"]))
         print("DA_MAE < ref_MAE for {}/{} points".format(counts, len(da_MAE.flatten())))
         #Compare abs(u_0 - u_c).sum() with abs(u_DA - u_c).sum() in paraview

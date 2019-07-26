@@ -91,7 +91,7 @@ def main():
                         DA_data["u_c"] = data[idx]
 
 
-                    DA_data = VDAInit.provide_u_c_update_data_not_reduced_AE(DA_data, settings, DA_data["u_c"])
+                    DA_data = VDAInit.provide_u_c_update_data_full_space(DA_data, settings, DA_data["u_c"])
                     DA_results = DA_pipeline.DA_SVD()
 
                     ref_MAE_mean = DA_results["ref_MAE_mean"]
@@ -111,11 +111,6 @@ def main():
                 print_(totals, name, obs_frac, mode, num_states)
                 print("------------")
 
-def print_(totals, name, obs_frac, mode, num_states):
-    print(name.upper(), ": obs_frac:", obs_frac, ", number_modes:", mode)
-    for k, v in totals.items():
-        print(k, "{:.2f}".format(v / num_states))
-    print()
 
 
 

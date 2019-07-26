@@ -303,7 +303,7 @@ class TrainAE():
                 self.DA_pipeline.data = VDAInit.provide_u_c_update_data_reduced_AE(self.DA_data,
                                                                                     self.settings, u_c)
             else:
-                self.DA_pipeline.data = VDAInit.provide_u_c_update_data_not_reduced_AE(self.DA_data,
+                self.DA_pipeline.data = VDAInit.provide_u_c_update_data_full_space(self.DA_data,
                                                                                         self.settings, u_c)
 
             DA_results = self.DA_pipeline.DA_AE()
