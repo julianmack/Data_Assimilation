@@ -25,6 +25,7 @@ def cost_fn_J(w, data, settings):
         Q = (G @ V_w - d)
 
     else:
+        #print("H", G[0, 2], ", V", V[0, 0], ", d", d[0],  ", w", w[0])
         # print("H", G.shape)
         # print("V", V.shape)
         # print("d", d.shape)
