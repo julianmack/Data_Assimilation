@@ -223,7 +223,7 @@ class VDAInit:
         w_0 = encoder(u_0)
         if False: #TODO - rationalize
 
-        
+
             observations, _, nobs = VDAInit.select_obs(settings, w_c)
 
             H_0 = np.eye(nobs) #i.e. using all observations
@@ -234,7 +234,7 @@ class VDAInit:
             d = w_c - w_0
             observations = w_c
 
-        return observations, H_0, w_0, d
+        return observations, H_0, None, d
 
     @staticmethod
     def provide_u_c_update_data_full_space(data, settings, u_c):
@@ -272,9 +272,11 @@ class VDAInit:
         observations, H_0, w_0, d = VDAInit.__get_obs_and_d_reduced_space(settings, u_c, u_0, encoder)
         data["observations"] = observations
         data["G"] = H_0
-        data["w_0"] = w_0
         data["d"] = d
         data["u_c"] = u_c
+
+        if w_0 is not None: #i.e. don't update if no result was returned
+            data["w_0"] = w_0
         return data
 
     @staticmethod
@@ -297,18 +299,19 @@ class VDAInit:
                     i_start = i
 
                 V_red = np.concatenate(res, axis=0)
-
-            #choose values that vary most
-            V_mean = V_red.mean(axis=0)
-            V_std = V_red.std(axis=0)
-
-            V_normal = (V_red - V_mean) / V_std
-
-            largest_var = V_normal.sum(axis=1)
-            smallest_idx = np.argmin(largest_var)
-            idxs = list(np.argpartition(largest_var, -(num_modes-1))[-(num_modes-1):])
-
-            idxs.append(smallest_idx)
+            else:
+                raise ValueError("Must have more timesteps available than in BATCH")
+            # #choose values that vary most
+            # V_mean = V_red.mean(axis=0)
+            # V_std = V_red.std(axis=0)
+            #
+            # V_normal = (V_red - V_mean) / V_std
+            #
+            # largest_var = V_normal.sum(axis=1)
+            # smallest_idx = np.argmin(largest_var)
+            # idxs = list(np.argpartition(largest_var, -(num_modes-1))[-(num_modes-1):])
+            #
+            # idxs.append(smallest_idx)
 
         else:
             #take random selection of V:
@@ -318,12 +321,11 @@ class VDAInit:
             step = V.shape[0] / num_modes
             idxs = [int(x * step) for x in range(num_modes)]
 
+            assert len(idxs) == num_modes
 
-        assert len(idxs) == num_modes
+            V_selected = V[idxs]
 
-        V_selected = V[idxs]
-
-        V_red = encoder(V_selected)
+            V_red = encoder(V_selected)
 
         return V_red
 

@@ -19,7 +19,7 @@ def main():
     if ALL_DATA:
         control_states = X
     else:
-        NUM_STATES = 100
+        NUM_STATES = 5
         START = 100
         control_states = train_X[START:NUM_STATES + START]
 
@@ -33,7 +33,6 @@ def main():
     settings.INTERMEDIATE_FP = init_settings.INTERMEDIATE_FP
     #settings.UNDO_NORMALIZE = True
     settings.DEBUG = False
-    settings.TOL = 1e-6
     settings.OBS_VARIANCE = 0.5
     x_fp = settings.get_X_fp(True) #force init X_FP
 
@@ -48,7 +47,7 @@ def main():
 
     res_AE = batch_DA_AE.run(print_every=10)
 
-
+    print(res_AE.tail(20))
 
 
 

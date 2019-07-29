@@ -73,7 +73,9 @@ class DAPipeline():
                 V_red = VDAInit.create_V_red(self.data.get("train_X"),
                                             self.data.get("encoder"), self.settings.get_number_modes(),
                                             self.settings)
-                self.data["V_trunc"] = V_red
+                self.data["V_trunc"] = V_red.T #tau x M
+
+                self.data["w_0"] = np.zeros((V_red.shape[0]))
                 print("HERE - should only print once")
             self.data["V_grad"] = None
         else:

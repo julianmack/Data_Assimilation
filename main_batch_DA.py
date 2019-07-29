@@ -3,9 +3,9 @@ from pipeline import ML_utils, GetData, SplitData
 from pipeline.VarDA.batch_DA import BatchDA
 from pipeline.settings import config
 
-ALL_DATA = True
+ALL_DATA = False
 def main():
-    save_fp = "/experiments/batch_DA/3/"
+    save_fp = "/experiments/batch_DA/4/"
     init_settings =  config.Config3D()
 
     #Load data
@@ -18,8 +18,8 @@ def main():
     if ALL_DATA:
         control_states = X
     else:
-        NUM_STATES = 25
-        START = 50
+        NUM_STATES = 5
+        START = 100
         control_states = train_X[START:NUM_STATES + START]
 
     #AE
