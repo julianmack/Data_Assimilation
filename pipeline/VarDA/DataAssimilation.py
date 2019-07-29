@@ -133,14 +133,27 @@ class DAPipeline():
             u_c = u_c.flatten()
             std = std.flatten()
             mean = mean.flatten()
+            u_DA = u_0 + delta_u_DA
 
+        elif settings.COMPRESSION_METHOD == "AE" and settings.REDUCED_SPACE:
+            #w_0 = data.get("w_0")
+            # delta_w_DA = w_opt + w_0
+            # u_DA = data.get("decoder")(delta_w_DA)
+            # u_DA = u_0 + u_DA
+
+
+            q_opt = data.get("V_trunc") @ w_opt
+            delta_u_DA  = data.get("decoder")(q_opt)
+
+            u_DA = u_0 + delta_u_DA
         elif settings.COMPRESSION_METHOD == "AE":
             delta_u_DA = data.get("decoder")(w_opt)
             if settings.THREE_DIM and len(delta_u_DA.shape) != 3:
                 delta_u_DA = delta_u_DA.squeeze(0)
 
+            u_DA = u_0 + delta_u_DA
 
-        u_DA = u_0 + delta_u_DA
+
 
         if False:
             print("std:    ", std.shape)
@@ -234,9 +247,3 @@ if __name__ == "__main__":
 
     DA = DAPipeline(settings)
     DA.run()
-    exit()
-
-    #create X:
-    loader = GetData()
-    X = loader.get_X(settings)
-    np.save(settings.get_X_fp(), X)

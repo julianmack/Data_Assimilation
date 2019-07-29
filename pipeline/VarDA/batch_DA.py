@@ -102,7 +102,7 @@ class BatchDA():
             if self.reconstruction:
                 data_tensor = torch.Tensor(u_c)
                 if self.settings.COMPRESSION_METHOD == "AE":
-                    device = ML_utils.get_device(True, 1)
+                    device = ML_utils.get_device()
                     #device = ML_utils.get_device(True, 1)
 
                     data_tensor = data_tensor.to(device)

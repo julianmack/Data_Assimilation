@@ -19,8 +19,8 @@ def main():
     if ALL_DATA:
         control_states = X
     else:
-        NUM_STATES = 30
-        START = 50
+        NUM_STATES = 100
+        START = 100
         control_states = train_X[START:NUM_STATES + START]
 
     #AE
@@ -28,8 +28,13 @@ def main():
     #dir = "/Users/julia/Documents/Imperial/DA_project/experiments/azure/train_DA_Pressure/2-l4NBN/" # 299.pth"
 
     model, settings = ML_utils.load_model_and_settings_from_dir(dir)
+    model.to(ML_utils.get_device()) #TODO
     settings.HOME_DIR = init_settings.HOME_DIR
     settings.INTERMEDIATE_FP = init_settings.INTERMEDIATE_FP
+    #settings.UNDO_NORMALIZE = True
+    settings.DEBUG = False
+    settings.TOL = 1e-6
+    settings.OBS_VARIANCE = 0.5
     x_fp = settings.get_X_fp(True) #force init X_FP
 
     out_fp = save_fp + "AE.csv"
@@ -42,7 +47,7 @@ def main():
                         reconstruction=True, plot=False)
 
     res_AE = batch_DA_AE.run(print_every=10)
-    
+
 
 
 

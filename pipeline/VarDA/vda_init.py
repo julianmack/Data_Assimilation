@@ -39,10 +39,9 @@ class VDAInit:
         encoder = None
         decoder = None
         model = self.AEmodel
-
+        device = ML_utils.get_device()
         if self.settings.COMPRESSION_METHOD == "AE":
             #get encoder
-            device = ML_utils.get_device()
             if model is None:
                 model = ML_utils.load_model_from_settings(settings)
 
@@ -62,7 +61,8 @@ class VDAInit:
                         elif dims == 4:
                             #batched input
                             vec = vec.unsqueeze(1)
-                    res = fn(vec).detach().cpu()
+                    with torch.no_grad():
+                        res = fn(vec).detach().cpu()
                     #for 3D case, squeeze for channel
                     dims = len(res.shape)
                     if self.settings.THREE_DIM and dims > 2:
@@ -88,8 +88,6 @@ class VDAInit:
 
         else:
             observations, H_0, w_0, d = self.__get_obs_and_d_not_reduced(self.settings, self.u_c, u_0, encoder)
-
-        device = ML_utils.get_device()
 
         #TODO - **maybe** get rid of this monstrosity...:
         #i.e. you could return a class that has these attributes:
@@ -208,7 +206,10 @@ class VDAInit:
         else:
             w_0 = None #this will be initialized in SVD_DA()
         observations, obs_idx, nobs = VDAInit.select_obs(settings, u_c) #options are specific for rand
+
         H_0 = VDAInit.create_H(obs_idx, settings.get_n(), nobs, settings.THREE_DIM)
+
+        #NOTE: assert np.allclose(observations, H_0 @ u_c.flatten())
         d = observations - H_0 @ u_0.flatten() #'d' in literature
         #R_inv = self.create_R_inv(OBS_VARIANCE, nobs)
         return observations, H_0, w_0, d
@@ -219,11 +220,20 @@ class VDAInit:
         if len(u_c.shape) not in [1, 3]:
             raise ValueError("This function does not accept batched input with {} dimensions".format(len(u_c.shape)))
         w_c = encoder(u_c)
-        observations, _, nobs = VDAInit.select_obs(settings, w_c)
-        H_0 = np.eye(nobs) #i.e. using all observations
         w_0 = encoder(u_0)
+        if False: #TODO - rationalize
 
-        d = observations - H_0 @ w_0.flatten()
+        
+            observations, _, nobs = VDAInit.select_obs(settings, w_c)
+
+            H_0 = np.eye(nobs) #i.e. using all observations
+            d = observations - H_0 @ w_0.flatten()
+        else:
+
+            H_0 = np.eye(len(w_c))
+            d = w_c - w_0
+            observations = w_c
+
         return observations, H_0, w_0, d
 
     @staticmethod
@@ -271,13 +281,43 @@ class VDAInit:
     def create_V_red(X, encoder, num_modes, settings):
         V = VDAInit.create_V_from_X(X, settings)
         assert V.shape[0] >= num_modes
+        if False: #TODO - rationalize this
+            res = []
+            BATCH = 128
+            if V.shape[0] > BATCH:
+                i_start = 0
+                for i in range(BATCH, V.shape[0] + BATCH, BATCH):
 
-        #take random selection of V:
-        #idxs = random.sample(range(V.shape[0]), num_modes)
+                    idx_end = i if i < V.shape[0] else V.shape[0]
+                    inp = V[i_start:idx_end]
 
-        #take evenly spaced states
-        step = V.shape[0] / num_modes
-        idxs = [int(x * step) for x in range(num_modes)]
+                    v = encoder(inp)
+                    res.append(v)
+
+                    i_start = i
+
+                V_red = np.concatenate(res, axis=0)
+
+            #choose values that vary most
+            V_mean = V_red.mean(axis=0)
+            V_std = V_red.std(axis=0)
+
+            V_normal = (V_red - V_mean) / V_std
+
+            largest_var = V_normal.sum(axis=1)
+            smallest_idx = np.argmin(largest_var)
+            idxs = list(np.argpartition(largest_var, -(num_modes-1))[-(num_modes-1):])
+
+            idxs.append(smallest_idx)
+
+        else:
+            #take random selection of V:
+            #idxs = random.sample(range(V.shape[0]), num_modes)
+
+            #take evenly spaced states
+            step = V.shape[0] / num_modes
+            idxs = [int(x * step) for x in range(num_modes)]
+
 
         assert len(idxs) == num_modes
 

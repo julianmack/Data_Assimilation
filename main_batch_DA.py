@@ -5,7 +5,7 @@ from pipeline.settings import config
 
 ALL_DATA = True
 def main():
-    save_fp = "/experiments/batch_DA/2/"
+    save_fp = "/experiments/batch_DA/3/"
     init_settings =  config.Config3D()
 
     #Load data
