@@ -3,10 +3,10 @@ from pipeline import ML_utils, GetData, SplitData
 from pipeline.VarDA.batch_DA import BatchDA
 from pipeline.settings import config
 
-ALL_DATA = False
-SAVE = False
+ALL_DATA = True
+SAVE = True
 def main():
-    save_fp = "/experiments/batch_DA/2/"
+    save_fp = "/experiments/batch_DA/3/"
     init_settings =  config.Config3D()
 
     #Load data
