@@ -28,6 +28,19 @@ def main():
     #dir = "/Users/julia/Documents/Imperial/DA_project/experiments/azure/train_DA_Pressure/2-l4NBN/" # 299.pth"
 
     model, settings = ML_utils.load_model_and_settings_from_dir(dir)
+    num_params = sum(p.numel() for p in model.parameters())
+    
+    latent_shape = settings.get_kwargs()["latent_sz"]
+    latent_size = 1
+    for x in latent_shape:
+        latent_size *= x
+
+    print("num params", num_params)
+    print("latent shape", latent_shape)
+    print("latent size", latent_size)
+    print("CHANNELS", settings.get_channels())
+
+    exit()
     model.to(ML_utils.get_device()) #TODO
     settings.HOME_DIR = init_settings.HOME_DIR
     settings.INTERMEDIATE_FP = init_settings.INTERMEDIATE_FP

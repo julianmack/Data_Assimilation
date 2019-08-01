@@ -7,7 +7,8 @@ import shutil
 
 #global variables for DA and training:
 EPOCHS = 1
-ALL_DATA = False
+ALL_DATA = False #for DA
+SMALL_DEBUG_DOM = False #For training 
 SAVE = False
 
 def main():
@@ -28,7 +29,6 @@ def main():
 
     calc_DA_MAE = True
     num_epochs_cv = 0
-    small_debug = True
     print_every = 1
     lr = 0.0001
     trainer = TrainAE(settings, expdir, calc_DA_MAE)
@@ -36,7 +36,7 @@ def main():
 
 
     model = trainer.train(EPOCHS, learning_rate=lr, test_every=1, num_epochs_cv=num_epochs_cv,
-                            print_every=print_every, small_debug=small_debug)
+                            print_every=print_every, small_debug=SMALL_DEBUG_DOM)
 
 
     #test loading

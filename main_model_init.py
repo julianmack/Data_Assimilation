@@ -13,8 +13,16 @@ def main():
     #         print(channel.shape, end=", ")
     #     print()
 
-    print(model)
+    #print(model)
     num_params = sum(p.numel() for p in model.parameters())
+    latent_shape = settings.get_kwargs()["latent_sz"]
+    latent_size = 1
+    for x in latent_shape:
+        latent_size *= x
+
     print("num params", num_params)
+    print("latent shape", latent_shape)
+    print("latent size", latent_size)
+    print("CHANNELS", settings.get_channels())
 if __name__ == "__main__":
     main()
