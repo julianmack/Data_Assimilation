@@ -1,7 +1,6 @@
 """Run training for AE"""
 import torch
 import torch.optim as optim
-from torch.utils.data import TensorDataset, DataLoader
 import numpy as np
 import pandas as pd
 
@@ -12,7 +11,7 @@ from pipeline import DAPipeline
 from pipeline import ML_utils
 from pipeline.AEs import Jacobian
 from pipeline.VarDA import VDAInit
-from pipeline import GetData, SplitData
+from pipeline import GetData
 from pipeline.utils.expdir import init_expdir
 
 import os
@@ -65,33 +64,10 @@ class TrainAE():
             self.model_dir = self.expdir
         else:
             self.model_dir = None
-
-        #data
-        loader = GetData()
-        splitter = SplitData()
-        X = loader.get_X(settings)
-
-        self.train_X, self.test_X, DA_u_c, X_norm,  mean, std = splitter.train_test_DA_split_maybe_normalize(X, settings)
-
-        if small_debug: #take v. small subset of test and train (for speed)
-            self.train_X = self.train_X[-8:]
-            self.test_X = self.test_X[:8]
-
-        #Add Channel if we are in 3D case
-        if settings.THREE_DIM:
-            self.train_X = np.expand_dims(self.train_X, 1)
-            self.test_X = np.expand_dims(self.test_X, 1)
-
-
-        #Dataloaders
-        train_dataset = TensorDataset(torch.Tensor(self.train_X))
-        self.train_loader = DataLoader(train_dataset, self.batch_sz, shuffle=True, num_workers=num_workers)
-        test_dataset = TensorDataset(torch.Tensor(self.test_X))
-        test_batch_sz = min(self.test_X.shape[0], self.batch_sz)
-        self.test_loader = DataLoader(test_dataset, test_batch_sz)
-
-
-
+        self.loader = GetData()
+        self.train_loader, self.test_loader = self.loader.get_train_test_loaders(settings,
+                                                            self.batch_sz, num_workers=num_workers,
+                                                            small_debug=small_debug)
         #self.loss_fn = torch.nn.L1Loss(reduction='sum')
         self.loss_fn = torch.nn.MSELoss(reduction="sum")
 
@@ -287,9 +263,9 @@ class TrainAE():
         By default this is the final element of the test or train set"""
         if self.calc_DA_MAE:
             if test_valid == "train":
-                u_c = self.train_X[-1]
+                u_c = self.loader.train_X[-1]
             elif test_valid == "test":
-                u_c = self.test_X[-1]
+                u_c = self.loader.test_X[-1]
             else:
                 raise ValueError("Can only evaluate DA_MAE on 'test' or 'train'")
 

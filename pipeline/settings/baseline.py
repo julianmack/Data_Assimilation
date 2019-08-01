@@ -18,7 +18,7 @@ class Baseline(CAEConfig):
         #self.CHANGEOVERS = ?
 
         self.BATCH_NORM = False
-
+        self.AUGMENTATION = True
         self.get_channels()
 
     def gen_channels(self):

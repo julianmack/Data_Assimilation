@@ -4,14 +4,83 @@ import random
 import os
 
 from pipeline.fluidity import VtkSave, vtktools
+from pipeline.data_.augmentation import FlipHorizontal, FieldJitter
+from pipeline.data_.split import SplitData
+
 from vtk.util import numpy_support as nps
 
+
+from torch.utils.data import TensorDataset, DataLoader
+
+from torchvision import transforms
+import torch
+
+class Data3D_Dataset(TensorDataset):
+    def __init__(self, *tensors, transform=None):
+        assert all(tensors[0].size(0) == tensor.size(0) for tensor in tensors)
+        self.tensors = tensors
+        self.transform = transform
+    def __getitem__(self, index):
+        sample = tuple(tensor[index] for tensor in self.tensors)
+        print("B", sample[0][0,0,0,0])
+        if self.transform:
+            sample = self.transform(sample)
+
+        print("A", sample[0][0,0,0,0])
+        return sample
 
 class GetData():
     """Class to load data from files in preparation for Data Assimilation or AE training"""
     def __init__(self):
         pass
 
+    def get_train_test_loaders(self, settings, batch_sz, num_workers = 6, small_debug=False):
+
+
+        X = self.get_X(settings)
+
+        splitter = SplitData()
+        train_X, test_X, DA_u_c, X_norm,  mean, std = splitter.train_test_DA_split_maybe_normalize(X, settings)
+
+        if small_debug: #take v. small subset of test and train (for speed)
+            batch_sz = 3 #to test sizes
+            num_workers = 0
+            train_X = train_X[-8:]
+            test_X = test_X[:8]
+
+        #Add Channel if we are in 3D case
+        if settings.THREE_DIM:
+            train_X = np.expand_dims(train_X, 1)
+            test_X = np.expand_dims(test_X, 1)
+
+        #ADD Data Augmentation to train_loader
+        trnsfrm = None
+        if hasattr(settings, "AUGMENTATION") and settings.AUGMENTATION:
+            trnsfrm = transforms.Compose([
+                            transforms.RandomApply([FlipHorizontal("x"),
+                                                    FlipHorizontal("y")], p=0.5),
+                            transforms.RandomChoice([FieldJitter(0.01, 0.1),
+                                                    FieldJitter(0.005, 0.5),
+                                                    FieldJitter(0., 0.)], ),
+                            ])
+
+
+        #Dataloaders
+        train_dataset = Data3D_Dataset(torch.Tensor(train_X), transform=trnsfrm)
+        train_loader = DataLoader(train_dataset, batch_sz, shuffle=True, num_workers=num_workers)
+        test_dataset = Data3D_Dataset(torch.Tensor(test_X))
+        test_batch_sz = min(test_X.shape[0], batch_sz)
+        test_loader = DataLoader(test_dataset, test_batch_sz)
+
+        for batch_idx, data in enumerate(train_loader):
+            x, = data
+            print(batch_idx, x.shape)
+        exit()
+        #save train_X and test_X
+        self.train_X = train_X
+        self.test_X = test_X
+
+        return train_loader, test_loader
 
     def get_X(self, settings):
         """Returns X in the M x n format"""

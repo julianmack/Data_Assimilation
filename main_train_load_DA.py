@@ -8,7 +8,7 @@ import shutil
 #global variables for DA and training:
 EPOCHS = 1
 ALL_DATA = False #for DA
-SMALL_DEBUG_DOM = False #For training
+SMALL_DEBUG_DOM = True #For training
 SAVE = False
 
 def main():
