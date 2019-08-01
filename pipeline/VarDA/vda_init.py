@@ -285,7 +285,7 @@ class VDAInit:
         assert V.shape[0] >= num_modes
         if False: #TODO - rationalize this
             res = []
-            BATCH = 128
+            BATCH = 16
             if V.shape[0] > BATCH:
                 i_start = 0
                 for i in range(BATCH, V.shape[0] + BATCH, BATCH):

@@ -138,7 +138,7 @@ class BatchDA():
             #add to aggregated dict results
             totals = self.__add_result_to_totals(result, totals)
 
-            if idx % print_every == 0:
+            if idx % print_every == 0 and idx > 0:
                 print("idx:", idx)
                 self.__print_totals(totals, idx + 1)
 
