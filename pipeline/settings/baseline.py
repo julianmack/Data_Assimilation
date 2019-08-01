@@ -16,8 +16,7 @@ class Baseline(CAEConfig):
         self.ACTIVATION = "lrelu"  #default negative_slope = 0.05
         self.CHANGEOVER_DEFAULT = 2
 
-
-        self.BATCH_NORM = False
+        self.BATCH_NORM = True
         self.AUGMENTATION = True
         self.DROPOUT = True
 

@@ -29,7 +29,7 @@ def main():
     calc_DA_MAE = True
     num_epochs_cv = 0
     print_every = 1
-    lr = 0.0001
+    lr = 0.001
     trainer = TrainAE(settings, expdir, calc_DA_MAE)
     expdir = trainer.expdir #get full path
 

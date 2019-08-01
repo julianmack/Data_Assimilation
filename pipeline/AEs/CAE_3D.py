@@ -55,12 +55,12 @@ class CAE_3D(BaseAE):
     def __conv_maybe_BN_or_drop(self, Cin, Cout, data, transpose, dropout):
         layer = OrderedDict()
         if dropout:
-            layer.update({"0": nn.Dropout3d(0.33)})
+            layer.update({"00": nn.Dropout3d(0.33)})
         if self.batch_norm:
-            layer.update({"1": nn.BatchNorm3d(Cin)})
+            layer.update({"0": nn.BatchNorm3d(Cin)})
         if not transpose:
-            layer.update({"2": nn.Conv3d(Cin, Cout, **data)})
+            layer.update({"1": nn.Conv3d(Cin, Cout, **data)})
         else:
-            layer.update({"2": nn.ConvTranspose3d(Cin, Cout, **data)})
+            layer.update({"1": nn.ConvTranspose3d(Cin, Cout, **data)})
         conv = nn.Sequential(layer)
         return conv

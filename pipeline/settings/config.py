@@ -164,12 +164,17 @@ class CAEConfig(ConfigAE):
         init_data = ML_utils.ConvScheduler.get_init_data_from_schedule(conv_data)
         channels = self.get_channels()
         latent_sz = self.__get_latent_sz(conv_data, channels)
+        if hasattr(self, "DROPOUT"):
+            dropout = self.DROPOUT
+        else:
+            dropout = False
+            
         kwargs =   {"layer_data": init_data,
                     "channels": channels,
                     "activation": self.ACTIVATION,
                     "latent_sz": latent_sz,
                     "batch_norm": self.BATCH_NORM,
-                    "dropout": self.DROPOUT}
+                    "dropout": dropout}
         return kwargs
 
     def get_n(self):

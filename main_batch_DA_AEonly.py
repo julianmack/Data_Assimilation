@@ -29,7 +29,7 @@ def main():
 
     model, settings = ML_utils.load_model_and_settings_from_dir(dir)
     num_params = sum(p.numel() for p in model.parameters())
-    
+
     latent_shape = settings.get_kwargs()["latent_sz"]
     latent_size = 1
     for x in latent_shape:
