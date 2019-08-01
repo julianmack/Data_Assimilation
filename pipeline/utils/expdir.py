@@ -10,13 +10,15 @@ def init_expdir(expdir, ow_permitted=False):
     except (AssertionError, KeyError, AttributeError) as e:
         print("~~~~~~~~{}~~~~~~~~~".format(str(e)))
         raise ValueError("expdir must be in the experiments/ directory")
+    if wd in expdir:
+        pass
+    else:
+        if expdir[0] == "/":
+            expdir = expdir[1:]
 
-    if expdir[0] == "/":
-        expdir = expdir[1:]
+        expdir = wd + expdir
     if not expdir[-1] == "/":
         expdir += "/"
-
-    expdir = wd + expdir
 
     if os.path.isdir(expdir):
         if not ow_permitted:

@@ -24,6 +24,7 @@ class BatchDA():
             self.expdir = init_expdir(dir, True)
             self.file_name = fps[-1]
 
+
         #TODO - add timing
 
 
@@ -148,7 +149,10 @@ class BatchDA():
 
         results_df = pd.DataFrame(results)
         #save to csv
+        print("HERE")
         if self.csv_fp:
+            print("HERE1")
+            print(self.expdir + self.file_name)
             results_df.to_csv(self.expdir + self.file_name)
 
         if self.plot:

@@ -12,7 +12,7 @@ class CAE_3D(BaseAE):
         assert len(layer_data) + 1 == len(channels)
         self.batch_norm = batch_norm
 
-        self.layers = nn.ModuleList([])
+        layers = nn.ModuleList([])
 
         channels = self.get_list_AE_layers(channels[0], channels[-1], channels[1:-1])
 
@@ -33,12 +33,12 @@ class CAE_3D(BaseAE):
             else:
                 conv = self.__conv_maybe_batch_norm(channels[idx], channels[idx + 1], data, True)
 
-            self.layers.append(conv)
+            layers.append(conv)
 
         #init instance variables
         self.latent_sz = latent_sz
-        self.layers_encode = self.layers[:num_encode]
-        self.layers_decode = self.layers[num_encode:]
+        self.layers_encode = layers[:num_encode]
+        self.layers_decode = layers[num_encode:]
 
 
         if activation == "lrelu":

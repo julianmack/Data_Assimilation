@@ -308,7 +308,7 @@ class TrainAE():
                 self.DA_pipeline.data = VDAInit.provide_u_c_update_data_full_space(self.DA_data,
                                                                                         self.settings, u_c)
 
-            DA_results = self.DA_pipeline.DA_AE()
+            DA_results = self.DA_pipeline.DA_AE(True) #force init = True
 
             print()
             print(test_valid)

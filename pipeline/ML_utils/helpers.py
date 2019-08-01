@@ -34,12 +34,19 @@ def load_AE(ModelClass, path, device = None, **kwargs):
     return encoder, decoder
 
 def load_model_from_settings(settings, device=None):
-
+    """Loads model from settings - if settings.AE_MODEL_FP is set,
+    this loads saved weights, otherwise it will init a new model """
     if not device:
         device = get_device()
+
+    set_seeds()
+
     model = settings.AE_MODEL_TYPE(**settings.get_kwargs())
-    weights = torch.load(settings.AE_MODEL_FP, map_location=device)
-    model.load_state_dict(weights)
+    if hasattr(settings, "AE_MODEL_FP"):
+        
+        weights = torch.load(settings.AE_MODEL_FP, map_location=device)
+        model.load_state_dict(weights)
+
     model.to(device)
     model.eval()
     return model
@@ -59,7 +66,7 @@ def load_model_and_settings_from_dir(dir):
                 if "-" in file:
                     continue
                 epoch = int(file.replace(".pth", ""))
-                if epoch > max_epoch:
+                if epoch >= max_epoch:
                     max_epoch = epoch
                     best_fp = path + file
 

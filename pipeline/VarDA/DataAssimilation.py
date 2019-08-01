@@ -63,7 +63,7 @@ class DAPipeline():
 
     def DA_AE(self, force_init=False):
         if self.data.get("model") == None or force_init:
-            self.model = ML_utils.load_model_from_settings(settings, self.data.get("device"))
+            self.model = ML_utils.load_model_from_settings(self.settings, self.data.get("device"))
             self.data["model"] = self.model
         else:
             self.model = self.data.get("model")
