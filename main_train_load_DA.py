@@ -8,7 +8,7 @@ import shutil
 #global variables for DA and training:
 EPOCHS = 1
 ALL_DATA = False
-SAVE = True
+SAVE = False
 
 def main():
 
@@ -39,9 +39,9 @@ def main():
                             print_every=print_every, small_debug=small_debug)
 
 
-
     #test loading
     model, settings = ML_utils.load_model_and_settings_from_dir(expdir)
+
 
     model.to(ML_utils.get_device()) #TODO
 
@@ -66,14 +66,14 @@ def main():
         out_fp = expdir + "AE.csv"
     else:
         out_fp = None
-    print(out_fp)
+
 
     batch_DA_AE = BatchDA(settings, control_states, csv_fp= out_fp, AEModel=model,
                         reconstruction=True, plot=False)
 
     res_AE = batch_DA_AE.run(print_every=10)
-    print(res_AE)
 
+    print(res_AE)
     #Uncomment line below if you want to automatically delete expdir (useful during testing)
     if not SAVE:
         shutil.rmtree(expdir, ignore_errors=False, onerror=None)
