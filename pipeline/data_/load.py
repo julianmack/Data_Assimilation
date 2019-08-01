@@ -22,11 +22,8 @@ class Data3D_Dataset(TensorDataset):
         self.transform = transform
     def __getitem__(self, index):
         sample = tuple(tensor[index] for tensor in self.tensors)
-        print("B", sample[0][0,0,0,0])
         if self.transform:
             sample = self.transform(sample)
-
-        print("A", sample[0][0,0,0,0])
         return sample
 
 class GetData():
@@ -68,14 +65,15 @@ class GetData():
         #Dataloaders
         train_dataset = Data3D_Dataset(torch.Tensor(train_X), transform=trnsfrm)
         train_loader = DataLoader(train_dataset, batch_sz, shuffle=True, num_workers=num_workers)
-        test_dataset = Data3D_Dataset(torch.Tensor(test_X))
+        test_dataset = Data3D_Dataset(torch.Tensor(test_X)) #no augmentation for test set
         test_batch_sz = min(test_X.shape[0], batch_sz)
         test_loader = DataLoader(test_dataset, test_batch_sz)
 
-        for batch_idx, data in enumerate(train_loader):
-            x, = data
-            print(batch_idx, x.shape)
-        exit()
+        # for batch_idx, data in enumerate(train_loader):
+        #     x, = data
+        #     print(batch_idx, x.shape)
+        # exit()
+        
         #save train_X and test_X
         self.train_X = train_X
         self.test_X = test_X
