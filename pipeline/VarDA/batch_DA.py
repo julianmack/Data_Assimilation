@@ -30,6 +30,8 @@ class BatchDA():
 
     def run(self, print_every=10):
 
+        shuffle = self.settings.SHUFFLE_DATA #save value
+        self.settings.SHUFFLE_DATA = False
 
         if self.settings.COMPRESSION_METHOD == "SVD":
             if self.settings.REDUCED_SPACE:
@@ -57,6 +59,7 @@ class BatchDA():
             if self.model is None:
                 raise ValueError("Must provide an AE torch.nn model if settings.COMPRESSION_METHOD == 'AE'")
 
+
             self.DA_pipeline = DAPipeline(self.settings, self.model)
             DA_data = self.DA_pipeline.data
 
@@ -66,6 +69,8 @@ class BatchDA():
 
         else:
             raise ValueError("settings.COMPRESSION_METHOD must be in ['AE', 'SVD']")
+
+        self.settings.SHUFFLE_DATA = shuffle
 
         if self.reconstruction:
             L1 = torch.nn.L1Loss(reduction='sum')
