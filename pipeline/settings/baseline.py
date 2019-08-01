@@ -19,13 +19,17 @@ class Baseline(CAEConfig):
 
         self.BATCH_NORM = False
 
-        self.gen_channels()
-#
-# def gen_channels(self):
-#     channels = [8 * self.CAE5_mult] * (self.get_num_layers_decode() + 1)
-#     half_layers = int((self.get_num_layers_decode() + 1) / 2)
-#     channels[half_layers:] = [16 * self.CAE5_mult] *  len(channels[half_layers:])
-#     channels[-1] = 8 * self.latent_mult #This gives latent dim of 32 * latent_mult
-#
-#     channels[0] = 1
-#     return channels
+        self.get_channels()
+
+    def gen_channels(self):
+        num_layers_dec = self.get_num_layers_decode()
+        idx_half = int((num_layers_dec + 1) / 2)
+
+        channels = [64] * (num_layers_dec+ 1)
+        channels[idx_half:] = [32] *  len(channels[idx_half:])
+
+        #update bespoke vals
+
+        channels[0] = 1
+        channels[1] = 16
+        return channels
