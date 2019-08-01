@@ -116,6 +116,8 @@ class ConfigAE(Config):
         self.AE_MODEL_TYPE = VanillaAE #this must match
         self.HIDDEN = [1000, 200]
         self.ACTIVATION = "lrelu"
+        self.DROPOUT = False
+
         #define getter for __kwargs since they may change after initialization
     def get_kwargs(self):
         return  {"input_size": self.get_n(), "latent_dim": self.NUMBER_MODES,
@@ -162,9 +164,12 @@ class CAEConfig(ConfigAE):
         init_data = ML_utils.ConvScheduler.get_init_data_from_schedule(conv_data)
         channels = self.get_channels()
         latent_sz = self.__get_latent_sz(conv_data, channels)
-        kwargs =   {"layer_data": init_data, "channels": channels,
-                    "activation": self.ACTIVATION, "latent_sz": latent_sz,
-                    "batch_norm": self.BATCH_NORM}
+        kwargs =   {"layer_data": init_data,
+                    "channels": channels,
+                    "activation": self.ACTIVATION,
+                    "latent_sz": latent_sz,
+                    "batch_norm": self.BATCH_NORM,
+                    "dropout": self.DROPOUT}
         return kwargs
 
     def get_n(self):
@@ -183,7 +188,6 @@ class CAEConfig(ConfigAE):
             changeover_out_def = self.CHANGEOVER_DEFAULT
         else:
             changeover_out_def = 10
-
         return ML_utils.ConvScheduler.conv_scheduler3D(self.get_n(), changeovers, 1, False, changeover_out_def=changeover_out_def )
 
     def get_channels(self):

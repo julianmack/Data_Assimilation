@@ -13,7 +13,7 @@ def main():
     #         print(channel.shape, end=", ")
     #     print()
 
-    #print(model)
+    print(model.layers_encode)
     num_params = sum(p.numel() for p in model.parameters())
     latent_shape = settings.get_kwargs()["latent_sz"]
     latent_size = 1

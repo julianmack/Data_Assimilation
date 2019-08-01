@@ -14,11 +14,13 @@ class Baseline(CAEConfig):
         super(Baseline, self).__init__()
         self.REDUCED_SPACE = True
         self.ACTIVATION = "lrelu"  #default negative_slope = 0.05
-        self.CHANGEOVER_DEFAULT = 0
-        #self.CHANGEOVERS = ?
+        self.CHANGEOVER_DEFAULT = 2
+
 
         self.BATCH_NORM = False
         self.AUGMENTATION = True
+        self.DROPOUT = True
+
         self.get_channels()
 
     def gen_channels(self):
@@ -31,5 +33,6 @@ class Baseline(CAEConfig):
         #update bespoke vals
 
         channels[0] = 1
-        channels[1] = 16
+        channels[1] = 1
+        channels[2] = 16
         return channels

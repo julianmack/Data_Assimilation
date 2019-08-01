@@ -7,8 +7,9 @@ from pipeline.AEs import BaseAE
 
 class CAE_3D(BaseAE):
     def __init__(self, layer_data, channels, activation = "relu", latent_sz=None,
-                jac_explicit=None, batch_norm=False):
+                jac_explicit=None, batch_norm=False, dropout=False):
         super(CAE_3D, self).__init__()
+
         assert len(layer_data) + 1 == len(channels)
         self.batch_norm = batch_norm
 
@@ -24,14 +25,17 @@ class CAE_3D(BaseAE):
         for idx, data in enumerate(layer_data_list):
             data = layer_data_list[idx]
 
-            if idx  == 0: #no batch_norm on input
+            if idx  == 0: #no batch_norm or dropout on input
                 self.batch_norm = False
-                conv = self.__conv_maybe_batch_norm(channels[idx], channels[idx + 1], data, False)
+                conv = self.__conv_maybe_BN_or_drop(channels[idx], channels[idx + 1],
+                                                    data, False, False)
                 self.batch_norm = batch_norm
             elif idx  < num_encode:
-                conv = self.__conv_maybe_batch_norm(channels[idx], channels[idx + 1], data, False)
+                conv = self.__conv_maybe_BN_or_drop(channels[idx], channels[idx + 1],
+                                                    data, False, dropout)
             else:
-                conv = self.__conv_maybe_batch_norm(channels[idx], channels[idx + 1], data, True)
+                conv = self.__conv_maybe_BN_or_drop(channels[idx], channels[idx + 1],
+                                                    data, True, dropout)
 
             layers.append(conv)
 
@@ -48,14 +52,15 @@ class CAE_3D(BaseAE):
         else:
             raise NotImplemtedError("Activation function must be in {'lrelu', 'relu'}")
 
-    def __conv_maybe_batch_norm(self, Cin, Cout, data, transpose):
+    def __conv_maybe_BN_or_drop(self, Cin, Cout, data, transpose, dropout):
         layer = OrderedDict()
-
+        if dropout:
+            layer.update({"0": nn.Dropout3d(0.33)})
         if self.batch_norm:
-            layer.update({"0": nn.BatchNorm3d(Cin)})
+            layer.update({"1": nn.BatchNorm3d(Cin)})
         if not transpose:
-            layer.update({"1": nn.Conv3d(Cin, Cout, **data)})
+            layer.update({"2": nn.Conv3d(Cin, Cout, **data)})
         else:
-            layer.update({"1": nn.ConvTranspose3d(Cin, Cout, **data)})
+            layer.update({"2": nn.ConvTranspose3d(Cin, Cout, **data)})
         conv = nn.Sequential(layer)
         return conv

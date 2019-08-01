@@ -6,9 +6,9 @@ from pipeline.VarDA.batch_DA import BatchDA
 import shutil
 
 #global variables for DA and training:
-EPOCHS = 1
+EPOCHS = 5
+SMALL_DEBUG_DOM = False #For training
 ALL_DATA = False #for DA
-SMALL_DEBUG_DOM = True #For training
 SAVE = False
 
 def main():
@@ -18,7 +18,6 @@ def main():
 
 
     settings.BATCH_NORM = False
-    settings.CHANGEOVER_DEFAULT = 0
     settings.REDUCED_SPACE = True
     settings.DEBUG = False
     settings.SHUFFLE_DATA = True #Set this =False for harder test and train set
@@ -57,10 +56,12 @@ def main():
 
     if ALL_DATA:
         control_states = X
+        print_every = 50
     else:
         NUM_STATES = 5
         START = 100
         control_states = train_X[START:NUM_STATES + START]
+        print_every = 10
 
     if SAVE:
         out_fp = expdir + "AE.csv"
@@ -71,9 +72,9 @@ def main():
     batch_DA_AE = BatchDA(settings, control_states, csv_fp= out_fp, AEModel=model,
                         reconstruction=True, plot=False)
 
-    res_AE = batch_DA_AE.run(print_every=10)
+    res_AE = batch_DA_AE.run(print_every=print_every)
 
-    print(res_AE)
+    print(res_AE.tail())
     #Uncomment line below if you want to automatically delete expdir (useful during testing)
     if not SAVE:
         shutil.rmtree(expdir, ignore_errors=False, onerror=None)
