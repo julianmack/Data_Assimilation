@@ -1,4 +1,5 @@
 import torch
+import time
 
 from pipeline import ML_utils, DAPipeline
 from pipeline.VarDA import SVD, VDAInit
@@ -8,7 +9,8 @@ import pandas as pd
 import numpy as np
 
 class BatchDA():
-    def __init__(self, settings, control_states, csv_fp=None, AEModel=None, reconstruction=True, plot=False):
+    def __init__(self, settings, control_states, csv_fp=None, AEModel=None,
+                reconstruction=True, plot=False):
 
         self.settings = settings
         self.control_states = control_states
@@ -24,8 +26,6 @@ class BatchDA():
             self.expdir = init_expdir(dir, True)
             self.file_name = fps[-1]
 
-
-        #TODO - add timing
 
 
     def run(self, print_every=10):
@@ -76,7 +76,8 @@ class BatchDA():
                 "da_MAE_mean": 0,
                 "counts": 0,
                 "l1_loss": 0,
-                "l2_loss": 0}
+                "l2_loss": 0,
+                "time": 0}
 
         results = []
 
@@ -94,11 +95,13 @@ class BatchDA():
             else:
                 self.DA_pipeline.data = VDAInit.provide_u_c_update_data_full_space(DA_data,
                                                                                         self.settings, u_c)
-
+            t1 = time.time()
             if self.settings.COMPRESSION_METHOD == "AE":
                 DA_results = self.DA_pipeline.DA_AE()
             elif self.settings.COMPRESSION_METHOD == "SVD":
                 DA_results = self.DA_pipeline.DA_SVD()
+            t2 = time.time()
+            t_tot = t2 - t1
 
             if self.reconstruction:
                 data_tensor = torch.Tensor(u_c)
@@ -131,7 +134,7 @@ class BatchDA():
             result["counts"] = DA_results["counts"]
             result["l1_loss"] = l1.detach().cpu().numpy()
             result["l2_loss"] = l2.detach().cpu().numpy()
-
+            result["time"] = t2 - t1
             #add to results list (that will become a .csv)
             results.append(result)
 

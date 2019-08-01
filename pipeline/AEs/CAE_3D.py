@@ -14,7 +14,7 @@ class CAE_3D(BaseAE):
         self.batch_norm = batch_norm
 
         layers = nn.ModuleList([])
-
+        #self.layers = layers
         channels = self.get_list_AE_layers(channels[0], channels[-1], channels[1:-1])
 
         layer_data_list = layer_data + layer_data[::-1]

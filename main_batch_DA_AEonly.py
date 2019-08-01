@@ -3,7 +3,7 @@ from pipeline import ML_utils, GetData, SplitData
 from pipeline.VarDA.batch_DA import BatchDA
 from pipeline.settings import config
 
-ALL_DATA = True
+ALL_DATA = False
 SAVE = True
 def main():
     save_fp = "/experiments/batch_DA/3/"
@@ -40,7 +40,7 @@ def main():
     print("latent size", latent_size)
     print("CHANNELS", settings.get_channels())
 
-    exit()
+
     model.to(ML_utils.get_device()) #TODO
     settings.HOME_DIR = init_settings.HOME_DIR
     settings.INTERMEDIATE_FP = init_settings.INTERMEDIATE_FP
