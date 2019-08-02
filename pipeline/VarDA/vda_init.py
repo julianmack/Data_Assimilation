@@ -8,6 +8,7 @@ from pipeline import GetData, SplitData
 class VDAInit:
     def __init__(self, settings, AEmodel=None, u_c=None):
         self.AEmodel = AEmodel
+        self.AEmodel.eval()
         self.settings = settings
         self.u_c = u_c #user can pass their own u_c
 
@@ -283,7 +284,7 @@ class VDAInit:
     def create_V_red(X, encoder, num_modes, settings):
         V = VDAInit.create_V_from_X(X, settings)
         assert V.shape[0] >= num_modes
-        if False: #TODO - rationalize this
+        if True: #TODO - rationalize this
             res = []
             BATCH = 16
             if V.shape[0] > BATCH:
@@ -297,21 +298,11 @@ class VDAInit:
                     res.append(v)
 
                     i_start = i
-
                 V_red = np.concatenate(res, axis=0)
+                
             else:
                 raise ValueError("Must have more timesteps available than in BATCH")
-            # #choose values that vary most
-            # V_mean = V_red.mean(axis=0)
-            # V_std = V_red.std(axis=0)
-            #
-            # V_normal = (V_red - V_mean) / V_std
-            #
-            # largest_var = V_normal.sum(axis=1)
-            # smallest_idx = np.argmin(largest_var)
-            # idxs = list(np.argpartition(largest_var, -(num_modes-1))[-(num_modes-1):])
-            #
-            # idxs.append(smallest_idx)
+
 
         else:
             #take random selection of V:
@@ -326,6 +317,17 @@ class VDAInit:
             V_selected = V[idxs]
 
             V_red = encoder(V_selected)
+            # #choose values that vary most
+            # V_mean = V_red.mean(axis=0)
+            # V_std = V_red.std(axis=0)
+            #
+            # V_normal = (V_red - V_mean) / V_std
+            #
+            # largest_var = V_normal.sum(axis=1)
+            # smallest_idx = np.argmin(largest_var)
+            # idxs = list(np.argpartition(largest_var, -(num_modes-1))[-(num_modes-1):])
+            #
+            # idxs.append(smallest_idx)
 
         return V_red
 

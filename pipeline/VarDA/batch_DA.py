@@ -28,7 +28,7 @@ class BatchDA():
 
 
 
-    def run(self, print_every=10):
+    def run(self, print_every=10, print_small=False):
 
         shuffle = self.settings.SHUFFLE_DATA #save value
         self.settings.SHUFFLE_DATA = False
@@ -93,7 +93,6 @@ class BatchDA():
 
         for idx in range(num_states):
             u_c = self.control_states[idx]
-
             if self.settings.REDUCED_SPACE:
                 self.DA_pipeline.data = VDAInit.provide_u_c_update_data_reduced_AE(DA_data,
                                                                                     self.settings, u_c)
@@ -147,23 +146,34 @@ class BatchDA():
             totals = self.__add_result_to_totals(result, totals)
 
             if idx % print_every == 0 and idx > 0:
-                print("idx:", idx)
-                self.__print_totals(totals, idx + 1)
-
-        print("------------")
-        self.__print_totals(totals, num_states)
-        print("------------")
+                if not print_small:
+                    print("idx:", idx)
+                self.__print_totals(totals, idx + 1, print_small)
+        if not print_small:
+            print("------------")
+        self.__print_totals(totals, num_states, print_small)
+        if not print_small:
+            print("------------")
 
 
         results_df = pd.DataFrame(results)
         #save to csv
         if self.csv_fp:
-            print(self.expdir + self.file_name)
             results_df.to_csv(self.expdir + self.file_name)
 
         if self.plot:
             raise NotImplementedError("plotting functionality not implemented yet")
         return results_df
+    @staticmethod
+    def get_tots(results_df):
+        data = {}
+        data["ref_MAE_mean"] = results_df["ref_MAE_mean"].mean()
+        data["da_MAE_mean"] = results_df["da_MAE_mean"].mean()
+        time = results_df["time"]
+        time = time[1:] #ignore the first one as this can occud offline
+
+        data["time"] = time.mean()
+        return data
 
     @staticmethod
     def __add_result_to_totals(result, totals):
@@ -172,9 +182,14 @@ class BatchDA():
         return totals
 
     @staticmethod
-    def __print_totals(totals, num_states):
-        for k, v in totals.items():
-            print(k, "{:.2f}".format(v / num_states))
-        print()
+    def __print_totals(totals, num_states, print_small):
+        if not print_small:
+            for k, v in totals.items():
+                print(k, "{:.2f}".format(v / num_states))
+            print()
+        else:
+            print("L2:", totals["l2_loss"]/ num_states, ", L1:", totals["l1_loss"]/ num_states, ", Ratio:",  totals["percent_improvement"]/ num_states, ", DA_MAE:", totals["da_MAE_mean"]/ num_states)
+
+
 
 

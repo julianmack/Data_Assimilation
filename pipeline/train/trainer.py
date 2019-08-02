@@ -13,6 +13,8 @@ from pipeline.AEs import Jacobian
 from pipeline.VarDA import VDAInit
 from pipeline import GetData
 from pipeline.utils.expdir import init_expdir
+from pipeline.VarDA.batch_DA import BatchDA
+
 
 import os
 
@@ -52,11 +54,14 @@ class TrainAE():
         self.device = ML_utils.get_device()
 
 
-    def train(self, num_epoch = 100, learning_rate = 0.001, print_every=2,
+    def train(self, num_epoch = 100, learning_rate = 0.001, print_every=5,
             test_every=5, num_epochs_cv=8, num_workers=6, small_debug=False):
 
         self.learning_rate = learning_rate
         self.num_epochs = num_epoch
+        self.print_every = print_every
+        self.test_every = test_every
+        self.num_epoch = num_epoch
 
         settings = self.settings
 
@@ -106,6 +111,7 @@ class TrainAE():
                 pickle.dump(settings, f)
 
 
+
         return self.model
 
 
@@ -127,7 +133,10 @@ class TrainAE():
         epoch = num_epoch - 1 #for case where no training occurs
 
 
+
+
         for epoch in range(start_epoch, num_epoch):
+            self.epoch = epoch
 
             train_loss, test_loss = self.train_one_epoch(epoch, print_every, test_every, num_epoch)
             train_losses.append(train_loss)
@@ -169,21 +178,18 @@ class TrainAE():
             L1_loss += loss1.item()
             ##############
 
-
-
-        train_DA_MAE, train_DA_ratio = self.maybe_eval_DA_MAE("train")
-        train_loss_res = (epoch, train_loss / len(self.train_loader.dataset), train_DA_MAE, train_DA_ratio)
+        self.model.eval()
+        train_DA_MAE, train_DA_ratio, train_DA_time = self.maybe_eval_DA_MAE("train")
+        train_loss_res = (epoch, train_loss / len(self.train_loader.dataset), train_DA_MAE, train_DA_ratio, train_DA_time)
         if epoch % print_every == 0 or epoch in [0, num_epoch - 1]:
-            out_str = 'epoch [{}/{}], loss:{:.4f} '.format(epoch + 1, num_epoch, train_loss / len(self.train_loader.dataset))
-            ############
+            out_str = 'epoch [{}/{}], TRAIN: -loss:{:.4f} '.format(epoch + 1, num_epoch, train_loss / len(self.train_loader.dataset))
             out_str += "L1 loss:{:.4f}".format(L1_loss / len(self.train_loader.dataset))
-            ############
-            if self.calc_DA_MAE:
-                out_str +  ", DA_MAE:{:.4f}".format(train_DA_MAE)
+            if self.calc_DA_MAE and (epoch % test_every == 0):
+                out_str +  ", DA_ratio:{:.4f}".format(train_DA_ratio)
             print(out_str)
 
+        self.model.eval()
         if epoch % test_every == 0 or epoch == num_epoch - 1:
-            self.model.eval()
             test_loss = 0
             for batch_idx, data in enumerate(self.test_loader):
                 x_test, = data
@@ -191,12 +197,13 @@ class TrainAE():
                 y_test = self.model(x_test)
                 loss = self.loss_fn(y_test, x_test)
                 test_loss += loss.item()
-            test_DA_MAE, test_DA_ratio = self.maybe_eval_DA_MAE("test")
-            out_str = "epoch [{}/{}], valid: -loss:{:.4f}".format(epoch + 1, num_epoch, test_loss / len(self.test_loader.dataset))
-            if self.calc_DA_MAE:
-                out_str +  ", -DA_MAE:{:.4f}".format(test_DA_MAE)
-            print(out_str)
-            test_loss_res = (epoch, test_loss/len(self.test_loader.dataset), test_DA_MAE, test_DA_ratio)
+            test_DA_MAE, test_DA_ratio, test_DA_time = self.maybe_eval_DA_MAE("test")
+            if epoch % print_every == 0 or epoch == num_epoch - 1:
+                out_str = "epoch [{}/{}], TEST: -loss:{:.4f}".format(epoch + 1, num_epoch, test_loss / len(self.test_loader.dataset))
+                if self.calc_DA_MAE and (epoch % test_every == 0 or epoch == num_epoch - 1):
+                    out_str +  ", -DA_ratio:{:.4f}".format(train_DA_MAE)
+                print(out_str)
+            test_loss_res = (epoch, test_loss/len(self.test_loader.dataset), test_DA_MAE, test_DA_ratio, test_DA_time)
 
         if epoch % test_every == 0 and self.model_dir != None:
             model_fp_new = "{}{}.pth".format(self.model_dir, epoch)
@@ -228,14 +235,15 @@ class TrainAE():
             self.optimizer = optim.Adam(self.model.parameters(), lr)
             test_losses = []
             train_losses = []
-
+            print("learning rate:", lr)
             for epoch in range(self.num_epochs_cv):
-                train, test = self.train_one_epoch(epoch, 1, test_every, self.num_epochs_cv)
+                self.epoch = epoch
+                train, test = self.train_one_epoch(epoch, self.print_every, test_every, self.num_epochs_cv)
                 if test:
                     test_losses.append(test)
                 train_losses.append(train)
 
-            df = pd.DataFrame(train_losses, columns = ["epoch","reconstruction_err","DA_MAE", "DA_ratio_improve_MAE"])
+            df = pd.DataFrame(train_losses, columns = ["epoch","reconstruction_err","DA_MAE", "DA_ratio_improve_MAE", "time"])
             train_final = df.tail(1).reconstruction_err
 
             res.append(train_final.values[0])
@@ -261,43 +269,34 @@ class TrainAE():
     def maybe_eval_DA_MAE(self, test_valid):
         """As the DA procedure is so expensive, only eval on a single state.
         By default this is the final element of the test or train set"""
-        if self.calc_DA_MAE:
+        if self.calc_DA_MAE and (self.epoch % self.test_every == 0 or self.epoch == self.num_epoch - 1):
             if test_valid == "train":
-                u_c = self.loader.train_X[-1]
+                u_c = self.loader.train_X.copy()
+                np.random.shuffle(u_c) #random shuffle
+                u_c = u_c[:64]
             elif test_valid == "test":
-                u_c = self.loader.test_X[-1]
+                u_c = self.loader.test_X
             else:
                 raise ValueError("Can only evaluate DA_MAE on 'test' or 'train'")
 
             if self.settings.THREE_DIM:
-                u_c = u_c.squeeze(0)
+                u_c = u_c.squeeze(1)
 
-            if not hasattr(self, "DA_pipeline"):
-                self.DA_pipeline = DAPipeline(self.settings, self.model, u_c=u_c)
-                self.DA_data = self.DA_pipeline.data
-                self.__da_data_wipe_some_values()
+            csv_fp = "{}{}_{}.csv".format(self.expdir, self.epoch, test_valid)
+            batcher = BatchDA(self.settings, u_c, csv_fp=csv_fp, AEModel=self.model,
+                        reconstruction=True)
+            batch_res = batcher.run(self.print_every * 10, True)
 
-            if self.settings.REDUCED_SPACE:
-                self.DA_pipeline.data = VDAInit.provide_u_c_update_data_reduced_AE(self.DA_data,
-                                                                                    self.settings, u_c)
-            else:
-                self.DA_pipeline.data = VDAInit.provide_u_c_update_data_full_space(self.DA_data,
-                                                                                        self.settings, u_c)
+            results = batcher.get_tots(batch_res)
 
-            DA_results = self.DA_pipeline.DA_AE(True) #force init = True
+            ref_mae = results["ref_MAE_mean"]
+            da_mae =  results["da_MAE_mean"]
+            ratio_improve_mae = (ref_mae - da_mae)/ref_mae
+            time = results["time"]
 
-            print()
-            print(test_valid)
-            self.DA_pipeline.print_DA_results(DA_results)
-
-            ref_mae = DA_results["ref_MAE_mean"]
-            mae = DA_results["da_MAE_mean"]
-
-            ratio_improve_mae = (ref_mae - mae)/ref_mae
-            self.__da_data_wipe_some_values()
-            return mae, ratio_improve_mae
+            return da_mae, ratio_improve_mae, time
         else:
-            return "NO_CALC", "NO_CALC"
+            return "NO_CALC", "NO_CALC", "NO_CALC"
 
     def slow_jac_wrapper(self, x):
         return Jacobian.accumulated_slow_model(x, self.model, self.DA_data.get("device"))
@@ -312,7 +311,7 @@ class TrainAE():
         self.DA_data["d"] = None
 
     def to_csv(self, np_array, fp):
-        df = pd.DataFrame(np_array, columns = ["epoch","reconstruction_err","DA_MAE", "DA_ratio_improve_MAE"])
+        df = pd.DataFrame(np_array, columns = ["epoch","reconstruction_err","DA_MAE", "DA_ratio_improve_MAE", "time"])
         df.to_csv(fp)
 
 

@@ -6,8 +6,8 @@ from pipeline.VarDA.batch_DA import BatchDA
 import shutil
 
 #global variables for DA and training:
-EPOCHS = 5
-SMALL_DEBUG_DOM = False #For training
+EPOCHS = 2
+SMALL_DEBUG_DOM = True #For training
 ALL_DATA = False #for DA
 SAVE = False
 
@@ -28,13 +28,14 @@ def main():
 
     calc_DA_MAE = True
     num_epochs_cv = 0
-    print_every = 1
+    print_every = 5
+    test_every = 2
     lr = 0.001
     trainer = TrainAE(settings, expdir, calc_DA_MAE)
     expdir = trainer.expdir #get full path
 
 
-    model = trainer.train(EPOCHS, learning_rate=lr, test_every=1, num_epochs_cv=num_epochs_cv,
+    model = trainer.train(EPOCHS, learning_rate=lr, test_every=test_every, num_epochs_cv=num_epochs_cv,
                             print_every=print_every, small_debug=SMALL_DEBUG_DOM)
 
 

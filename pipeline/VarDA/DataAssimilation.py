@@ -68,6 +68,7 @@ class DAPipeline():
         else:
             self.model = self.data.get("model")
 
+        self.data["model"].eval()
         if self.settings.REDUCED_SPACE:
             if self.data.get("V_trunc") is None or force_init: #only init if not already init
                 V_red = VDAInit.create_V_red(self.data.get("train_X"),
@@ -76,7 +77,6 @@ class DAPipeline():
                 self.data["V_trunc"] = V_red.T #tau x M
 
                 self.data["w_0"] = np.zeros((V_red.shape[0]))
-                print("HERE - should only print once")
             self.data["V_grad"] = None
         else:
 
