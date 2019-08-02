@@ -188,7 +188,13 @@ class BatchDA():
                 print(k, "{:.2f}".format(v / num_states))
             print()
         else:
-            print("L2:", totals["l2_loss"]/ num_states, ", L1:", totals["l1_loss"]/ num_states, ", Ratio:",  totals["percent_improvement"]/ num_states, ", DA_MAE:", totals["da_MAE_mean"]/ num_states)
+            out_str = "DA - - L2: {:.2f}, L1: {:.2f}, % Improve: {:.2f}%, DA_MAE: {:.2f}, time(s):  {:.4f}s".format(
+                                                    totals["l2_loss"]/ num_states,
+                                                    totals["l1_loss"]/ num_states,
+                                                    totals["percent_improvement"]/ num_states,
+                                                    totals["da_MAE_mean"]/ num_states,
+                                                    totals["time"]/ num_states)
+            print(out_str)
 
 
 
