@@ -29,7 +29,12 @@ class GenCAE(BaseAE):
                     where:
                         number_x (int) - is number of times to repeat 'blocks_'
                         blocks_ (list/str) - of same structure as `blocks`
-                        kwargs_block_x (dict) - optional. dictionary required to init blocks_
+                        kwargs_block_x (list of dicts/dict) - optional. If list of
+                                    dictionaries - each is used to init every repeated
+                                    version of blocks_. Must have len(kwargs_block_x) = number_x
+                                                                    If dict, all repeated
+                                    versions of blocks_ will have the same kwargs dict
+
         activation (str)- Activation function between blocks. One of ["relu", "lrelu", "prelu", "GDN"]
         latent_sz (int) - latent size of fixed size input.
 
@@ -56,46 +61,55 @@ class GenCAE(BaseAE):
         elif activation == "GDN":
             raise NotImplementedError()
         else:
-            raise NotImplemtedError("Activation function must be in {"relu", "lrelu", "prelu", "GDN"}")
+            raise NotImplemtedError("Activation function must be in {`relu`, `lrelu`, `prelu`, `GDN`}")
 
         self.layers_encode = self.parse_blocks(blocks, encode=True)
-        self.layers_decode = self.parse_blocks(blocks[::-1], encode=False)
+        self.layers_decode = self.parse_blocks(blocks, encode=False)
         self.latent_sz = latent_sz
 
-    def parse_blocks(self, blocks, encode, kwargs=None):
+    def parse_blocks(self, blocks, encode, kwargs_ls=None):
         if isinstance(blocks, str):
-            return self.parse_blocks_str(blocks, encode, kwargs)
+            return self.parse_blocks_str(blocks, encode, kwargs_ls)
         elif isinstance(blocks, list):
             assert len(blocks) > 1, "blocks must be list of structure [<MODE>, block_1, ...]"
             mode = blocks[0]
             assert isinstance(mode, str) , "blocks[0] must be a string"
             assert mode in MODES.all
 
-            blocks_expanded = []
-            for block in blocks[1:]:
+            blocks = blocks[1:] #ignore mode
+            if not encode:
+                blocks = blocks[::-1]
+
+            blocks_expanded = OrderedDict()
+            for idx, block in enumerate(blocks):
                 assert isinstance(block, tuple)
                 if len(block) == 2:
                     (num, blocks_) = block
                 elif len(block) == 3:
-                    assert isinstance(blocks, str), "Only give kwargs for node element of blocks data-structure"
-                    (num, blocks_, kwargs) = block
+                    (num, blocks_, kwargs_ls) = block
+                    assert isinstance(blocks_, str), "Only give kwargs for node element of blocks data-structure"
+                    assert isinstance(kwargs_ls, (list, dict))
+                    if isinstance(kwargs_ls, list):
+                        assert len(kwargs_ls) == num
+                    else:
+                        kwargs_ls = [kwargs_ls] * num #repeat kwargs
                 else:
                     raise ValueError("block must be on length 2 or 3")
 
-                layers_lower = parse_blocks(blocks_, encode, kwargs) #nn.module
                 layer = OrderedDict()
                 for i in range(num):
-                    layer.update({i: layers_lower})
+                    layers_lower = self.parse_blocks(blocks_, encode, kwargs_ls[i]) #nn.module
+                    layer.update({str(i): layers_lower})
 
-                blocks_expanded.append(nn.Sequential(layer))
+                blocks_expanded.update({str(idx): nn.Sequential(layer)})
 
 
-            if mode == SEQENTIAL:
+            if mode == MODES.S:
                 layers_out = nn.Sequential(blocks_expanded)
-            elif mode == PARALLEL_ADD:
+            elif mode == MODES.PA:
                 raise NotImplementedError("")
                 layers_out = nnParallelAdd(blocks_expanded)
-            elif mode == PARALLEL_CONCAT:
+            elif mode == MODES.PC:
                 raise NotImplementedError("")
                 layers_out = nnParallelConcat(blocks_expanded)
             else:

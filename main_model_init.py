@@ -15,13 +15,15 @@ def main():
     #     print()
 
     print(model.layers_encode)
+    print(model)
     num_params = sum(p.numel() for p in model.parameters())
+
+    print("num params", num_params)
     latent_shape = settings.get_kwargs()["latent_sz"]
     latent_size = 1
     for x in latent_shape:
         latent_size *= x
 
-    print("num params", num_params)
     print("latent shape", latent_shape)
     print("latent size", latent_size)
     print("CHANNELS", settings.get_channels())

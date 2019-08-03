@@ -1,4 +1,4 @@
-from pipeline.settings.config import CAEConfig
+from pipeline.settings.config import Config3D
 from pipeline.AEs.AE_general import GenCAE
 from pipeline.AEs.AE_general import MODES as M
 
@@ -31,8 +31,15 @@ class Block(Config3D):
         conv_kwargs = {"kernel_size": kernel,
                      "padding": padding,
                      "stride": stride}
+        conv1 = conv_kwargs.copy()
+        conv2 = conv_kwargs.copy()
+        conv1["in_channels"] = 1
+        conv1["out_channels"] = 56
+        conv2["in_channels"] = 56
+        conv2["out_channels"] = 24
+        kwargs_ls = [conv1, conv2]
 
-        blocks = [M.S, (2, "conv", conv_kwargs)]
+        blocks = [M.S, (2, "conv", kwargs_ls)]
 
         latent_sz = None
 
