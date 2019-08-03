@@ -97,7 +97,7 @@ class Config3D(Config):
 
         self.get_X_fp(True) #force init X_fp
         self.set_n( (91, 85, 32))
-
+        self.FACTOR_INCREASE = 2.43
 
 class ConfigExample(Config):
     """Override and add relevant configuration options."""
@@ -168,7 +168,7 @@ class CAEConfig(ConfigAE):
             dropout = self.DROPOUT
         else:
             dropout = False
-            
+
         kwargs =   {"layer_data": init_data,
                     "channels": channels,
                     "activation": self.ACTIVATION,

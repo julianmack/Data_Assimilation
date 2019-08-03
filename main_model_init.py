@@ -1,9 +1,10 @@
 from pipeline.settings.baseline import Baseline
+from pipeline.settings.block_explore import Block
 from pipeline import ML_utils
 
 
 def main():
-    settings = Baseline()
+    settings = Block()
     model = ML_utils.load_model_from_settings(settings)
     # for name, val in model.named_parameters():
     #     print(name, val.shape)
