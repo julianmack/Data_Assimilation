@@ -7,11 +7,11 @@ import shutil
 
 #global variables for DA and training:
 EPOCHS = 150
-SMALL_DEBUG_DOM = False #For training
+SMALL_DEBUG_DOM = False #False #For training
 calc_DA_MAE = True
-num_epochs_cv = 25 #30
-print_every = 10 #10
-test_every = 10 #10
+num_epochs_cv = 25
+print_every = 10
+test_every = 10
 
 
 def main():
@@ -29,7 +29,7 @@ def main():
                     print("Augmentation", aug)
                     print("dropout", dropout)
                     print("config", config)
-                    
+
                     settings = config()
                     settings.BATCH_NORM = BN
                     settings.DROPOUT = dropout
@@ -46,7 +46,6 @@ def main():
                                             print_every=print_every, small_debug=SMALL_DEBUG_DOM)
 
                     idx += 1
-
 
 
 

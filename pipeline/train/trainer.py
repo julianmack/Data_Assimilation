@@ -200,7 +200,7 @@ class TrainAE():
             test_DA_MAE, test_DA_ratio, test_DA_time = self.maybe_eval_DA_MAE("test")
             if epoch % print_every == 0 or epoch == num_epoch - 1:
                 out_str = "epoch [{}/{}], TEST: -loss:{:.4f}".format(epoch + 1, num_epoch, test_loss / len(self.test_loader.dataset))
-                if self.calc_DA_MAE and (epoch % test_every == 0 or epoch == num_epoch - 1):
+                if self.calc_DA_MAE and (epoch % test_every == 0):
                     out_str +  ", -DA_ratio:{:.4f}".format(train_DA_MAE)
                 print(out_str)
             test_loss_res = (epoch, test_loss/len(self.test_loader.dataset), test_DA_MAE, test_DA_ratio, test_DA_time)
