@@ -3,7 +3,7 @@ import torch.nn.functional as F
 from collections import OrderedDict
 
 from pipeline.AEs import BaseAE
-
+from pipeline.nn.builder import NNBuilder as Build
 
 class MODES():
     S = "SEQENTIAL"
@@ -35,24 +35,22 @@ class GenCAE(BaseAE):
                                                                     If dict, all repeated
                                     versions of blocks_ will have the same kwargs dict
 
-        activation (str)- Activation function between blocks. One of ["relu", "lrelu", "prelu", "GDN"]
+        activation (str)- Activation function between blocks. One of [None, "relu", "lrelu", "prelu", "GDN"]
         latent_sz (int) - latent size of fixed size input.
 
-        batch_norm (bool) - Whether to use batch normalization between layers (where appropriate).
-                               Note: if a block is used that has BN included, this will override this param
-        dropout (bool) -  Whether to use dropout between all layers (where appropriate)
+        # batch_norm (bool) - Whether to use batch normalization between layers (where appropriate).
+        #                        Note: if a block is used that has BN included, this will override this param
+        # dropout (bool) -  Whether to use dropout between all layers (where appropriate)
 
 
     """
-    def __init__(self, blocks, activation = "relu", latent_sz=None, batch_norm = False,
-                                                                        dropout=False):
+    def __init__(self, blocks, activation = "relu", latent_sz=None):
 
         super(GenCAE, self).__init__()
 
-        self.batch_norm = batch_norm
-        self.dropout = dropout
-
-        if activation == "lrelu":
+        if activation is None: #This is necessary if activation functions are included in blocks
+            self.act_fn = lambda x: x #i.e. just return input
+        elif activation == "lrelu":
             self.act_fn = nn.LeakyReLU(negative_slope = 0.05, inplace=False)
         elif activation == "relu":
             self.act_fn = F.relu
@@ -79,7 +77,6 @@ class GenCAE(BaseAE):
             blocks = blocks[1:] #ignore mode
             if not encode:
                 blocks = blocks[::-1]
-
             blocks_expanded = OrderedDict()
             for idx, block in enumerate(blocks):
                 assert isinstance(block, tuple)
@@ -93,6 +90,9 @@ class GenCAE(BaseAE):
                         assert len(kwargs_ls) == num
                     else:
                         kwargs_ls = [kwargs_ls] * num #repeat kwargs
+
+                    if not encode:
+                        kwargs_ls = kwargs_ls[::-1] #reverse order of layers
                 else:
                     raise ValueError("block must be on length 2 or 3")
 
@@ -105,7 +105,10 @@ class GenCAE(BaseAE):
 
 
             if mode == MODES.S:
-                layers_out = nn.Sequential(blocks_expanded)
+                if len(blocks_expanded) == 1:
+                    layers_out = blocks_expanded[str(0)]
+                else:
+                    layers_out = nn.Sequential(blocks_expanded)
             elif mode == MODES.PA:
                 raise NotImplementedError("")
                 layers_out = nnParallelAdd(blocks_expanded)
@@ -119,23 +122,12 @@ class GenCAE(BaseAE):
         else:
             raise ValueError("blocks must be of type str or list. Received type {}".format(type(blocks)))
 
-    def parse_blocks_str(self, block, encode, kwargs):
+    def parse_blocks_str(self, block, encode, layer_kwargs):
+        layer_kwargs["encode"] = encode
         if block == "conv": #this is poorly named - simple conv?
-            return nn.Conv3d(**kwargs) if encode else nn.ConvTranspose3d(**kwargs)
+            return Build.conv(**layer_kwargs)
+
         else:
             raise NotImplementedError("Only conv block is implemented")
 
 
-
-    def __conv_maybe_BN_or_drop(self, Cin, Cout, data, transpose, dropout):
-        layer = OrderedDict()
-        if dropout:
-            layer.update({"00": nn.Dropout3d(0.33)})
-        if self.batch_norm:
-            layer.update({"0": nn.BatchNorm3d(Cin)})
-        if not transpose:
-            layer.update({"1": nn.Conv3d(Cin, Cout, **data)})
-        else:
-            layer.update({"1": nn.ConvTranspose3d(Cin, Cout, **data)})
-        conv = nn.Sequential(layer)
-        return conv
