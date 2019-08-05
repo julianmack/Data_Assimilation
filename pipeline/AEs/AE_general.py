@@ -131,11 +131,16 @@ class GenCAE(BaseAE):
             raise ValueError("blocks must be of type str or list. Received type {}".format(type(blocks)))
 
     def parse_blocks_str(self, block, encode, layer_kwargs):
-        layer_kwargs["encode"] = encode
         if block == "conv": #this is poorly named - simple conv?
+            layer_kwargs["encode"] = encode
             return Build.conv(**layer_kwargs)
-
+        elif block == "resB":
+            return Build.resB(self.act_fn, **layer_kwargs)
+        elif block == "resB_3":
+            return Build.resB_3(self.act_fn, **layer_kwargs)
+        elif block == "DRU":
+            return Build.DRU(self.act_fn, **layer_kwargs)
         else:
-            raise NotImplementedError("Only conv block is implemented")
+            raise NotImplementedError("block={} is not implemented".format(block))
 
 

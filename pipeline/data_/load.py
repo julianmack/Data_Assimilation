@@ -45,6 +45,7 @@ class GetData():
             train_X = train_X[-8:]
             test_X = test_X[:8]
 
+        
         #Add Channel if we are in 3D case
         if settings.THREE_DIM:
             train_X = np.expand_dims(train_X, 1)
@@ -73,7 +74,7 @@ class GetData():
         #     x, = data
         #     print(batch_idx, x.shape)
         # exit()
-        
+
         #save train_X and test_X
         self.train_X = train_X
         self.test_X = test_X

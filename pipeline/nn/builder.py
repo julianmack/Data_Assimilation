@@ -1,5 +1,5 @@
 from torch import nn
-
+from pipeline.nn.residual_simple import ResBlock, ResBlockStack3, DRU
 class NNBuilder():
     """Class to build nn blocks"""
 
@@ -32,3 +32,31 @@ class NNBuilder():
             layer.update({"2": nn.ConvTranspose3d(**conv_kwargs)})
         conv = nn.Sequential(layer)
         return conv
+
+    @staticmethod
+    def resB(activation_fn, C):
+        """Returns Residual block of structure:
+        conv -> activation -> conv -> sum both conv.
+
+        These enforce that Cin == Cout == C"""
+
+        return ResBlock(activation_fn, C)
+
+    @staticmethod
+    def resB_3(activation_fn, C):
+        """Returns 3 stacked residual blocks each of structure:
+            conv -> activation -> conv -> sum both conv.
+        There is then a skip connection from first to output of stacked
+        residual block as in 10.1109/CVPR.2018.00462
+
+        Note: enforce that Cin == Cout == C"""
+
+        return ResBlockStack3(activation_fn, C)
+    @staticmethod
+    def DRU(activation_fn, C):
+        """Returns A Dense Residual Unit
+
+        Note: enforce that Cin == Cout == C"""
+
+        return DRU(activation_fn, C)
+

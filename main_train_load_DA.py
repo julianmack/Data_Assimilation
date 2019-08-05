@@ -3,18 +3,20 @@ from pipeline.settings.baseline import Baseline
 from pipeline import TrainAE, ML_utils, GetData, SplitData
 from pipeline.VarDA.batch_DA import BatchDA
 from pipeline.settings.block_explore import Block
+from pipeline.settings.block_models import Res34AE, Res34AE_Stacked
+
 
 import shutil
 
 #global variables for DA and training:
-EPOCHS = 2
+EPOCHS = 1
 SMALL_DEBUG_DOM = True #For training
 ALL_DATA = False #for DA
 SAVE = False
 
 def main():
 
-    settings = Block()
+    settings = Res34AE_Stacked()
     #model = ML_utils.load_model_from_settings(settings)
 
 
@@ -24,7 +26,7 @@ def main():
     settings.SHUFFLE_DATA = True #Set this =False for harder test and train set
     settings.FIELD_NAME = "Pressure"
 
-    expdir = "experiments/train/baseline/test/"
+    expdir = "experiments/train/block/test/"
 
 
     calc_DA_MAE = True

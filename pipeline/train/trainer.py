@@ -62,6 +62,7 @@ class TrainAE():
         self.print_every = print_every
         self.test_every = test_every
         self.num_epoch = num_epoch
+        self.small_debug = small_debug
 
         settings = self.settings
 
@@ -281,6 +282,9 @@ class TrainAE():
 
             if self.settings.THREE_DIM:
                 u_c = u_c.squeeze(1)
+
+            if self.small_debug:
+                u_c = u_c[:8]
 
             csv_fp = "{}{}_{}.csv".format(self.expdir, self.epoch, test_valid)
             batcher = BatchDA(self.settings, u_c, csv_fp=csv_fp, AEModel=self.model,

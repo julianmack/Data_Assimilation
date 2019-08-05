@@ -147,7 +147,6 @@ class ConvScheduler():
                 if out < lowest_out and (idx + 1 != len(strides)):
                     raise ValueError("Provided strides result in out < lowest_out since {} < {}".format(out, lowest_out))
                 return res
-        print(break_flag, out, len(res), len(strides), idx, res)
         if break_flag == False: #at end of strides, must return
             ConvScheduler.__error_check(out, lowest_out, len(res), len(strides), res)
             return res
@@ -171,7 +170,6 @@ class ConvScheduler():
         if out <= lowest_out or (idx >= len(strides)):
             ConvScheduler.__error_check(out, lowest_out, len(res), len(strides), res)
             return res
-
         if inp == 2:
             stride = strides[idx]
             idx += 1

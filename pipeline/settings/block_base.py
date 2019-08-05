@@ -1,9 +1,13 @@
 from pipeline.settings.config import Config3D
 from pipeline.AEs.AE_general import GenCAE
 from pipeline.AEs.AE_general import MODES as M
+from pipeline.ML_utils import ConvScheduler
 
 from itertools import cycle, islice
-from pipeline.settings.helpers import recursive_len, recursive_set, recursive_set_same_struct
+from pipeline.settings.helpers import recursive_len, recursive_set
+from pipeline.settings.helpers import recursive_set_same_struct, recursive_update
+from pipeline.settings.helpers import flatten_list
+
 from copy import deepcopy
 
 class Block(Config3D):
@@ -27,20 +31,11 @@ class Block(Config3D):
         self.AUGMENTATION = False
         self.DROPOUT = False
 
-        #I enter:
-
-        self.BLOCKS = [M.S, (2, "conv")]
-        self.BLOCKS = [M.S, (1, "conv"), (1,  [M.S, (1, "conv"), (1, "conv")])]
-
-
-        self.DOWNSAMPLE = [1, 0, 0, 0]
-        #self.DOWNSAMPLE = 0
 
     def get_kwargs(self):
+        assert hasattr(self, "BLOCKS"), "Must init self.BLOCKS"
 
         blocks = self.gen_blocks_with_kwargs()
-
-
 
         latent_sz = None
         kwargs =   {"blocks": blocks,
@@ -51,14 +46,40 @@ class Block(Config3D):
     def gen_blocks_with_kwargs(self):
 
         downsample = self.gen_downsample()
+
         channels = self.gen_channels()
-        print(channels)
-        print(downsample)
-        print(self.BLOCKS)
-        
-        blocks_w_kwargs = self.gen_block_kwargs_recursive(self.BLOCKS, downsample,
-                                                        channels, reset_idx=True)
+
+        strides = self.gen_strides_flat(downsample)
+
+        conv_data = ConvScheduler.conv_scheduler3D(self.get_n(), None, 1, self.DEBUG, strides=strides)
+        init_data = ConvScheduler.get_init_data_from_schedule(conv_data)
+
+
+        init_data_not_flat = recursive_set_same_struct(downsample, init_data, reset_idx=True)
+
+
+
+
+        blocks_w_kwargs = self.gen_block_kwargs_recursive(self.BLOCKS, channels,
+                                init_data=init_data_not_flat, reset_idx=True)
+
         return blocks_w_kwargs
+
+    def gen_channels(self):
+        if isinstance(self.BLOCKS, list):
+            if self.BLOCKS[0] == M.S:
+                structure = self.parse_BLOCKS()
+                num_layers_conv = self.recursive_len_conv(structure)
+                if hasattr(self, "CHANNELS"):
+                    channels_flat = self.CHANNELS
+                    assert len(channels_flat) == num_layers_conv + 1
+                else:
+                    channels_flat = self.channels_default(num_layers_conv + 1)
+
+                #channels = recursive_set_same_struct(structure, channels_flat)
+            else:
+                raise NotImplementedError("Parallel channel generation not implemented")
+        return channels_flat
 
     @staticmethod
     def channels_default(num_layers):
@@ -79,6 +100,7 @@ class Block(Config3D):
     def gen_downsample(self):
         """By default, all layers are downsampling layers (of stride 2)"""
         structure = self.parse_BLOCKS()
+
         if hasattr(self, "DOWNSAMPLE"):
             down = self.DOWNSAMPLE
             assert isinstance(down, (list, int))
@@ -89,7 +111,9 @@ class Block(Config3D):
                 assert all(x in [0, 1] for x in down)
                 schedule = self.gen_downsample_recursive(down, structure)
         else:
-            schedule = structure #set all to downsample
+            update = {"conv": 1, "ResB": 0 }
+
+            schedule = recursive_update(deepcopy(structure), update, 0) #set all to downsample
         assert len(schedule) == len(structure)
 
         return schedule
@@ -103,7 +127,7 @@ class Block(Config3D):
     def recursive_parse_BLOCKS(self, blocks):
         """Returns list with expanded structure of layers in self.BLOCKS"""
         if isinstance(blocks, str):
-            return 1
+            return blocks
         elif isinstance(blocks, list):
             assert len(blocks) > 1, "blocks must be list of structure [<MODE>, block_1, ...]"
             mode = blocks[0]
@@ -134,25 +158,12 @@ class Block(Config3D):
             raise ValueError("blocks must be of type str or list. Received type {}".format(type(blocks)))
 
 
-    def gen_channels(self):
-        if isinstance(self.BLOCKS, list):
-            if self.BLOCKS[0] == M.S:
-                structure = self.parse_BLOCKS()
-                num_layers_dec = recursive_len(structure)
-                #TODO - add check for own channels here
-                channels_flat = self.channels_default(num_layers_dec + 1)
-
-                #channels = recursive_set_same_struct(structure, channels_flat)
-            else:
-                raise NotImplementedError("Parallel channel generation not implemented")
-        return channels_flat
 
 
 
-
-    def gen_block_kwargs_recursive(self, blocks, downsample, channels, idx_=[0], reset_idx=False):
+    def gen_block_kwargs_recursive(self, blocks, channels, init_data, idx_=[0], reset_idx=False):
         if reset_idx:
-            return self.gen_block_kwargs_recursive(blocks, downsample, channels, [0])
+            return self.gen_block_kwargs_recursive(blocks, channels, init_data, idx_=[0])
         if isinstance(blocks, str):
             return blocks
         elif isinstance(blocks, list):
@@ -164,8 +175,7 @@ class Block(Config3D):
             blocks = blocks[1:] #ignore mode
             layers_out  = [mode]
             for block_idx, block in enumerate(blocks):
-
-                downsample_lo = deepcopy(downsample[block_idx])
+                init_data_lo = deepcopy(init_data[block_idx])
                 assert isinstance(block, tuple)
                 if len(block) == 2:
                     (num, blocks_) = block
@@ -176,19 +186,16 @@ class Block(Config3D):
                         for i in range(num):
                             [idx] = idx_
                             idx_[0] = idx + 1 #use mutable objecT
-                            if downsample_lo[i]:
-                                stride = (2, 2, 2)
-                            else:
-                                stride = (1, 1, 1)
-                            conv_kwargs = {"kernel_size": (3, 3, 3),
-                                         "padding": (0, 0, 0),
-                                         "stride": stride,
+
+                            conv_kwargs = {"kernel_size": init_data_lo[i]["kernel_size"],
+                                         "padding": init_data_lo[i]["padding"],
+                                         "stride": init_data_lo[i]["stride"],
                                          "in_channels": channels[idx],
                                          "out_channels": channels[idx + 1],}
                             kwargs = {"conv_kwargs": conv_kwargs,
                                      "dropout": self.DROPOUT,
                                      "batch_norm": self.BATCH_NORM,}
-                            # kwargs = {idx} #EDIT THIS
+                            #kwargs = {idx} #EDIT THIS
                             kwargs_ls.append(kwargs)
 
                         layers_out.append((num, blocks_, kwargs_ls))
@@ -197,7 +204,7 @@ class Block(Config3D):
                         layer = []
                         for i in range(num):
                             if mode == M.S:
-                                blocks_lower = self.gen_block_kwargs_recursive(blocks_, downsample_lo[i], channels, idx_)
+                                blocks_lower = self.gen_block_kwargs_recursive(blocks_, channels, init_data_lo[i], idx_)
                                 layers_out.append((1, blocks_lower)) #this only works for sequential
                             else:
                                 raise NotImplementedError()
@@ -225,17 +232,34 @@ class Block(Config3D):
             raise ValueError("blocks must be of type str or list. Received type {}".format(type(blocks)))
 
 
+    @staticmethod
+    def gen_strides_flat(downsample):
+        downs = deepcopy(downsample)
+        update_strides = {1: 2, 0:1}
+        strides_not_flat = recursive_update(downs, update_strides)
+        return list(flatten_list(strides_not_flat))
 
     @staticmethod
     def gen_downsample_recursive(down, structure):
         schedule = []
         cycled_down = list(islice(cycle(down), len(structure)))
         for idx, block in enumerate(structure):
-            if isinstance(block, int):
-                schedule.append(cycled_down[idx])
+            if isinstance(block, str):
+                if block == "conv":
+                    schedule.append(cycled_down[idx])
+                else:
+                    pass
             else:
                 schedule.append(Block.gen_downsample_recursive(down, block))
         return schedule
 
-
+    @staticmethod
+    def recursive_len_conv(item):
+        """Calculates number of layers that are conv (others are ignored)"""
+        if type(item) == list:
+            return sum(Block.recursive_len_conv(subitem) for subitem in item)
+        else:
+            if item == "conv":
+                return 1
+            return 0
 
