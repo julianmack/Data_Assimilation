@@ -31,7 +31,23 @@ class Baseline2_replicate(Block):
         self.CHANNELS[1] = 16
         self.CHANNELS[2] = 32
 
-        #self.DOWNSAMPLE = down_z
+class BaselineRes(Block):
+    def __init__(self):
+        super(BaselineRes, self).__init__()
+        self.BLOCKS = [M.S, (7, "conv"), (2, "resB", {"C": 32}), (2, "conv")]
+        self.DOWNSAMPLE__ = [[0, 1, 0, 1, 0, 1, 0], [], [0, 0]]
+
+class BaselineResDown(Block):
+    def __init__(self):
+        super(BaselineResDown, self).__init__()
+        self.BLOCKS = [M.S, (7, "conv"), (2, "resB1x1", {"I": 32, "O": 4}), (2, "conv")]
+        self.DOWNSAMPLE__ = [[0, 1, 0, 1, 0, 1, 0], [], [0, 0]]
+
+class BaselineResSlim(Block):
+    def __init__(self):
+        super(BaselineResSlim, self).__init__()
+        self.BLOCKS = [M.S, (7, "conv"), (2, "resBslim", {"I": 32, "O": 4}), (2, "conv")]
+        self.DOWNSAMPLE__ = [[0, 1, 0, 1, 0, 1, 0], [], [0, 0]]
 
 class Res34AE(Block):
     def __init__(self):

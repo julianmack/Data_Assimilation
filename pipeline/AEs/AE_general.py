@@ -136,10 +136,16 @@ class GenCAE(BaseAE):
             return Build.conv(**layer_kwargs)
         elif block == "resB":
             return Build.resB(self.act_fn, **layer_kwargs)
+        elif block == "resB1x1":
+            return Build.resB1x1(self.act_fn, **layer_kwargs)
+        elif block == "resBslim":
+            return Build.resBslim(self.act_fn, **layer_kwargs)
         elif block == "resB_3":
             return Build.resB_3(self.act_fn, **layer_kwargs)
         elif block == "DRU":
             return Build.DRU(self.act_fn, **layer_kwargs)
+        elif block == "1x1":
+            Build.conv1x1(layer_kwargs)
         else:
             raise NotImplementedError("block={} is not implemented".format(block))
 

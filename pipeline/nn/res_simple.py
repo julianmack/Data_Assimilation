@@ -14,6 +14,21 @@ class ResBlock(nn.Module):
         h = self.act_fn(self.conv1(x))
         h = self.conv2(h)
         return h + x
+class ResBlock1x1(nn.Module):
+
+    def __init__(self, activation_fn, in_channels, out_channels):
+        super(ResBlock1x1, self).__init__()
+        self.act_fn = activation_fn
+
+        self.conv1x1 = nn.Conv3d(in_channels, out_channels, kernel_size=(1, 1, 1), stride=(1,1,1))
+        self.conv1 = nn.Conv3d(out_channels, out_channels, kernel_size=(3, 3, 3), stride=(1,1,1), padding=(1,1,1))
+        self.conv2 = nn.Conv3d(out_channels, in_channels, kernel_size=(3, 3, 3), stride=(1,1,1), padding=(1,1,1))
+
+    def forward(self, x):
+        h = self.act_fn(self.conv1x1(x))
+        h = self.act_fn(self.conv1(h))
+        h = self.conv2(h)
+        return h + x
 
 class ResBlockStack3(nn.Module):
 

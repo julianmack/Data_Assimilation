@@ -56,6 +56,7 @@ class Block(Config3D):
         else:
             strides = self.gen_strides_flat(downsample)
 
+
         conv_data = ConvScheduler.conv_scheduler3D(self.get_n(), None, 1, self.DEBUG, strides=strides)
         init_data = ConvScheduler.get_init_data_from_schedule(conv_data)
 
@@ -63,7 +64,7 @@ class Block(Config3D):
             downsample = downsample[0]
 
         init_data_not_flat = recursive_set_same_struct(downsample, init_data, reset_idx=True)
-
+        
         blocks_w_kwargs = self.gen_block_kwargs_recursive(self.BLOCKS, channels,
                                 init_data=init_data_not_flat, reset_idx=True)
 
@@ -89,7 +90,7 @@ class Block(Config3D):
     def channels_default(num_layers):
         """Returns default channel schedule of length
         num_layers (all top level list)"""
-        
+
         idx_half = int((num_layers + 1) / 2)
 
         channels = [64] * (num_layers + 1)
@@ -103,31 +104,34 @@ class Block(Config3D):
 
     def gen_downsample(self):
         """By default, all layers are downsampling layers (of stride 2)"""
-        structure = self.parse_BLOCKS()
 
-        if hasattr(self, "DOWNSAMPLE"):
-            down = self.DOWNSAMPLE
-            assert isinstance(down, (list, int, tuple))
-            if isinstance(down, int):
-                assert down in [0, 1]
-                schedule = recursive_set(deepcopy(structure), down)
-            elif isinstance(down, list):
-                assert all(x in [0, 1] for x in down)
-                schedule = self.gen_downsample_recursive(down, structure)
+        if not hasattr(self, "DOWNSAMPLE__"):
+            structure = self.parse_BLOCKS()
+            if hasattr(self, "DOWNSAMPLE"):
+                down = self.DOWNSAMPLE
+                assert isinstance(down, (list, int, tuple))
+                if isinstance(down, int):
+                    assert down in [0, 1]
+                    schedule = recursive_set(deepcopy(structure), down)
+                elif isinstance(down, list):
+                    assert all(x in [0, 1] for x in down)
+                    schedule = self.gen_downsample_recursive(down, structure)
+                else:
+                    assert len(down) == 3
+                    assert all(len(x) == len(down[0]) for x in down)
+                    sched = []
+                    for dim_down in down:
+                        sched.append(self.gen_downsample_recursive(dim_down, structure))
+                    schedule = tuple(sched)
             else:
-                assert len(down) == 3
-                assert all(len(x) == len(down[0]) for x in down)
-                sched = []
-                for dim_down in down:
-                    sched.append(self.gen_downsample_recursive(dim_down, structure))
-                schedule = tuple(sched)
-        else:
-            update = {"conv": 1, "ResB": 0 }
+                update = {"conv": 1, "ResB": 0 }
 
-            schedule = recursive_update(deepcopy(structure), update, 0) #set all to downsample
-        assert len(schedule) == len(structure) or isinstance(schedule, tuple)
+                schedule = recursive_update(deepcopy(structure), update, 0) #set all to downsample
 
-        return schedule
+            assert len(schedule) == len(structure) or isinstance(schedule, tuple)
+            self.DOWNSAMPLE__ = schedule
+
+        return self.DOWNSAMPLE__
 
 
     #################### Everything below this point is a helper function
@@ -194,23 +198,24 @@ class Block(Config3D):
 
                     if isinstance(blocks_, str):
                         #then generate kwargs
-                        kwargs_ls = []
-                        for i in range(num):
-                            [idx] = idx_
-                            idx_[0] = idx + 1 #use mutable objecT
-
-                            conv_kwargs = {"kernel_size": init_data_lo[i]["kernel_size"],
-                                         "padding": init_data_lo[i]["padding"],
-                                         "stride": init_data_lo[i]["stride"],
-                                         "in_channels": channels[idx],
-                                         "out_channels": channels[idx + 1],}
-                            kwargs = {"conv_kwargs": conv_kwargs,
-                                     "dropout": self.DROPOUT,
-                                     "batch_norm": self.BATCH_NORM,}
-                            #kwargs = {idx} #EDIT THIS
-                            kwargs_ls.append(kwargs)
-
-                        layers_out.append((num, blocks_, kwargs_ls))
+                        if not blocks_ == "conv":
+                            layers_out.append((num, blocks_))
+                        else:
+                            kwargs_ls = []
+                            for i in range(num):
+                                [idx] = idx_
+                                idx_[0] = idx + 1 #use mutable objecT
+                                conv_kwargs = {"kernel_size": init_data_lo[i]["kernel_size"],
+                                             "padding": init_data_lo[i]["padding"],
+                                             "stride": init_data_lo[i]["stride"],
+                                             "in_channels": channels[idx],
+                                             "out_channels": channels[idx + 1],}
+                                kwargs = {"conv_kwargs": conv_kwargs,
+                                         "dropout": self.DROPOUT,
+                                         "batch_norm": self.BATCH_NORM,}
+                                #kwargs = {idx} #EDIT THIS
+                                kwargs_ls.append(kwargs)
+                            layers_out.append((num, blocks_, kwargs_ls))
                     else:
                         #then go recursively
                         layer = []
@@ -230,10 +235,9 @@ class Block(Config3D):
                         kwargs_ls = [kwargs_ls] * num
                     else:
                         assert len(kwargs_ls) == num
-                    #in this case, all blocks are
-                    #TODO - increment the idx
-                    [idx] = idx_
-                    idx_[0] = idx + num #use mutable objecT
+                    if blocks_ == "conv":
+                        [idx] = idx_
+                        idx_[0] = idx + num #use mutable objecT
                     layers_out.append((num, blocks_, kwargs_ls))
 
                 else:

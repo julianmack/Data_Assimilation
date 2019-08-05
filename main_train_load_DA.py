@@ -1,6 +1,6 @@
 """File to run elements of pipeline module from"""
 from pipeline.settings.baseline import Baseline
-from pipeline.settings.block_models import Baseline1_replicate
+from pipeline.settings.block_models import Baseline1_replicate, BaselineRes
 
 from pipeline import TrainAE, ML_utils, GetData, SplitData
 from pipeline.VarDA.batch_DA import BatchDA
@@ -18,7 +18,7 @@ SAVE = False
 
 def main():
 
-    settings = Baseline1_replicate()
+    settings = BaselineRes()
     #model = ML_utils.load_model_from_settings(settings)
 
 

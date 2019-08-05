@@ -1,6 +1,31 @@
 import torch
 from torch import nn
+from pipeline.nn.conv import FactorizedConv
 
+
+class ResBlockSlim(nn.Module):
+
+    def __init__(self, activation_fn, in_channels, out_channels):
+        super(ResBlockSlim, self).__init__()
+        self.act_fn = activation_fn
+
+        self.conv1x1 = nn.Conv3d(in_channels, out_channels, kernel_size=(1, 1, 1), stride=(1,1,1))
+        conv_kwargs1 = {"in_channels": out_channels,
+                        "out_channels": out_channels,
+                        "kernel_size": (3, 3, 3),
+                        "stride": (1,1,1),
+                        "padding": (1,1,1)}
+        conv_kwargs2 = conv_kwargs1.copy()
+        conv_kwargs2["out_channels"] = in_channels
+        self.conv1 = FactorizedConv(self.act_fn, **conv_kwargs1)
+        self.conv2 = FactorizedConv(self.act_fn, **conv_kwargs2)
+
+
+    def forward(self, x):
+        h = self.act_fn(self.conv1x1(x))
+        h = self.act_fn(self.conv1(h))
+        h = self.conv2(h)
+        return h + x
 
 class DRU(nn.Module):
 

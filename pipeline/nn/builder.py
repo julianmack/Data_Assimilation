@@ -1,6 +1,6 @@
 from torch import nn
-from pipeline.nn.res_simple import ResBlock, ResBlockStack3
-from pipeline.nn.res_complex import DRU
+from pipeline.nn.res_simple import ResBlock, ResBlockStack3, ResBlock1x1
+from pipeline.nn.res_complex import DRU, ResBlockSlim
 
 class NNBuilder():
     """Class to build nn blocks"""
@@ -36,6 +36,12 @@ class NNBuilder():
         return conv
 
     @staticmethod
+    def conv1x1(D, I):
+        channel_down = (channel // D) if (channel // D > 0) else 1
+        return nn.Conv3d(I, channel_down, kernel_size=(1, 1, 1), stride=(1,1,1))
+
+
+    @staticmethod
     def resB(activation_fn, C):
         """Returns Residual block of structure:
         conv -> activation -> conv -> sum both conv.
@@ -54,6 +60,16 @@ class NNBuilder():
         Note: enforce that Cin == Cout == C"""
 
         return ResBlockStack3(activation_fn, C)
+
+    @staticmethod
+    def resB1x1(activation_fn, I, O):
+
+        return ResBlock1x1(activation_fn, I, O)
+    @staticmethod
+    def resBslim(activation_fn, I, O):
+
+        return ResBlockSlim(activation_fn, I, O)
+
     @staticmethod
     def DRU(activation_fn, C):
         """Returns A Dense Residual Unit
