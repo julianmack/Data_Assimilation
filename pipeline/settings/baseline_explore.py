@@ -17,9 +17,9 @@ class Baseline1(CAEConfig):
         self.CHANGEOVER_DEFAULT = 2
         self.DEBUG = False
 
-        self.BATCH_NORM = True
+        self.BATCH_NORM = False
         self.AUGMENTATION = True
-        self.DROPOUT = True
+        self.DROPOUT = False
 
         self.get_channels()
 
@@ -54,17 +54,18 @@ class Baseline2(CAEConfig):
         self.CHANGEOVER_DEFAULT = 0
         self.DEBUG = False
 
-        self.BATCH_NORM = True
+        self.BATCH_NORM = False
         self.AUGMENTATION = True
-        self.DROPOUT = True
+        self.DROPOUT = False
 
         self.get_channels()
+
 
     def gen_channels(self):
         num_layers_dec = self.get_num_layers_decode()
         idx_half = int((num_layers_dec + 1) / 2)
 
-        channels = [64] * (num_layers_dec+ 1)
+        channels = [64] * (num_layers_dec + 1)
         channels[idx_half:] = [32] *  len(channels[idx_half:])
 
         #update bespoke vals

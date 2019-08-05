@@ -46,19 +46,23 @@ class Block(Config3D):
     def gen_blocks_with_kwargs(self):
 
         downsample = self.gen_downsample()
+        channels = self.get_channels()
 
-        channels = self.gen_channels()
-
-        strides = self.gen_strides_flat(downsample)
+        if isinstance(downsample, tuple):
+            strides = []
+            for down in downsample:
+                strides.append(self.gen_strides_flat(down))
+            strides = tuple(strides)
+        else:
+            strides = self.gen_strides_flat(downsample)
 
         conv_data = ConvScheduler.conv_scheduler3D(self.get_n(), None, 1, self.DEBUG, strides=strides)
         init_data = ConvScheduler.get_init_data_from_schedule(conv_data)
 
+        if isinstance(downsample, tuple):
+            downsample = downsample[0]
 
         init_data_not_flat = recursive_set_same_struct(downsample, init_data, reset_idx=True)
-
-
-
 
         blocks_w_kwargs = self.gen_block_kwargs_recursive(self.BLOCKS, channels,
                                 init_data=init_data_not_flat, reset_idx=True)
@@ -74,7 +78,7 @@ class Block(Config3D):
                     channels_flat = self.CHANNELS
                     assert len(channels_flat) == num_layers_conv + 1
                 else:
-                    channels_flat = self.channels_default(num_layers_conv + 1)
+                    channels_flat = self.channels_default(num_layers_conv)
 
                 #channels = recursive_set_same_struct(structure, channels_flat)
             else:
@@ -85,7 +89,7 @@ class Block(Config3D):
     def channels_default(num_layers):
         """Returns default channel schedule of length
         num_layers (all top level list)"""
-
+        
         idx_half = int((num_layers + 1) / 2)
 
         channels = [64] * (num_layers + 1)
@@ -103,18 +107,25 @@ class Block(Config3D):
 
         if hasattr(self, "DOWNSAMPLE"):
             down = self.DOWNSAMPLE
-            assert isinstance(down, (list, int))
+            assert isinstance(down, (list, int, tuple))
             if isinstance(down, int):
                 assert down in [0, 1]
                 schedule = recursive_set(deepcopy(structure), down)
-            else:
+            elif isinstance(down, list):
                 assert all(x in [0, 1] for x in down)
                 schedule = self.gen_downsample_recursive(down, structure)
+            else:
+                assert len(down) == 3
+                assert all(len(x) == len(down[0]) for x in down)
+                sched = []
+                for dim_down in down:
+                    sched.append(self.gen_downsample_recursive(dim_down, structure))
+                schedule = tuple(sched)
         else:
             update = {"conv": 1, "ResB": 0 }
 
             schedule = recursive_update(deepcopy(structure), update, 0) #set all to downsample
-        assert len(schedule) == len(structure)
+        assert len(schedule) == len(structure) or isinstance(schedule, tuple)
 
         return schedule
 
@@ -175,6 +186,7 @@ class Block(Config3D):
             blocks = blocks[1:] #ignore mode
             layers_out  = [mode]
             for block_idx, block in enumerate(blocks):
+
                 init_data_lo = deepcopy(init_data[block_idx])
                 assert isinstance(block, tuple)
                 if len(block) == 2:

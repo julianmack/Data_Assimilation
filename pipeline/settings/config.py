@@ -89,6 +89,14 @@ class Config():
         env = os.environ
         for k, v in self.env_vars.items():
             env[str(k)] = str(v)
+    def get_channels(self):
+        if hasattr(self, "CHANNELS") and self.CHANNELS != None:
+            return self.CHANNELS
+        elif hasattr(self, "gen_channels"): #gen random channels
+            self.CHANNELS = self.gen_channels()
+            return self.CHANNELS
+        else:
+            raise NotImplementedError("No default channel init")
 
 class Config3D(Config):
     def __init__(self):
@@ -195,14 +203,6 @@ class CAEConfig(ConfigAE):
             changeover_out_def = 10
         return ML_utils.ConvScheduler.conv_scheduler3D(self.get_n(), changeovers, 1, False, changeover_out_def=changeover_out_def )
 
-    def get_channels(self):
-        if self.CHANNELS != None and hasattr(self, "CHANNELS"):
-            return self.CHANNELS
-        elif hasattr(self, "gen_channels"): #gen random channels
-            self.CHANNELS = self.gen_channels()
-            return self.CHANNELS
-        else:
-            raise NotImplementedError("No default channel init")
     def gen_channels(self):
         channels = [8] * (self.get_num_layers_decode() + 1)
         channels[0] = 1

@@ -153,7 +153,6 @@ class ConvScheduler():
         elif out <= lowest_out or (idx >= len(strides)) and break_flag:
             ConvScheduler.__error_check(out, lowest_out, len(res), len(strides), res)
             return res
-
         if inp == 3:
             stride = strides[idx]
             idx += 1
@@ -177,9 +176,20 @@ class ConvScheduler():
                 pad = 0
                 kernel = 2
                 out = ConvScheduler.conv_formula(inp, stride, pad, kernel)
+                inp  = out
                 res.append({"in": inp, "out": out, "stride": stride, "pad": pad, "kernel": kernel})
             else:
                 raise ValueError("Provided stride results in error. Can't have stride=2 when input=2")
+        if inp == 1:
+            for stride in strides[idx:]:
+                if stride == 1:
+                    pad = 0
+                    kernel = 1
+                    out = ConvScheduler.conv_formula(inp, stride, pad, kernel)
+                    inp = out
+                    res.append({"in": inp, "out": out, "stride": stride, "pad": pad, "kernel": kernel})
+                else:
+                    raise ValueError("Provided stride results in error. Can't have stride=2 when input=1")
 
         ConvScheduler.__error_check(out, lowest_out, len(res), len(strides), res)
         return res
