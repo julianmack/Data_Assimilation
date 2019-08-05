@@ -2,6 +2,7 @@
 from pipeline.settings.baseline import Baseline
 from pipeline import TrainAE, ML_utils, GetData, SplitData
 from pipeline.VarDA.batch_DA import BatchDA
+from pipeline.settings.block_explore import Block
 
 import shutil
 
@@ -13,7 +14,7 @@ SAVE = False
 
 def main():
 
-    settings = Baseline()
+    settings = Block()
     #model = ML_utils.load_model_from_settings(settings)
 
 

@@ -43,7 +43,7 @@ def load_model_from_settings(settings, device=None):
 
     model = settings.AE_MODEL_TYPE(**settings.get_kwargs())
     if hasattr(settings, "AE_MODEL_FP"):
-        
+
         weights = torch.load(settings.AE_MODEL_FP, map_location=device)
         model.load_state_dict(weights)
 

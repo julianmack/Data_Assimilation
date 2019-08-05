@@ -15,7 +15,7 @@ def main():
     #     print()
 
     print(model.layers_encode)
-    print(model)
+    
     num_params = sum(p.numel() for p in model.parameters())
 
     print("num params", num_params)

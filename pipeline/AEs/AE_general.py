@@ -82,6 +82,7 @@ class GenCAE(BaseAE):
                 assert isinstance(block, tuple)
                 if len(block) == 2:
                     (num, blocks_) = block
+                    kwargs_ls = None
                 elif len(block) == 3:
                     (num, blocks_, kwargs_ls) = block
                     assert isinstance(blocks_, str), "Only give kwargs for node element of blocks data-structure"
@@ -98,10 +99,17 @@ class GenCAE(BaseAE):
 
                 layer = OrderedDict()
                 for i in range(num):
-                    layers_lower = self.parse_blocks(blocks_, encode, kwargs_ls[i]) #nn.module
+                    if kwargs_ls:
+                        layers_lower = self.parse_blocks(blocks_, encode, kwargs_ls[i]) #nn.module
+                    else:
+                        layers_lower = self.parse_blocks(blocks_, encode)
                     layer.update({str(i): layers_lower})
 
-                blocks_expanded.update({str(idx): nn.Sequential(layer)})
+                if num == 1 and mode == MODES.S:
+                    layer = layer[str(0)]
+                    blocks_expanded.update({str(idx): layer})
+                else:
+                    blocks_expanded.update({str(idx): nn.Sequential(layer)})
 
 
             if mode == MODES.S:

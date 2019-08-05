@@ -11,6 +11,10 @@ def main():
     conv_data = ConvScheduler.conv_scheduler3D(n, None, 1, True)
     init_data = ConvScheduler.get_init_data_from_schedule(conv_data)
     print(init_data)
+    print()
+    print(conv_data)
+    print()
+    exit()
     channels = list(range(1, len(init_data) + 2))[::-1]
     cae = AutoEncoders.CAE_3D(init_data, channels)
 
