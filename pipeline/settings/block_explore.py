@@ -39,6 +39,9 @@ class Block(Config3D):
     def get_kwargs(self):
 
         blocks = self.gen_blocks_with_kwargs()
+
+
+
         latent_sz = None
         kwargs =   {"blocks": blocks,
                     "activation": self.ACTIVATION,
@@ -52,6 +55,7 @@ class Block(Config3D):
         print(channels)
         print(downsample)
         print(self.BLOCKS)
+        
         blocks_w_kwargs = self.gen_block_kwargs_recursive(self.BLOCKS, downsample,
                                                         channels, reset_idx=True)
         return blocks_w_kwargs
