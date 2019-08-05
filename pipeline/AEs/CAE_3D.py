@@ -19,7 +19,6 @@ class CAE_3D(BaseAE):
 
         layer_data_list = layer_data + layer_data[::-1]
         num_encode = len(layer_data)
-        print(layer_data)
         assert len(channels) == len(layer_data_list) + 1
 
         for idx, data in enumerate(layer_data_list):
