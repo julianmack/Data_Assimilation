@@ -1,11 +1,11 @@
 from pipeline.settings.baseline import Baseline
 from pipeline.settings.block_base import Block
-from pipeline.settings.block_models import Res34AE, Res34AE_Stacked
+from pipeline.settings.block_models import Res34AE, Res34AE_Stacked, Cho2019
 from pipeline import ML_utils
 
 
 def main():
-    settings = Res34AE_Stacked()
+    settings = Cho2019()
     model = ML_utils.load_model_from_settings(settings)
     # for name, val in model.named_parameters():
     #     print(name, val.shape)

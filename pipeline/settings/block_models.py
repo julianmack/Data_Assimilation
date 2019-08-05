@@ -20,6 +20,21 @@ class Res34AE_Stacked(Block):
         self.DOWNSAMPLE = [0, 1, 0, 1, 0, 1, 0, 0] #downsample for conv
         #i.e. strides =   [1, 2, 1, 2, 1, 2, 1, 1]
 
+class Cho2019(Block):
+    """Initilaizes model as in paper:
+            "Low Bit-rate Image Compression based on
+            Post-processing with Grouped Residual Dense Network"
+    Uses DRUs (Dense Residual Blocks)
+
+    """
+    def __init__(self):
+        super(Cho2019, self).__init__()
+        self.ACTIVATION = "lrelu"
+        self.BLOCKS = [M.S, (8, "conv"), (4, "DRU", {"C": 32})]
+
+        self.DOWNSAMPLE = [0, 1, 0, 1, 0, 1, 0, 0] #downsample for conv
+        #i.e. strides =   [1, 2, 1, 2, 1, 2, 1, 1]
+
 class CAE7_replica(Block):
 
     def __init__(self):

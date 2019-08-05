@@ -1,5 +1,7 @@
 from torch import nn
-from pipeline.nn.residual_simple import ResBlock, ResBlockStack3, DRU
+from pipeline.nn.res_simple import ResBlock, ResBlockStack3
+from pipeline.nn.res_complex import DRU
+
 class NNBuilder():
     """Class to build nn blocks"""
 
