@@ -8,36 +8,37 @@ class ResNextBlock(nn.Module):
     It is really just a standard res_block with sqeezed 1x1 convs
     at input and output
     """
-    def __init__(self, activation_fn, Cin, channel_small=None, down_sf=4):
+    def __init__(self, activation_constructor, Cin, channel_small=None, down_sf=4):
         super(ResNextBlock, self).__init__()
-        self.act_fn = activation_fn
 
         if not channel_small:
             #Minimum of 4 channels
             channel_small = (Cin // down_sf) if (Cin // down_sf > 0) else 4
 
-        self.conv1x1_1 = nn.Conv3d(Cin, channel_small, kernel_size=(1, 1, 1), stride=(1,1,1))
-        self.conv3x3 = nn.Conv3d(channel_small, channel_small, kernel_size=(3, 3, 3), stride=(1,1,1), padding=(1,1,1))
-        self.conv1x1_2 = nn.Conv3d(channel_small, Cin, kernel_size=(1, 1, 1), stride=(1,1,1))
+
+        conv1x1_1 = nn.Conv3d(Cin, channel_small, kernel_size=(1, 1, 1), stride=(1,1,1))
+        conv3x3 = nn.Conv3d(channel_small, channel_small, kernel_size=(3, 3, 3), stride=(1,1,1), padding=(1,1,1))
+        conv1x1_2 = nn.Conv3d(channel_small, Cin, kernel_size=(1, 1, 1), stride=(1,1,1))
+
+        self.ResLayers = nn.Sequential(conv1x1_1,
+        activation_constructor(channel_small), conv3x3,
+        activation_constructor(channel_small), conv1x1_2)
 
     def forward(self, x):
-        h = self.act_fn(self.conv1x1_1(x))
-        h = self.act_fn(self.conv3x3(h))
-        h = self.conv1x1_2(h)
+        h = self.ResLayers(x)
         return h + x
 
 class ResNeXt(nn.Module):
     """Full ResNext module from : arXiv:1611.05431v2
     """
 
-    def __init__(self, activation_fn, Cin, cardinality):
+    def __init__(self, activation_constructor, Cin, cardinality):
         super(ResNeXt, self).__init__()
-        self.act_fn = activation_fn
 
         channel_small = 4 #fixed for ResNeXt system
         blocks = nn.ModuleList([])
         for i in range(cardinality):
-            resblock = ResNextBlock(activation_fn, Cin, channel_small=4)
+            resblock = ResNextBlock(activation_constructor, Cin, channel_small=4)
             blocks.append(resblock)
         self.resblocks = blocks
 
@@ -45,9 +46,9 @@ class ResNeXt(nn.Module):
     def forward(self, x):
         for idx, block in enumerate(self.resblocks):
             if idx == 0:
-                h = self.act_fn(block(x))
+                h = block(x)
             else:
-                h += self.act_fn(block(x))
+                h += block(x)
 
         return h + x
 

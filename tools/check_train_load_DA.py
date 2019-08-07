@@ -15,8 +15,9 @@ from pipeline.settings.models_.resNeXt import Baseline1Block, ResNeXt
 
 #################### Models to init
 resNext_k = {"layers": 3, "cardinality": 8}
-CONFIGS = [Res34AE, ResNeXt, Baseline1Block, Cho2019]
-KWARGS = (0, resNext_k, 0, 0)
+
+CONFIGS = ResNeXt
+KWARGS = (resNext_k,)
 ##################
 
 

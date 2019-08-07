@@ -48,20 +48,11 @@ class GenCAE(BaseAE):
 
         super(GenCAE, self).__init__()
 
-        if activation is None: #This is necessary if activation functions are included in blocks
-            self.act_fn = lambda x: x #i.e. just return input
-        elif activation == "lrelu":
-            self.act_fn = nn.LeakyReLU(negative_slope = 0.05, inplace=False)
-        elif activation == "relu":
-            self.act_fn = F.relu
-        elif activation == "prelu":
-            raise NotImplementedError()
-        elif activation == "GDN":
-            raise NotImplementedError()
-        else:
-            raise NotImplemtedError("Activation function must be in {`relu`, `lrelu`, `prelu`, `GDN`}")
+        self.__init_activation(activation)
 
         self.layers_encode = self.parse_blocks(blocks, encode=True)
+        print(self.layers_encode )
+        exit()
         self.layers_decode = self.parse_blocks(blocks, encode=False)
         self.latent_sz = latent_sz
 
@@ -133,22 +124,42 @@ class GenCAE(BaseAE):
     def parse_blocks_str(self, block, encode, layer_kwargs):
         if block == "conv": #this is poorly named - simple conv?
             layer_kwargs["encode"] = encode
+            layer_kwargs["activation"] = self.activation
             return Build.conv(**layer_kwargs)
         elif block == "resB":
-            return Build.resB(self.act_fn, **layer_kwargs)
+            return Build.resB(self.activation, **layer_kwargs)
         elif block == "ResNeXt":
-            return Build.ResNeXt(self.act_fn, **layer_kwargs)
+            return Build.ResNeXt(self.activation, **layer_kwargs)
         elif block == "resB1x1":
-            return Build.resB1x1(self.act_fn, **layer_kwargs)
+            return Build.resB1x1(self.activation, **layer_kwargs)
         elif block == "resBslim":
-            return Build.resBslim(self.act_fn, **layer_kwargs)
+            return Build.resBslim(self.activation, **layer_kwargs)
         elif block == "resB_3":
-            return Build.resB_3(self.act_fn, **layer_kwargs)
+            return Build.resB_3(self.activation, **layer_kwargs)
         elif block == "DRU":
-            return Build.DRU(self.act_fn, **layer_kwargs)
+            return Build.DRU(self.activation, **layer_kwargs)
         elif block == "1x1":
             Build.conv1x1(layer_kwargs)
         else:
             raise NotImplementedError("block={} is not implemented".format(block))
 
+    def __init_activation(self, activation):
+        """self.act_fn from BaseAE is depreccated in favour of initilizing
+        the activation function at model init time (to give correct number
+         of channels in PreLu GDN etc.)
+         """
 
+        if activation is None: #This is necessary if activation functions are included in blocks
+            fn = lambda x: x #i.e. just return input
+        elif activation == "lrelu":
+            fn = nn.LeakyReLU(negative_slope = 0.05, inplace=False)
+        elif activation == "relu":
+            fn = F.relu
+        elif activation == "prelu":
+            fn = "prelu" #defer until NNBuilder()
+        elif activation == "GDN":
+            raise NotImplementedError()
+        else:
+            raise NotImplemtedError("Activation function must be in {`relu`, `lrelu`, `prelu`, `GDN`}")
+        self.activation = fn
+        self.act_fn = lambda x: x #i.e. does nothing
