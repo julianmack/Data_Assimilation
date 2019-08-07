@@ -14,7 +14,7 @@ from pipeline.settings.models_.resNeXt import Baseline1Block, ResNeXt
 
 
 #################### Models to init
-resNext_k = {"layers": 3, "cardinality": 8}
+resNext_k = {"layers": 3, "cardinality": 2}
 
 CONFIGS = ResNeXt
 KWARGS = (resNext_k,)
@@ -27,11 +27,11 @@ SMALL_DEBUG_DOM = True #For training
 ALL_DATA = False #for DA
 
 def main():
-    assert isinstance(CONFIGS, (list, Config))
-    if isinstance(CONFIGS, Config):
-        configs = (CONFIG, ) * len(KWARGS)
-    else:
+
+    if isinstance(CONFIGS, list):
         configs = CONFIGS
+    else:
+        configs = (CONFIGS, ) * len(KWARGS)
     assert len(configs) == len(KWARGS)
 
     for idx, conf in enumerate(configs):

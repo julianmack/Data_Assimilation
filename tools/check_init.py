@@ -8,7 +8,7 @@ from pipeline import ML_utils
 from types import ModuleType
 
 
-resNext_k = {"layers": 2, "cardinality": 2}
+resNext_k = {"layers": 3, "cardinality": 2}
 
 # CONFIGS = [Res34AE, ResNeXt, Baseline1Block, Cho2019]
 # KWARGS = (0, resNext_k, 0, 0)

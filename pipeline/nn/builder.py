@@ -96,14 +96,18 @@ class NNBuilder():
 
     @staticmethod
     def act_constr(activation_fn):
-        if callable(activation_fn):
+        if  activation_fn == "relu":
+            activation_constructor = lambda x: nn.ReLU()
+        elif activation_fn == "lrelu":
+            activation_constructor = lambda x: nn.LeakyReLU(0.05)
+        elif callable(activation_fn):
             activation_constructor = lambda x: activation_fn
         elif activation_fn == "prelu": # must be initilalized in situ
             activation_constructor = nn.PReLU
         else:
             raise NotImplementedError("Activation function not implemented")
         return activation_constructor
-        
+
     @staticmethod
     def maybe_add_activation(module, act_fn_constructor, final, C):
         if final:

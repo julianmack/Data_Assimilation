@@ -1,5 +1,4 @@
 import torch.nn as nn
-import torch.nn.functional as F
 from collections import OrderedDict
 
 from pipeline.AEs import BaseAE
@@ -51,10 +50,13 @@ class GenCAE(BaseAE):
         self.__init_activation(activation)
 
         self.layers_encode = self.parse_blocks(blocks, encode=True)
-        print(self.layers_encode )
-        exit()
+        self.layers_encode = self.remove_final_activation(self.layers_encode)
+
         self.layers_decode = self.parse_blocks(blocks, encode=False)
+        self.layers_decode = self.remove_final_activation(self.layers_decode)
+
         self.latent_sz = latent_sz
+
 
     def parse_blocks(self, blocks, encode, kwargs_ls=None):
         if isinstance(blocks, str):
@@ -152,9 +154,9 @@ class GenCAE(BaseAE):
         if activation is None: #This is necessary if activation functions are included in blocks
             fn = lambda x: x #i.e. just return input
         elif activation == "lrelu":
-            fn = nn.LeakyReLU(negative_slope = 0.05, inplace=False)
+            fn = "lrelu"
         elif activation == "relu":
-            fn = F.relu
+            fn = "relu"
         elif activation == "prelu":
             fn = "prelu" #defer until NNBuilder()
         elif activation == "GDN":
@@ -163,3 +165,32 @@ class GenCAE(BaseAE):
             raise NotImplemtedError("Activation function must be in {`relu`, `lrelu`, `prelu`, `GDN`}")
         self.activation = fn
         self.act_fn = lambda x: x #i.e. does nothing
+
+
+    @staticmethod
+    def remove_final_activation(module_list):
+        """Final activation from encoder and decoder must be removed after initialization"""
+
+        recursion_depth = 20
+        final = module_list
+        prev = module_list
+        for depth in range(recursion_depth):
+            try:
+                save = final
+                final = final[-1]
+                prev = save
+            except (IndexError, TypeError):
+                break
+
+        if depth == 1:
+            module_list = nn.Sequential(*list(prev.children())[:-1])
+        elif depth == 2:
+            module_list[-1] = nn.Sequential(*list(prev.children())[:-1])
+        elif depth == 3:
+            module_list[-1][-1] = nn.Sequential(*list(prev.children())[:-1])
+        elif depth == 4:
+            module_list[-1][-1][-1] = nn.Sequential(*list(prev.children())[:-1])
+        else:
+            raise NotImplementedError("Must implement activation removal to depth of {}".format(depth))
+
+        return module_list
