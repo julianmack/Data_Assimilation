@@ -154,9 +154,9 @@ class GenCAE(BaseAE):
         if activation is None: #This is necessary if activation functions are included in blocks
             fn = lambda x: x #i.e. just return input
         elif activation == "lrelu":
-            fn = "lrelu"
+            fn = nn.LeakyReLU(negative_slope = 0.05, inplace=False)
         elif activation == "relu":
-            fn = "relu"
+            fn = nn.ReLU
         elif activation == "prelu":
             fn = "prelu" #defer until NNBuilder()
         elif activation == "GDN":

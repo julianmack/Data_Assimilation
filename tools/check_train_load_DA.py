@@ -1,7 +1,8 @@
 """This is used to check that a new model sucessfully initializes
 Trains, runs and can be used for DA"""
 
-from pipeline import TrainAE, ML_utils, GetData, SplitData
+from pipeline import ML_utils, GetData, SplitData
+from pipeline import TrainAE
 from pipeline.VarDA.batch_DA import BatchDA
 from pipeline.settings.config import Config
 import shutil

@@ -6,7 +6,6 @@ import pandas as pd
 
 import pickle
 
-import pipeline
 from pipeline import DAPipeline
 from pipeline import ML_utils
 from pipeline.AEs import Jacobian
@@ -15,7 +14,7 @@ from pipeline import GetData
 from pipeline.utils.expdir import init_expdir
 from pipeline.VarDA.batch_DA import BatchDA
 
-
+import time
 import os
 
 BATCH = 16
@@ -162,6 +161,8 @@ class TrainAE():
         L1_loss = 0
         ###############
 
+        t_start = time.time()
+
         for batch_idx, data in enumerate(self.train_loader):
             self.model.train()
             x, = data
@@ -181,16 +182,23 @@ class TrainAE():
 
         self.model.eval()
         train_DA_MAE, train_DA_ratio, train_DA_time = self.maybe_eval_DA_MAE("train")
-        train_loss_res = (epoch, train_loss / len(self.train_loader.dataset), train_DA_MAE, train_DA_ratio, train_DA_time)
+
+        t_end = time.time()
+
+        train_loss_res = (epoch, train_loss / len(self.train_loader.dataset), train_DA_MAE, train_DA_ratio, train_DA_time, t_end - t_start)
         if epoch % print_every == 0 or epoch in [0, num_epoch - 1]:
-            out_str = 'epoch [{}/{}], TRAIN: -loss:{:.4f} '.format(epoch + 1, num_epoch, train_loss / len(self.train_loader.dataset))
-            out_str += "L1 loss:{:.4f}".format(L1_loss / len(self.train_loader.dataset))
+            out_str = 'epoch [{}/{}], TRAIN: -loss:{:.2f} '.format(epoch + 1, num_epoch, train_loss / len(self.train_loader.dataset))
+            out_str += "L1 loss:{:.2f}".format(L1_loss / len(self.train_loader.dataset))
             if self.calc_DA_MAE and (epoch % test_every == 0):
                 out_str +  ", DA_ratio:{:.4f}".format(train_DA_ratio)
+            out_str + ", epoch time(mins):{:.2f}m".format( (t_end - t_start) / 60.)
             print(out_str)
+
+
 
         self.model.eval()
         if epoch % test_every == 0 or epoch == num_epoch - 1:
+            t_start = time.time()
             test_loss = 0
             for batch_idx, data in enumerate(self.test_loader):
                 x_test, = data
@@ -204,11 +212,14 @@ class TrainAE():
                 if self.calc_DA_MAE and (epoch % test_every == 0):
                     out_str +  ", -DA_ratio:{:.4f}".format(train_DA_MAE)
                 print(out_str)
-            test_loss_res = (epoch, test_loss/len(self.test_loader.dataset), test_DA_MAE, test_DA_ratio, test_DA_time)
+            t_end = time.time()
+            test_loss_res = (epoch, test_loss/len(self.test_loader.dataset), test_DA_MAE, test_DA_ratio, test_DA_time, t_end - t_start)
 
         if epoch % test_every == 0 and self.model_dir != None:
             model_fp_new = "{}{}.pth".format(self.model_dir, epoch)
             torch.save(self.model.state_dict(), model_fp_new)
+
+
         return train_loss_res, test_loss_res
 
     def __maybe_cross_val_lr(self, test_every, num_epochs_cv = 8):
@@ -315,7 +326,7 @@ class TrainAE():
         self.DA_data["d"] = None
 
     def to_csv(self, np_array, fp):
-        df = pd.DataFrame(np_array, columns = ["epoch","reconstruction_err","DA_MAE", "DA_ratio_improve_MAE", "time"])
+        df = pd.DataFrame(np_array, columns = ["epoch","reconstruction_err","DA_MAE", "DA_ratio_improve_MAE", "time_DA", "time_epoch"])
         df.to_csv(fp)
 
 
