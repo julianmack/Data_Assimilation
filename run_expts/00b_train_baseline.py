@@ -23,12 +23,13 @@ EPOCHS = 150
 SMALL_DEBUG_DOM = False #For training
 calc_DA_MAE = True
 num_epochs_cv = 0 #unlike in expt 00
-LR = 0.0005
+LR = 0.0003
 print_every = 10
 test_every = 10
 exp_base = "experiments/train/baseline_0b/"
 
 def main():
+    print("updated")
     model_settings = [BaselineBlock, Baseline2, Baseline1,]
     augments = [True, False]
 
