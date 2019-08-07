@@ -18,6 +18,7 @@ import time
 import os
 
 BATCH = 16
+LARGE = 1e30
 
 class TrainAE():
     def __init__(self, AE_settings, expdir, calc_DA_MAE=False, batch_sz=BATCH):
@@ -167,15 +168,25 @@ class TrainAE():
             self.model.train()
             x, = data
             x = x.to(self.device)
+
             self.optimizer.zero_grad()
             y = self.model(x)
-            loss = self.loss_fn(y, x)
+
+            #to prevent overflow
+            # x_red = x / LARGE
+            # y_red = y / LARGE
+
+
+            #loss = self.loss_fn(y_red, x_red) * LARGE ** 2
+            loss = self.loss_fn(y, x) 
             loss.backward()
+
             train_loss += loss.item()
             self.optimizer.step()
 
             ##############
             self.model.eval()
+            #loss1 = L1(y_red, x_red) * LARGE
             loss1 = L1(y, x)
             L1_loss += loss1.item()
             ##############
@@ -190,8 +201,8 @@ class TrainAE():
             out_str = 'epoch [{}/{}], TRAIN: -loss:{:.2f} '.format(epoch + 1, num_epoch, train_loss / len(self.train_loader.dataset))
             out_str += "L1 loss:{:.2f}".format(L1_loss / len(self.train_loader.dataset))
             if self.calc_DA_MAE and (epoch % test_every == 0):
-                out_str +  ", DA_ratio:{:.4f}".format(train_DA_ratio)
-            out_str + ", epoch time(mins):{:.2f}m".format( (t_end - t_start) / 60.)
+                out_str +=  ", DA_ratio:{:.4f}".format(train_DA_ratio)
+            out_str += ", time taken (m): {:.2f}m".format( (t_end - t_start) / 60.)
             print(out_str)
 
 
@@ -207,12 +218,14 @@ class TrainAE():
                 loss = self.loss_fn(y_test, x_test)
                 test_loss += loss.item()
             test_DA_MAE, test_DA_ratio, test_DA_time = self.maybe_eval_DA_MAE("test")
+            t_end = time.time()
             if epoch % print_every == 0 or epoch == num_epoch - 1:
                 out_str = "epoch [{}/{}], TEST: -loss:{:.4f}".format(epoch + 1, num_epoch, test_loss / len(self.test_loader.dataset))
                 if self.calc_DA_MAE and (epoch % test_every == 0):
-                    out_str +  ", -DA_ratio:{:.4f}".format(train_DA_MAE)
+                    out_str +=  ", -DA_ratio:{:.4f}".format(train_DA_MAE)
+                out_str += ", time taken(m): {:.2f}m".format( (t_end - t_start) / 60.)
                 print(out_str)
-            t_end = time.time()
+
             test_loss_res = (epoch, test_loss/len(self.test_loader.dataset), test_DA_MAE, test_DA_ratio, test_DA_time, t_end - t_start)
 
         if epoch % test_every == 0 and self.model_dir != None:
@@ -326,7 +339,7 @@ class TrainAE():
         self.DA_data["d"] = None
 
     def to_csv(self, np_array, fp):
-        df = pd.DataFrame(np_array, columns = ["epoch","reconstruction_err","DA_MAE", "DA_ratio_improve_MAE", "time_DA", "time_epoch"])
+        df = pd.DataFrame(np_array, columns = ["epoch","reconstruction_err","DA_MAE", "DA_ratio_improve_MAE", "time_DA(s)", "time_epoch(s)"])
         df.to_csv(fp)
 
 

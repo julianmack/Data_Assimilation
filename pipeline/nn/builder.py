@@ -113,4 +113,5 @@ class NNBuilder():
         if final:
             return module
         else:
-            return nn.Sequential(module, act_fn_constructor(C))
+            BN = nn.BatchNorm3d(C)
+            return nn.Sequential(BN, module, act_fn_constructor(C))

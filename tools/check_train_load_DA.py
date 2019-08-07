@@ -11,21 +11,27 @@ import shutil
 from pipeline.settings.block_models import BaselineRes
 from pipeline.settings.block_models import Res34AE, Res34AE_Stacked, Cho2019
 from pipeline.settings.models_.resNeXt import Baseline1Block, ResNeXt
+from pipeline.settings.baseline_explore import Baseline1
 
 
 
 #################### Models to init
-resNext_k = {"layers": 3, "cardinality": 2}
+resNext_1 = {"layers": 0, "cardinality": 2}
+resNext_2 = {"layers": 4, "cardinality": 2}
+resNext_3 = {"layers": 27, "cardinality": 32}
 
-CONFIGS = ResNeXt
-KWARGS = (resNext_k,)
+CONFIGS = [ResNeXt, ResNeXt, ResNeXt]
+KWARGS = (resNext_1,  resNext_2, resNext_3)
 ##################
 
+CONFIGS = [CONFIGS[2]]
+KWARGS = [KWARGS[2]]
 
 #global variables for DA and training:
 EPOCHS = 1
 SMALL_DEBUG_DOM = True #For training
 ALL_DATA = False #for DA
+PRINT_MODEL = False
 
 def main():
 
@@ -65,7 +71,8 @@ def check_train_load_DA(config, config_kwargs, small_debug=True, all_data=False)
         model = trainer.train(EPOCHS, learning_rate=lr, test_every=test_every, num_epochs_cv=num_epochs_cv,
                                 print_every=print_every, small_debug=small_debug)
 
-
+        if PRINT_MODEL:
+            print(model.layers_encode)
         #test loading
         model, settings = ML_utils.load_model_and_settings_from_dir(expdir)
 
@@ -94,14 +101,15 @@ def check_train_load_DA(config, config_kwargs, small_debug=True, all_data=False)
         out_fp = expdir + "AE.csv" #this will be written and then deleted
 
         batch_DA_AE = BatchDA(settings, control_states, csv_fp= out_fp, AEModel=model,
-                            reconstruction=True, plot=False, print_small=True)
+                            reconstruction=True, plot=False)
 
-        res_AE = batch_DA_AE.run(print_every=print_every)
+        res_AE = batch_DA_AE.run(print_every=print_every, print_small=True)
 
         print(res_AE.tail())
         shutil.rmtree(expdir, ignore_errors=False, onerror=None)
-    except:
+    except Exception as e:
         try:
+            print(str(e))
             shutil.rmtree(expdir, ignore_errors=False, onerror=None)
         except:
             pass
