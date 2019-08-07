@@ -8,19 +8,8 @@ class BaselineBlock(Block):
         self.BLOCKS = [M.S, (9, "conv")]
         self.DOWNSAMPLE = [0, 1, 0, 1, 0, 1, 0, 0, 0]
 
-class Baseline1_replicate(Block):
-    def __init__(self):
-        super(Baseline1_replicate, self).__init__()
-        self.BLOCKS = [M.S, (7, "conv")]
-        down = [0, 0, 1, 1, 1, 1, 1]
-        down_z = [0, 0, 1, 1, 1, 0, 0]
-        self.DOWNSAMPLE = (down, down, down_z)
-        self.get_channels()
-        self.CHANNELS[1] = 1
-        self.CHANNELS[2] = 16
-        #self.DOWNSAMPLE = down_z
-
-class Baseline2_replicate(Block):
+class Baseline2Block(Block):
+    """Replica of Baseline2 w. Block build"""
     def __init__(self):
         super(Baseline2_replicate, self).__init__()
         self.BLOCKS = [M.S, (6, "conv")]

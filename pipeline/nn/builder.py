@@ -1,6 +1,5 @@
 from torch import nn
-from pipeline.nn.res_simple import ResBlock, ResBlockStack3, ResBlock1x1
-from pipeline.nn.res_complex import DRU, ResBlockSlim
+from pipeline.nn import res_complex, res_simple
 
 class NNBuilder():
     """Class to build nn blocks"""
@@ -40,6 +39,9 @@ class NNBuilder():
         channel_down = (channel // D) if (channel // D > 0) else 1
         return nn.Conv3d(I, channel_down, kernel_size=(1, 1, 1), stride=(1,1,1))
 
+    @staticmethod
+    def ResNeXt(activation_fn, C, N):
+        return res_complex.ResNeXt(activation_fn, C, N)
 
     @staticmethod
     def resB(activation_fn, C):
@@ -48,7 +50,7 @@ class NNBuilder():
 
         These enforce that Cin == Cout == C"""
 
-        return ResBlock(activation_fn, C)
+        return res_simple.ResBlock(activation_fn, C)
 
     @staticmethod
     def resB_3(activation_fn, C):
@@ -59,16 +61,16 @@ class NNBuilder():
 
         Note: enforce that Cin == Cout == C"""
 
-        return ResBlockStack3(activation_fn, C)
+        return res_simple.ResBlockStack3(activation_fn, C)
 
     @staticmethod
     def resB1x1(activation_fn, I, O):
 
-        return ResBlock1x1(activation_fn, I, O)
+        return res_simple.ResBlock1x1(activation_fn, I, O)
     @staticmethod
     def resBslim(activation_fn, I, O):
 
-        return ResBlockSlim(activation_fn, I, O)
+        return res_complex.ResBlockSlim(activation_fn, I, O)
 
     @staticmethod
     def DRU(activation_fn, C):
@@ -76,5 +78,5 @@ class NNBuilder():
 
         Note: enforce that Cin == Cout == C"""
 
-        return DRU(activation_fn, C)
+        return res_complex.DRU(activation_fn, C)
 

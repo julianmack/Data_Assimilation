@@ -136,6 +136,8 @@ class GenCAE(BaseAE):
             return Build.conv(**layer_kwargs)
         elif block == "resB":
             return Build.resB(self.act_fn, **layer_kwargs)
+        elif block == "ResNeXt":
+            return Build.ResNeXt(self.act_fn, **layer_kwargs)
         elif block == "resB1x1":
             return Build.resB1x1(self.act_fn, **layer_kwargs)
         elif block == "resBslim":
