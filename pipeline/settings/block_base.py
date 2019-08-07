@@ -28,7 +28,7 @@ class Block(Config3D):
 
         self.ACTIVATION = "lrelu"  #default negative_slope = 0.05
         self.BATCH_NORM = False
-        self.AUGMENTATION = False
+        self.AUGMENTATION = True
         self.DROPOUT = False
 
 
@@ -64,7 +64,7 @@ class Block(Config3D):
             downsample = downsample[0]
 
         init_data_not_flat = recursive_set_same_struct(downsample, init_data, reset_idx=True)
-        
+
         blocks_w_kwargs = self.gen_block_kwargs_recursive(self.BLOCKS, channels,
                                 init_data=init_data_not_flat, reset_idx=True)
 

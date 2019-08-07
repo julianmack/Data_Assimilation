@@ -27,3 +27,7 @@ class ResNeXt(Baseline1Block):
         super(ResNeXt, self).__init__()
         kwargs = {"C": 32, "N": cardinality}
         self.BLOCKS = [M.S, (5, "conv"), (layers, "ResNeXt",  kwargs), (2, "conv")]
+        down = [[0, 0, 1, 1, 1,], [], [1, 1]]
+        down_z = [[0, 0, 1, 1, 1,], [], [0, 0]]
+        self.DOWNSAMPLE__  = (down, down, down_z)
+
