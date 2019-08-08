@@ -10,7 +10,7 @@ def main():
     num_params = sum(p.numel() for p in model.parameters())
     print("num params", num_params)
     print("CHANNELS", settings.get_channels())
-
+    
     # settings = Baseline2_replicate()
     # model = ML_utils.load_model_from_settings(settings)
     # print(model.layers_decode)

@@ -178,7 +178,7 @@ class TrainAE():
 
 
             #loss = self.loss_fn(y_red, x_red) * LARGE ** 2
-            loss = self.loss_fn(y, x) 
+            loss = self.loss_fn(y, x)
             loss.backward()
 
             train_loss += loss.item()
@@ -247,7 +247,7 @@ class TrainAE():
         if self.settings.BATCH_NORM: #i.e. generally larger learning_rate with BN
             lrs = [0.0005, 0.0015, 0.005]
         else:
-            lrs = [0.0001, 0.0003, 0.001]
+            lrs = [0.0001, 0.0003]
 
         res = []
         optimizers = []
@@ -284,7 +284,7 @@ class TrainAE():
                 torch.save(self.model.state_dict(), model_fp_new)
                 best_model = self.model
 
-        self.learning_rate = lrs[best_idx]
+        self.learning_rate = lrs[best_idx] * 0.8
         self.optimizer = optimizers[best_idx]
         self.model = best_model
         test_loss = best_test

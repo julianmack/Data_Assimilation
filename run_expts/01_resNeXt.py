@@ -22,11 +22,11 @@ import shutil
 EPOCHS = 150
 SMALL_DEBUG_DOM = False #For training
 calc_DA_MAE = True
-num_epochs_cv = 0
+num_epochs_cv = 20
 LR = 0.0003
 print_every = 10
 test_every = 10
-exp_base = "experiments/train/01_resNeXt/"
+exp_base = "experiments/train/01_resNeXt_2/"
 
 def main():
     res_layers = [3, 9, 27]
