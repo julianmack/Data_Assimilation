@@ -46,7 +46,7 @@ def load_model_from_settings(settings, device=None):
 
         weights = torch.load(settings.AE_MODEL_FP, map_location=device)
         model.load_state_dict(weights)
-
+    
     model.to(device)
     model.eval()
     return model
@@ -73,6 +73,7 @@ def load_model_and_settings_from_dir(dir):
     if not settings:
         raise ValueError("No settings.txt file in dir")
 
+    settings.export_env_vars()
     settings.AE_MODEL_FP = best_fp
     model = load_model_from_settings(settings)
 

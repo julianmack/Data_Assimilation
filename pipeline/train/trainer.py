@@ -17,7 +17,7 @@ from pipeline.VarDA.batch_DA import BatchDA
 import time
 import os
 
-BATCH = 16
+BATCH = 32
 LARGE = 1e30
 
 class TrainAE():
@@ -48,7 +48,7 @@ class TrainAE():
 
         ML_utils.set_seeds() #set seeds before init model
 
-        self.model =  AE_settings.AE_MODEL_TYPE(**AE_settings.get_kwargs())
+        self.model =  ML_utils.load_model_from_settings(AE_settings)
         print("Number of parameters:", sum(p.numel() for p in self.model.parameters()))
 
         self.device = ML_utils.get_device()
@@ -88,7 +88,6 @@ class TrainAE():
             self.learning_rate = lr_res
             train_losses, test_losses = [], []
             #if only lr was returned, no model/optimizers were selected. Init:
-            self.model =  self.settings.AE_MODEL_TYPE(**self.settings.get_kwargs())
             self.optimizer = optim.Adam(self.model.parameters(), self.learning_rate)
 
 
@@ -256,7 +255,7 @@ class TrainAE():
         for idx, lr in enumerate(lrs):
 
             ML_utils.set_seeds() #set seeds before init model
-            self.model =  self.settings.AE_MODEL_TYPE(**self.settings.get_kwargs())
+            self.model =  ML_utils.load_model_from_settings(self.settings)
             self.optimizer = optim.Adam(self.model.parameters(), lr)
             test_losses = []
             train_losses = []
