@@ -8,7 +8,8 @@ from pipeline import GetData, SplitData
 class VDAInit:
     def __init__(self, settings, AEmodel=None, u_c=None):
         self.AEmodel = AEmodel
-        self.AEmodel.eval()
+        if self.AEmodel is not None:
+            self.AEmodel.eval()
         self.settings = settings
         self.u_c = u_c #user can pass their own u_c
 
@@ -299,7 +300,7 @@ class VDAInit:
 
                     i_start = i
                 V_red = np.concatenate(res, axis=0)
-                
+
             else:
                 raise ValueError("Must have more timesteps available than in BATCH")
 

@@ -52,7 +52,7 @@ class TrainAE():
         print("Number of parameters:", sum(p.numel() for p in self.model.parameters()))
 
         self.device = ML_utils.get_device()
-
+        self.columns = ["epoch","reconstruction_err","DA_MAE", "DA_ratio_improve_MAE", "time_DA(s)", "time_epoch(s)"]
 
     def train(self, num_epoch = 100, learning_rate = 0.001, print_every=5,
             test_every=5, num_epochs_cv=8, num_workers=6, small_debug=False):
@@ -268,7 +268,7 @@ class TrainAE():
                     test_losses.append(test)
                 train_losses.append(train)
 
-            df = pd.DataFrame(train_losses, columns = ["epoch","reconstruction_err","DA_MAE", "DA_ratio_improve_MAE", "time"])
+            df = pd.DataFrame(train_losses, columns = self.columns)
             train_final = df.tail(1).reconstruction_err
 
             res.append(train_final.values[0])
@@ -339,7 +339,7 @@ class TrainAE():
         self.DA_data["d"] = None
 
     def to_csv(self, np_array, fp):
-        df = pd.DataFrame(np_array, columns = ["epoch","reconstruction_err","DA_MAE", "DA_ratio_improve_MAE", "time_DA(s)", "time_epoch(s)"])
+        df = pd.DataFrame(np_array, columns = self.columns)
         df.to_csv(fp)
 
 
