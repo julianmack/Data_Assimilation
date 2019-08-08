@@ -4,7 +4,8 @@ Trains, runs and can be used for DA"""
 from pipeline import ML_utils, GetData, SplitData
 from pipeline import TrainAE
 from pipeline.VarDA.batch_DA import BatchDA
-from pipeline.settings.config import Config
+from pipeline.settings.base import Config
+
 import shutil
 
 ################# Import models

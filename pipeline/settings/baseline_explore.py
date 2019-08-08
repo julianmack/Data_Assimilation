@@ -1,4 +1,4 @@
-from pipeline.settings.config import CAEConfig
+from pipeline.settings.base_CAE import CAEConfig
 
 class Baseline1(CAEConfig):
     """This model is the baseline CAE in my report and is *similar* to
