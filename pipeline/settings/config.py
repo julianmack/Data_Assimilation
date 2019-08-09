@@ -24,6 +24,7 @@ class Config():
         self.THREE_DIM = False # i.e. is representation in 3D tensor or 1D array
         self.SAVE = True
         self.DEBUG = True
+        self.GPU_DEVICE = 0
 
         self.SEED = 42
         self.NORMALIZE = True #Whether to normalize input data
@@ -84,7 +85,11 @@ class Config():
         return self.NUMBER_MODES
 
     def export_env_vars(self):
-        self.env_vars = {"SEED": self.SEED}
+        if hasattr(self, "GPU_DEVICE"):
+            gpu_idx = self.GPU_DEVICE
+        else:
+            gpu_idx = 0
+        self.env_vars = {"SEED": self.SEED, "GPU_DEVICE": gpu_idx}
 
         env = os.environ
         for k, v in self.env_vars.items():

@@ -25,6 +25,7 @@ def load_AE(ModelClass, path, device = None, **kwargs):
     if device == None:
         device = get_device()
 
+
     model = ModelClass(**kwargs)
     model.load_state_dict(torch.load(path, map_location=device))
     model.eval()
@@ -46,7 +47,7 @@ def load_model_from_settings(settings, device=None):
 
         weights = torch.load(settings.AE_MODEL_FP, map_location=device)
         model.load_state_dict(weights)
-    
+
     model.to(device)
     model.eval()
     return model
@@ -80,8 +81,12 @@ def load_model_and_settings_from_dir(dir):
     return model, settings
 
 
-def get_device(use_gpu=True, device_idx=0):
+def get_device(use_gpu=True, device_idx=None):
     """get torch device type"""
+    if device_idx is None:
+        device_idx = os.environ.get("GPU_DEVICE")
+        if device_idx == None:
+            raise NameError("GPU_DEVICE environment variable has not been initialized. Do this manually or initialize a Config class")
     if use_gpu:
         device = torch.device("cuda:" + str(device_idx) if torch.cuda.is_available() else "cpu")
     else:

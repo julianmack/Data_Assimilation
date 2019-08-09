@@ -20,8 +20,11 @@ num_epochs_cv = 25
 LR = 0.0003
 print_every = 10
 test_every = 10
-exp_base = "experiments/train/01_resNeXt_2/cont/"
+GPU_DEVICE = 1
+
+exp_base = "experiments/train/01_resNeXt_2/cont/0_b"
 exp_load = "experiments/train/01_resNeXt_2/0/"
+model_fp = "experiments/train/01_resNeXt_2/cont/0/60.pth"
 def main():
     res_layers = [3, 9, 27]
     cardinalities = [1, 8, 32]
@@ -37,7 +40,10 @@ def main():
 
     kwargs = {"layers": layer, "cardinality": cardinality}
     _, settings = ML_utils.load_model_and_settings_from_dir(exp_load)
-
+    settings.AE_MODEL_FP = model_fp
+    settings.GPU_DEVICE = GPU_DEVICE
+    settings.export_env_vars()
+    
     expdir = exp_base + str(idx) + "/"
 
 
