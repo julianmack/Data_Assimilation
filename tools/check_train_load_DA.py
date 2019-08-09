@@ -16,16 +16,15 @@ from pipeline.settings.baseline_explore import Baseline1
 
 
 #################### Models to init
-resNext_1 = {"layers": 0, "cardinality": 2}
-resNext_2 = {"layers": 4, "cardinality": 2}
-resNext_3 = {"layers": 8, "cardinality": 2}
+resNext_1 = {"layers": 0, "cardinality": 8}
+resNext_2 = {"layers": 1, "cardinality": 8}
+resNext_3 = {"layers": 3, "cardinality": 8}
 
 CONFIGS = [ResNeXt, ResNeXt, ResNeXt]
 KWARGS = (resNext_1,  resNext_2, resNext_3)
 ##################
-
-CONFIGS = [CONFIGS[2]]
-KWARGS = [KWARGS[2]]
+# CONFIGS = CONFIGS[2]
+# KWARGS = (KWARGS[2],)
 
 #global variables for DA and training:
 EPOCHS = 1

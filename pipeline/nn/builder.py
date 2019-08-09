@@ -63,6 +63,12 @@ class NNBuilder():
         module = res_complex.ResNeXt(act_fn_constructor, C, N)
         return NNBuilder.maybe_add_activation(module, act_fn_constructor, final, C)
     @staticmethod
+    def resResNeXt(activation_fn, C, N, L, final=False):
+        act_fn_constructor = NNBuilder.act_constr(activation_fn)
+        module = res_complex.resResNeXt(act_fn_constructor, C, N, L)
+        return NNBuilder.maybe_add_activation(module, act_fn_constructor, final, C)
+
+    @staticmethod
     def resB(activation_fn, C, final=False):
         """Returns Residual block of structure:
         conv -> activation -> conv -> sum both conv.

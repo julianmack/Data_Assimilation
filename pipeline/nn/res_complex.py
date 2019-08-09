@@ -20,7 +20,7 @@ class ResNextBlock(nn.Module):
         conv1x1_1 = nn.Conv3d(Cin, channel_small, kernel_size=(1, 1, 1), stride=(1,1,1))
         conv3x3 = nn.Conv3d(channel_small, channel_small, kernel_size=(3, 3, 3), stride=(1,1,1), padding=(1,1,1))
         conv1x1_2 = nn.Conv3d(channel_small, Cin, kernel_size=(1, 1, 1), stride=(1,1,1))
-        
+
 
         #Initializations
         init.conv(conv1x1_1.weight, activation_constructor)
@@ -60,6 +60,24 @@ class ResNeXt(nn.Module):
 
         return h + x
 
+
+class resResNeXt(nn.Module):
+    """Adds a skip connection over the whole ResNeXt module.
+    Also add a final Batch Norm to prevent gradients/values exploding
+    in resNext layers.
+    """
+
+    def __init__(self, activation_constructor, Cin, cardinality, layers):
+        super(resResNeXt, self).__init__()
+        blocks = []
+        for i in range(layers):
+            res = ResNeXt(activation_constructor, Cin, cardinality)
+            blocks.append(res)
+        self.resRes = nn.Sequential(*blocks, nn.BatchNorm3d(Cin))
+
+    def forward(self, x):
+        h = self.resRes(x)
+        return h + x
 
 class ResBlockSlim(nn.Module):
 

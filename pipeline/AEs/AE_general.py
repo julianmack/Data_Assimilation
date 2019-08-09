@@ -132,6 +132,8 @@ class GenCAE(BaseAE):
             return Build.resB(self.activation, **layer_kwargs)
         elif block == "ResNeXt":
             return Build.ResNeXt(self.activation, **layer_kwargs)
+        elif block == "resResNeXt":
+            return Build.resResNeXt(self.activation, **layer_kwargs)
         elif block == "resB1x1":
             return Build.resB1x1(self.activation, **layer_kwargs)
         elif block == "resBslim":
