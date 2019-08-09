@@ -29,8 +29,9 @@ class ResNextBlock(nn.Module):
 
         #ADD batch norms automatically
         self.ResLayers = nn.Sequential(nn.BatchNorm3d(Cin), conv1x1_1,
-        activation_constructor(channel_small), nn.BatchNorm3d(channel_small), conv3x3,
-        activation_constructor(channel_small), nn.BatchNorm3d(channel_small), conv1x1_2)
+            activation_constructor(channel_small), nn.BatchNorm3d(channel_small), conv3x3,
+            activation_constructor(channel_small), nn.BatchNorm3d(channel_small), conv1x1_2)
+            #nn.BatchNorm3d(Cin))
 
     def forward(self, x):
         h = self.ResLayers(x)
@@ -49,7 +50,7 @@ class ResNeXt(nn.Module):
             resblock = ResNextBlock(activation_constructor, Cin, channel_small=4)
             blocks.append(resblock)
         self.resblocks = blocks
-
+        self.ResNeXtBN = nn.BatchNorm3d(Cin)
 
     def forward(self, x):
         for idx, block in enumerate(self.resblocks):
@@ -57,6 +58,8 @@ class ResNeXt(nn.Module):
                 h = block(x)
             else:
                 h += block(x)
+        h = h
+        h = self.ResNeXtBN(h)
 
         return h + x
 

@@ -17,7 +17,10 @@ from pipeline.VarDA.batch_DA import BatchDA
 import time
 import os
 
-BATCH = 32
+BATCH_MULT = 1
+BATCH_UNIT = 16
+
+BATCH = BATCH_MULT * BATCH_UNIT #64
 LARGE = 1e30
 
 class TrainAE():
@@ -55,7 +58,7 @@ class TrainAE():
         self.columns = ["epoch","reconstruction_err","DA_MAE", "DA_ratio_improve_MAE", "time_DA(s)", "time_epoch(s)"]
 
     def train(self, num_epoch = 100, learning_rate = 0.001, print_every=5,
-            test_every=5, num_epochs_cv=8, num_workers=6, small_debug=False):
+            test_every=5, num_epochs_cv=8, num_workers=4, small_debug=False):
 
         self.learning_rate = learning_rate
         self.num_epochs = num_epoch
@@ -154,7 +157,7 @@ class TrainAE():
     def train_one_epoch(self, epoch, print_every, test_every, num_epoch):
         train_loss_res, test_loss_res = None, None
         train_loss = 0
-
+        mean_diff = 0
         self.model.to(self.device)
         ###############
         L1 = torch.nn.L1Loss(reduction='sum')
@@ -181,6 +184,7 @@ class TrainAE():
             loss.backward()
 
             train_loss += loss.item()
+            mean_diff += torch.abs((x.mean() - y.mean())) * x.shape[0]
             self.optimizer.step()
 
             ##############
@@ -197,8 +201,11 @@ class TrainAE():
 
         train_loss_res = (epoch, train_loss / len(self.train_loader.dataset), train_DA_MAE, train_DA_ratio, train_DA_time, t_end - t_start)
         if epoch % print_every == 0 or epoch in [0, num_epoch - 1]:
-            out_str = 'epoch [{}/{}], TRAIN: -loss:{:.2f} '.format(epoch + 1, num_epoch, train_loss / len(self.train_loader.dataset))
-            out_str += "L1 loss:{:.2f}".format(L1_loss / len(self.train_loader.dataset))
+            out_str = 'epoch [{}/{}], TRAIN: -loss:{:.2f}, av_diff: {:.2f}'
+            out_str = out_str.format(epoch + 1, num_epoch,
+                                train_loss / len(self.train_loader.dataset),
+                                mean_diff / len(self.train_loader.dataset) )
+            out_str += ", L1 loss:{:.2f}".format(L1_loss / len(self.train_loader.dataset))
             if self.calc_DA_MAE and (epoch % test_every == 0):
                 out_str +=  ", DA_ratio:{:.4f}".format(train_DA_ratio)
             out_str += ", time taken (m): {:.2f}m".format( (t_end - t_start) / 60.)
@@ -243,10 +250,15 @@ class TrainAE():
         else:
             self.num_epochs_cv = num_epochs_cv
 
+        mult = 1
         if self.settings.BATCH_NORM: #i.e. generally larger learning_rate with BN
-            lrs = [0.0005, 0.0015, 0.005]
-        else:
-            lrs = [0.0001, 0.0003]
+            mult = 5
+
+        mult *= BATCH_MULT #linear multiply by size of batch: https://arxiv.org/abs/1706.02677
+
+
+        lrs_base = [0.0001, 0.0003, 0.001]
+        lrs = [mult * x for x in lrs_base]
 
         res = []
         optimizers = []

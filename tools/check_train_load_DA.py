@@ -16,20 +16,20 @@ from pipeline.settings.baseline_explore import Baseline1
 
 
 #################### Models to init
-resNext_1 = {"layers": 0, "cardinality": 8}
-resNext_2 = {"layers": 1, "cardinality": 8}
-resNext_3 = {"layers": 3, "cardinality": 8}
+resNext_1 = {"layers": 2, "cardinality": 2}
+resNext_2 = {"layers": 4, "cardinality": 4}
+resNext_3 = {"layers": 16, "cardinality": 16}
 
 CONFIGS = [ResNeXt, ResNeXt, ResNeXt]
 KWARGS = (resNext_1,  resNext_2, resNext_3)
 ##################
-# CONFIGS = CONFIGS[2]
-# KWARGS = (KWARGS[2],)
+CONFIGS = CONFIGS[2]
+KWARGS = (KWARGS[2],)
 
 #global variables for DA and training:
 EPOCHS = 1
 SMALL_DEBUG_DOM = True #For training
-ALL_DATA = False #for DA
+ALL_DATA = False
 PRINT_MODEL = False
 
 def main():
@@ -58,12 +58,13 @@ def check_train_load_DA(config, config_kwargs, small_debug=True, all_data=False)
 
         calc_DA_MAE = True
         num_epochs_cv = 0
-        print_every = 5
-        test_every = 2
+        print_every = 1
+        test_every = 1
         lr = 0.0003
 
         print(settings.__class__.__name__)
-
+        if config_kwargs:
+            print(list([(k, v) for (k, v) in config_kwargs.items()]))
         trainer = TrainAE(settings, expdir, calc_DA_MAE)
         expdir = trainer.expdir #get full path
 

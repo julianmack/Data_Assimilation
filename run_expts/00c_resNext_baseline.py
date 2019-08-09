@@ -2,7 +2,11 @@
 Running to create a baseline using ResNext param names so that:
 1) expt 1 and onwards results have a point of comparison
 2) retraining this model with extra resnet layers added will be feasible
+
+Train for 400 epochs (to see if this makes large difference) but we will use
+the model after 150 epochs for comparison.
 """
+
 from pipeline.settings.models_.resNeXt import ResNeXt
 
 
@@ -11,10 +15,10 @@ from pipeline.VarDA.batch_DA import BatchDA
 
 
 #global variables for DA and training:
-EPOCHS = 150 # 150
-SMALL_DEBUG_DOM = False #False #For training
+EPOCHS = 400
+SMALL_DEBUG_DOM = False #False #False #For training
 calc_DA_MAE = True
-num_epochs_cv = 0
+num_epochs_cv = 25
 LR = 0.0003
 print_every = 10
 test_every = 10
@@ -31,7 +35,6 @@ def main():
     settings.AUGMENTATION = True
     settings.DEBUG = False
     expdir = exp_base
-
 
     trainer = TrainAE(settings, expdir, calc_DA_MAE)
     expdir = trainer.expdir #get full path
