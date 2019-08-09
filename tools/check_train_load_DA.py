@@ -18,7 +18,7 @@ from pipeline.settings.baseline_explore import Baseline1
 #################### Models to init
 resNext_1 = {"layers": 2, "cardinality": 2}
 resNext_2 = {"layers": 4, "cardinality": 4}
-resNext_3 = {"layers": 16, "cardinality": 16}
+resNext_3 = {"layers": 0, "cardinality": 0}
 
 CONFIGS = [ResNeXt, ResNeXt, ResNeXt]
 KWARGS = (resNext_1,  resNext_2, resNext_3)

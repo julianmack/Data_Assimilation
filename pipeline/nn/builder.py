@@ -64,6 +64,8 @@ class NNBuilder():
         return NNBuilder.maybe_add_activation(module, act_fn_constructor, final, C)
     @staticmethod
     def resResNeXt(activation_fn, C, N, L, final=False):
+        if L < 1:
+            return nn.Sequential()
         act_fn_constructor = NNBuilder.act_constr(activation_fn)
         module = res_complex.resResNeXt(act_fn_constructor, C, N, L)
         return NNBuilder.maybe_add_activation(module, act_fn_constructor, final, C)
