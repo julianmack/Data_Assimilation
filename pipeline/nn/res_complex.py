@@ -1,6 +1,7 @@
 import torch
 from torch import nn
 from pipeline.nn.conv import FactorizedConv
+from pipeline.nn import init
 
 class ResNextBlock(nn.Module):
     """Single res-block from arXiv:1611.05431v2
@@ -19,10 +20,17 @@ class ResNextBlock(nn.Module):
         conv1x1_1 = nn.Conv3d(Cin, channel_small, kernel_size=(1, 1, 1), stride=(1,1,1))
         conv3x3 = nn.Conv3d(channel_small, channel_small, kernel_size=(3, 3, 3), stride=(1,1,1), padding=(1,1,1))
         conv1x1_2 = nn.Conv3d(channel_small, Cin, kernel_size=(1, 1, 1), stride=(1,1,1))
+        
 
-        self.ResLayers = nn.Sequential(conv1x1_1,
-        activation_constructor(channel_small), conv3x3,
-        activation_constructor(channel_small), conv1x1_2)
+        #Initializations
+        init.conv(conv1x1_1.weight, activation_constructor)
+        init.conv(conv3x3.weight, activation_constructor)
+        init.conv(conv1x1_2.weight, activation_constructor)
+
+        #ADD batch norms automatically
+        self.ResLayers = nn.Sequential(nn.BatchNorm3d(Cin), conv1x1_1,
+        activation_constructor(channel_small), nn.BatchNorm3d(channel_small), conv3x3,
+        activation_constructor(channel_small), nn.BatchNorm3d(channel_small), conv1x1_2)
 
     def forward(self, x):
         h = self.ResLayers(x)

@@ -156,7 +156,7 @@ class GenCAE(BaseAE):
         elif activation == "lrelu":
             fn = nn.LeakyReLU(negative_slope = 0.05, inplace=False)
         elif activation == "relu":
-            fn = nn.ReLU
+            fn = nn.ReLU()
         elif activation == "prelu":
             fn = "prelu" #defer until NNBuilder()
         elif activation == "GDN":

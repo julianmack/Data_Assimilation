@@ -18,7 +18,7 @@ from pipeline.settings.baseline_explore import Baseline1
 #################### Models to init
 resNext_1 = {"layers": 0, "cardinality": 2}
 resNext_2 = {"layers": 4, "cardinality": 2}
-resNext_3 = {"layers": 27, "cardinality": 32}
+resNext_3 = {"layers": 8, "cardinality": 2}
 
 CONFIGS = [ResNeXt, ResNeXt, ResNeXt]
 KWARGS = (resNext_1,  resNext_2, resNext_3)
@@ -109,10 +109,10 @@ def check_train_load_DA(config, config_kwargs, small_debug=True, all_data=False)
         shutil.rmtree(expdir, ignore_errors=False, onerror=None)
     except Exception as e:
         try:
-            print(str(e))
             shutil.rmtree(expdir, ignore_errors=False, onerror=None)
-        except:
-            pass
+            raise e
+        except Exception as z:
+            raise e
 
 
 

@@ -13,13 +13,10 @@ def main():
     settings.OBS_VARIANCE = 10
     settings.SAVE = True
     settings.FORCE_GEN_X = False
-    settings.AZURE_DOWNLOAD = False
+    settings.AZURE_DOWNLOAD = True
 
     settings.THREE_DIM = True
-    settings.set_X_fp(settings.INTERMEDIATE_FP + "X_3D_{}.npy".format(settings.FIELD_NAME))
-    settings.set_n( (91, 85, 32))
-    print(settings.get_n())
-
+    
     DA = DAPipeline(settings)
 
     print(settings.COMPRESSION_METHOD)

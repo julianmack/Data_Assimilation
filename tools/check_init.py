@@ -3,13 +3,14 @@ It should print the number of parameters and channels"""
 
 from pipeline.settings.block_models import Res34AE, Res34AE_Stacked, Cho2019
 from pipeline.settings.config import Config
+
 from pipeline.settings.models_.resNeXt import Baseline1Block, ResNeXt
 from pipeline.settings.baseline_explore import Baseline1
 from pipeline import ML_utils
 from types import ModuleType
 
 
-resNext_k = {"layers": 3, "cardinality": 2}
+resNext_k = {"layers": 2, "cardinality": 2}
 
 # CONFIGS = [Res34AE, ResNeXt, Baseline1Block, Cho2019]
 # KWARGS = (0, resNext_k, 0, 0)
@@ -39,7 +40,6 @@ def check_init(config, config_kwargs, prnt):
 
     settings = config(**config_kwargs)
     settings.DEBUG = False
-
     assert isinstance(settings, Config)
 
     model = ML_utils.load_model_from_settings(settings)
@@ -51,6 +51,7 @@ def check_init(config, config_kwargs, prnt):
         print(end="\n")
     if prnt:
         print(model.layers_encode)
+
     num_params = sum(p.numel() for p in model.parameters())
     print("num params", num_params)
     print("CHANNELS", settings.get_channels())

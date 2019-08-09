@@ -43,7 +43,7 @@ def main():
     settings.AE_MODEL_FP = model_fp
     settings.GPU_DEVICE = GPU_DEVICE
     settings.export_env_vars()
-    
+
     expdir = exp_base + str(idx) + "/"
 
 

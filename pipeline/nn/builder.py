@@ -1,6 +1,8 @@
 from torch import nn
 from pipeline.nn import res_complex, res_simple
 from collections import OrderedDict
+from pipeline.nn import init
+
 
 class NNBuilder():
     """Class to build nn blocks"""
@@ -18,21 +20,31 @@ class NNBuilder():
             conv_kwargs["in_channels"] = Cout
             conv_kwargs["out_channels"] = Cin
 
+        act_fn_constructor = NNBuilder.act_constr(activation)
+
         if not dropout and not batch_norm and final:
-            return nn.Conv3d(**conv_kwargs) if encode else nn.ConvTranspose3d(**conv_kwargs)
+            conv = nn.Conv3d(**conv_kwargs) if encode else nn.ConvTranspose3d(**conv_kwargs)
+            init.conv(conv.weight, act_fn_constructor)
+            return conv
+
 
         #else
         layer = OrderedDict()
-        act_fn_constructor = NNBuilder.act_constr(activation)
+
         if dropout:
             #TODO - make dropout rate variable
             layer.update({"0": nn.Dropout3d(0.33)})
         if batch_norm:
             layer.update({"1": nn.BatchNorm3d(conv_kwargs["in_channels"])})
+
         if encode:
-            layer.update({"2": nn.Conv3d(**conv_kwargs)})
+            conv = nn.Conv3d(**conv_kwargs)
         else:
-            layer.update({"2": nn.ConvTranspose3d(**conv_kwargs)})
+            conv = nn.ConvTranspose3d(**conv_kwargs)
+        init.conv(conv.weight, act_fn_constructor)
+        layer.update({"2": conv})
+
+
         if not final:
             layer.update({"3": act_fn_constructor(conv_kwargs["out_channels"])})
         conv = nn.Sequential(layer)
@@ -97,7 +109,7 @@ class NNBuilder():
     @staticmethod
     def act_constr(activation_fn):
         if  activation_fn == "relu":
-            activation_constructor = lambda x: nn.ReLU()
+            activation_constructor = lambda x: nn.ReLU()()
         elif activation_fn == "lrelu":
             activation_constructor = lambda x: nn.LeakyReLU(0.05)
         elif callable(activation_fn):
@@ -113,5 +125,6 @@ class NNBuilder():
         if final:
             return module
         else:
-            BN = nn.BatchNorm3d(C)
-            return nn.Sequential(BN, module, act_fn_constructor(C))
+            return nn.Sequential(module, act_fn_constructor(C))
+            # BN = nn.BatchNorm3d(C)
+            #return nn.Sequential(BN, module, act_fn_constructor(C))
