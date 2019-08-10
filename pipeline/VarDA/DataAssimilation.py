@@ -101,9 +101,12 @@ class DAPipeline():
 
             #Define intial w_0
             V_trunc_plus = SVD.SVD_V_trunc_plus(U, s, W, self.settings.get_number_modes())
-            w_0 = V_trunc_plus @ self.data["u_0"].flatten() #i.e. this is the value given in Rossella et al (2019).
+            if self.settings.NORMALIZE:
+                w_0 = V_trunc_plus @ np.zeros_like(self.data["u_0"].flatten()) #i.e. this is the value given in Rossella et al (2019).
+            else:
+                raise NotImplementedError("Not implemented for non normalized SVD")
             #w_0 = np.zeros((W.shape[-1],)) #TODO - I'm not sure about this - can we assume is it 0?
-
+            
             self.data["V_trunc"] = V_trunc
             self.data["V"] = V
             self.data["w_0"] = w_0

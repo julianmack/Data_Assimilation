@@ -10,7 +10,7 @@ plt.style.use('seaborn-white')
 def get_DA_info(exp_dir_base):
     max_epoch = 0
     last_df = None
-    
+
     DA_data = []
     for path, subdirs, files in os.walk(exp_dir_base):
         for file in files:
@@ -18,22 +18,22 @@ def get_DA_info(exp_dir_base):
                 epoch_csv = int(file.replace("_test.csv", ""))
                 fp = os.path.join(path, file)
                 dfDA = pd.read_csv(fp)
-                
+
                 DA_mean = dfDA["percent_improvement"].mean()
                 DA_std = dfDA["percent_improvement"].std()
                 res = (epoch_csv, dfDA, DA_mean, DA_std)
                 DA_data.append(res)
-                
+
                 if epoch_csv >= max_epoch:
                     max_epoch = epoch_csv
                     last_df = dfDA
-    
-    #get DF with best 
+
+    #get DF with best
     mean_DA = [(epoch, mean, std) for (epoch, _, mean, std) in DA_data]
     mean_DA.sort()
     mean_DA = [{"epoch": x, "mean": y, "std1": z, "upper2std": (y + 2 * z), "lower2std": (y - 2 * z), "std2": 2 * z} for (x, y, z) in mean_DA]
     mean_DF = pd.DataFrame(mean_DA)
-    
+
     return DA_data, mean_DF, last_df
 
 
@@ -76,25 +76,25 @@ def extract_res_from_files(exp_dir_base):
                     train = os.path.join(path, name)
                 elif fnmatch(name, SETTINGS):
                     settings = os.path.join(path, name)
-            
+
             if test and train and settings:
                 test_DA_df = get_DA_info(path)
                 DA_data, mean_DF, last_df = get_DA_info(path)
-                
+
                 dftest = pd.read_csv(test)
                 dftrain = pd.read_csv(train)
                 with open(settings, "rb") as f:
                     stt = pickle.load(f)
-                data_dict = {"train_df": dftrain, 
-                             "test_df":dftest, 
+                data_dict = {"train_df": dftrain,
+                             "test_df":dftest,
                              "test_DA_df_final": last_df,
                              "DA_mean_DF": mean_DF,
-                             "settings":stt, 
+                             "settings":stt,
                              "path": path}
                 results.append(data_dict)
-                
+
     print("{} experiments conducted".format(len(results)))
-        
+
     return results
 
 def plot_results_loss_epochs(results, ylim = None):
@@ -109,7 +109,7 @@ def plot_results_loss_epochs(results, ylim = None):
         plt.ylim(ylim[0], ylim[1])
 
     for idx, ax in enumerate(axs.flatten()):
-        
+
         test_df = results[idx]["test_df"]
         train_df = results[idx]["train_df"]
         sttn = results[idx]["settings"]
@@ -121,7 +121,7 @@ def plot_results_loss_epochs(results, ylim = None):
         # multiple line plot
         ax.set_ylabel('MSE loss', color='r')
         ax.tick_params(axis='y', labelcolor='r')
-        
+
         ax2 = ax.twinx()  # instantiate a second axes that shares the same x-axis
 
         color = 'tab:blue'
@@ -132,11 +132,14 @@ def plot_results_loss_epochs(results, ylim = None):
         ax2.tick_params(axis='y', labelcolor=color)
 
         fig.tight_layout()  # otherwise the right y-label is slightly clipped
-        
+
         ########################
 
         model_name = sttn.__class__.__name__
-        latent = sttn.get_number_modes()
+        try:
+            latent = sttn.get_number_modes()
+        except:
+            latent = "??"
         activation = sttn.ACTIVATION
 
         if hasattr(sttn, "BATCH_NORM"):
@@ -153,17 +156,17 @@ def plot_results_loss_epochs(results, ylim = None):
             lr = sttn.learning_rate
         else:
             lr = "??"
-        
+
         if hasattr(sttn, "AUGMENTATION"):
             aug = sttn.AUGMENTATION
         else:
             aug = False
-        
+
         if hasattr(sttn, "DROPOUT"):
             drop = sttn.DROPOUT
         else:
             drop = False
-            
+
         try:
             num_layers = sttn.get_num_layers_decode()
         except:
@@ -172,8 +175,8 @@ def plot_results_loss_epochs(results, ylim = None):
         #ax.set_title(idx)
         ax.set_title("{}: {}, {}, aug={}, drop={}, \nlr={}, latent={}, layers={}".format(model_name, activation, BN, aug, drop, lr, latent, num_layers))
     plt.show()
-    
-    
+
+
 def extract(res):
     """Extracts relevant data to a dataframe from the 'results' dictionary"""
     test_df = res["test_df"]
@@ -182,21 +185,25 @@ def extract(res):
 
     valid_loss = min(test_df.reconstruction_err)
     model_name = sttn.__class__.__name__
-    latent = sttn.get_number_modes()
+    try:
+        latent = sttn.get_number_modes()
+    except:
+        latent = "??"
+
     activation = sttn.ACTIVATION
     channels = sttn.get_channels()
     num_channels = sum(channels)
-    
+
     first_channel = channels[1] #get the input channel (this may be a bottleneck)
-    
+
     if hasattr(sttn, "get_num_layers_decode"):
         num_layers = sttn.get_num_layers_decode()
         chan_layer = num_channels/num_layers
     else:
         num_layers = "??"
         chan_layer = "??"
-    
-    
+
+
     if hasattr(sttn, "CHANGEOVER_DEFAULT"):
         conv_changeover = sttn.CHANGEOVER_DEFAULT
     else:
@@ -215,7 +222,7 @@ def extract(res):
         drop = sttn.DROPOUT
     else:
         drop = False
-            
+
     if hasattr(sttn, "learning_rate"):
         lr = sttn.learning_rate
     else:

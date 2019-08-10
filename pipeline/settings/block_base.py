@@ -134,6 +134,10 @@ class Block(Config3D):
         return self.DOWNSAMPLE__
 
 
+
+    def get_number_modes(self):
+        raise NotImplementedError("`Number of modes` not implemented for Block class")
+
     #################### Everything below this point is a helper function
 
     def parse_BLOCKS(self):

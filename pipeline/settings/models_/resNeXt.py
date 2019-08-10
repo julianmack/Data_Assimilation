@@ -6,7 +6,7 @@ class Baseline1Block(Block):
     """Replica of Baseline1 w. Block build"""
     def __init__(self):
         super(Baseline1Block, self).__init__()
-        self.ACTIVATION = "lrelu"
+        self.ACTIVATION = "prelu"
         self.BLOCKS = [M.S, (7, "conv")]
         down = [0, 0, 1, 1, 1, 1, 1]
         down_z = [0, 0, 1, 1, 1, 0, 0]

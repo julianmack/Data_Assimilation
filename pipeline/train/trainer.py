@@ -321,10 +321,16 @@ class TrainAE():
             if self.small_debug:
                 u_c = u_c[:8]
 
+            if self.print_every >= 10:
+                DA_print = 200
+            else:
+                DA_print = self.print_every * 10
+
+
             csv_fp = "{}{}_{}.csv".format(self.expdir, self.epoch, test_valid)
             batcher = BatchDA(self.settings, u_c, csv_fp=csv_fp, AEModel=self.model,
                         reconstruction=True)
-            batch_res = batcher.run(self.print_every * 10, True)
+            batch_res = batcher.run(DA_print, True)
 
             results = batcher.get_tots(batch_res)
 
@@ -336,7 +342,7 @@ class TrainAE():
 
             #but actually we need average ratio improvement:
             ratio_improve_mae = results["percent_improvement"] / 100
-            
+
             time = results["time"]
 
             return da_mae, ratio_improve_mae, time

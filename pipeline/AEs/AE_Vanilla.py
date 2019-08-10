@@ -1,5 +1,5 @@
 import torch.nn as nn
-from pipeline.AEs import BaseAE 
+from pipeline.AEs import BaseAE
 import torch.nn.functional as F
 
 
