@@ -319,7 +319,7 @@ class TrainAE():
                 u_c = u_c.squeeze(1)
 
             if self.small_debug:
-                u_c = u_c[:8]
+                u_c = u_c[:4]
 
             csv_fp = "{}{}_{}.csv".format(self.expdir, self.epoch, test_valid)
             batcher = BatchDA(self.settings, u_c, csv_fp=csv_fp, AEModel=self.model,

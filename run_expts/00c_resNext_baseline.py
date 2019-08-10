@@ -23,7 +23,7 @@ LR = 0.0003
 print_every = 10
 test_every = 10
 exp_base = "experiments/train/00c_baseResNext/"
-
+GPU_DEVICE = 1
 def main():
     layer = 0
     print("Layers", 0)
@@ -34,6 +34,11 @@ def main():
     settings = ResNeXt(**kwargs)
     settings.AUGMENTATION = True
     settings.DEBUG = False
+    settings.GPU_DEVICE = GPU_DEVICE
+    settings.SEED = 19
+    settings.export_env_vars()
+
+
     expdir = exp_base
 
     trainer = TrainAE(settings, expdir, calc_DA_MAE)

@@ -329,7 +329,6 @@ class VDAInit:
             # idxs = list(np.argpartition(largest_var, -(num_modes-1))[-(num_modes-1):])
             #
             # idxs.append(smallest_idx)
-
         return V_red
 
     @staticmethod

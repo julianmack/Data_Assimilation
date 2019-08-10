@@ -1,5 +1,5 @@
 from torch import nn
-from pipeline.nn import res_complex, res_simple
+from pipeline.nn import res_complex, res_simple, empty
 from collections import OrderedDict
 from pipeline.nn import init
 
@@ -64,11 +64,11 @@ class NNBuilder():
         return NNBuilder.maybe_add_activation(module, act_fn_constructor, final, C)
     @staticmethod
     def resResNeXt(activation_fn, C, N, L, final=False):
-        if L < 1:
+        if L < 1 or C < 1:
             return nn.Sequential()
         act_fn_constructor = NNBuilder.act_constr(activation_fn)
         module = res_complex.resResNeXt(act_fn_constructor, C, N, L)
-        return NNBuilder.maybe_add_activation(module, act_fn_constructor, final, C)
+        return module #No activation - this is already in the resNext
 
     @staticmethod
     def resB(activation_fn, C, final=False):

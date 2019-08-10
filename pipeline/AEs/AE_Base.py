@@ -17,6 +17,7 @@ class BaseAE(nn.Module):
         self.__check_instance_vars()
         x = self.encode(x)
         x = self.decode(x)
+
         return x
 
     def encode(self, x):

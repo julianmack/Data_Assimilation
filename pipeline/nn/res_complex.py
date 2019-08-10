@@ -28,9 +28,10 @@ class ResNextBlock(nn.Module):
         init.conv(conv1x1_2.weight, activation_constructor)
 
         #ADD batch norms automatically
-        self.ResLayers = nn.Sequential(nn.BatchNorm3d(Cin), conv1x1_1,
+        self.ResLayers = nn.Sequential(conv1x1_1,
             activation_constructor(channel_small), nn.BatchNorm3d(channel_small), conv3x3,
-            activation_constructor(channel_small), nn.BatchNorm3d(channel_small), conv1x1_2)
+            activation_constructor(channel_small), nn.BatchNorm3d(channel_small),
+            conv1x1_2, activation_constructor(Cin))
             #nn.BatchNorm3d(Cin))
 
     def forward(self, x):
@@ -76,10 +77,13 @@ class resResNeXt(nn.Module):
         for i in range(layers):
             res = ResNeXt(activation_constructor, Cin, cardinality)
             blocks.append(res)
-        self.resRes = nn.Sequential(*blocks, nn.BatchNorm3d(Cin))
+        self.resRes = nn.Sequential(*blocks, activation_constructor(Cin),
+                                    nn.BatchNorm3d(Cin))
 
     def forward(self, x):
+
         h = self.resRes(x)
+        h = h / 100. #To give less importance to residual network (at least initially)
         return h + x
 
 class ResBlockSlim(nn.Module):
@@ -101,6 +105,7 @@ class ResBlockSlim(nn.Module):
 
 
     def forward(self, x):
+
         h = self.act_fn(self.conv1x1(x))
         h = self.act_fn(self.conv1(h))
         h = self.conv2(h)
