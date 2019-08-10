@@ -2,6 +2,8 @@ import torch
 from torch import nn
 from pipeline.nn.conv import FactorizedConv
 from pipeline.nn import init
+from torch.nn.parameter import Parameter
+
 
 class ResNextBlock(nn.Module):
     """Single res-block from arXiv:1611.05431v2
@@ -35,7 +37,7 @@ class ResNextBlock(nn.Module):
             #nn.BatchNorm3d(Cin))
 
     def forward(self, x):
-        
+
         h = self.ResLayers(x)
         return h + x
 
@@ -80,10 +82,12 @@ class resResNeXt(nn.Module):
             blocks.append(res)
         self.resRes = nn.Sequential(*blocks, activation_constructor(Cin),
                                     nn.BatchNorm3d(Cin))
+        self.attenuate_res = Parameter(torch.tensor([0.05], requires_grad=True))
+
 
     def forward(self, x):
         h = self.resRes(x)
-        h = h / 100. #To give less importance to residual network (at least initially)
+        h = h * self.attenuate_res #To give less importance to residual network (at least initially)
         return h + x
 
 class ResBlockSlim(nn.Module):
