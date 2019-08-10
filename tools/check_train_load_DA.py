@@ -18,7 +18,7 @@ from pipeline.settings.baseline_explore import Baseline1
 #################### Models to init
 resNext_1 = {"layers": 2, "cardinality": 2}
 resNext_2 = {"layers": 4, "cardinality": 4}
-resNext_3 = {"layers": 0, "cardinality": 2}
+resNext_3 = {"layers": 2, "cardinality": 2}
 
 CONFIGS = [ResNeXt, ResNeXt, ResNeXt]
 KWARGS = (resNext_1,  resNext_2, resNext_3)
@@ -44,10 +44,35 @@ def main():
         check_train_load_DA(configs[idx], KWARGS[idx], SMALL_DEBUG_DOM, ALL_DATA)
         print()
 
+def run_DA_batch(settings, model, all_data, expdir):
+    settings.DEBUG = False
+    #set control_states
+    #Load data
+    loader, splitter = GetData(), SplitData()
+    X = loader.get_X(settings)
 
+    train_X, test_X, u_c_std, X, mean, std = splitter.train_test_DA_split_maybe_normalize(X, settings)
+
+    if all_data:
+        control_states = X
+        print_every = 50
+    else:
+        NUM_STATES = 5
+        START = 100
+        control_states = train_X[START:NUM_STATES + START]
+        print_every = 10
+    if settings.COMPRESSION_METHOD == "AE":
+        out_fp = expdir + "AE.csv" #this will be written and then deleted
+    else:
+        out_fp = expdir + "SVD.csv"
+
+    batch_DA_AE = BatchDA(settings, control_states, csv_fp= out_fp, AEModel=model,
+                        reconstruction=True, plot=False)
+
+    return batch_DA_AE.run(print_every=print_every, print_small=True)
 
 def check_train_load_DA(config, config_kwargs, small_debug=True, all_data=False):
-    expdir = "experiments/TTL/"
+    expdir = "experiments/CTL/"
     try:
         if not config_kwargs:
             config_kwargs = {}
@@ -79,31 +104,9 @@ def check_train_load_DA(config, config_kwargs, small_debug=True, all_data=False)
 
         model.to(ML_utils.get_device()) #TODO
 
-        settings.DEBUG = False
         x_fp = settings.get_X_fp(True) #force init X_FP
 
-        #set control_states
-        #Load data
-        loader, splitter = GetData(), SplitData()
-        X = loader.get_X(settings)
-
-        train_X, test_X, u_c_std, X, mean, std = splitter.train_test_DA_split_maybe_normalize(X, settings)
-
-        if all_data:
-            control_states = X
-            print_every = 50
-        else:
-            NUM_STATES = 5
-            START = 100
-            control_states = train_X[START:NUM_STATES + START]
-            print_every = 10
-
-        out_fp = expdir + "AE.csv" #this will be written and then deleted
-
-        batch_DA_AE = BatchDA(settings, control_states, csv_fp= out_fp, AEModel=model,
-                            reconstruction=True, plot=False)
-
-        res_AE = batch_DA_AE.run(print_every=print_every, print_small=True)
+        res_AE = run_DA_batch(settings, model, all_data, expdir)
 
         print(res_AE.tail())
         shutil.rmtree(expdir, ignore_errors=False, onerror=None)
