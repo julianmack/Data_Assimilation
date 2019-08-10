@@ -18,10 +18,10 @@ from pipeline.VarDA.batch_DA import BatchDA
 EPOCHS = 400
 SMALL_DEBUG_DOM = False #False #False #For training
 calc_DA_MAE = True
-num_epochs_cv = 25
+num_epochs_cv = 15
 LR = 0.0003
-print_every = 10
-test_every = 10
+print_every = 5
+test_every = 5
 exp_base = "experiments/train/00c_baseResNext/"
 GPU_DEVICE = 1
 def main():

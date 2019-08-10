@@ -47,7 +47,7 @@ def main():
 
 
 def check_train_load_DA(config, config_kwargs, small_debug=True, all_data=False):
-    expdir = "experiments/testing/testtrainload/"
+    expdir = "experiments/TTL/"
     try:
         if not config_kwargs:
             config_kwargs = {}

@@ -207,7 +207,7 @@ class TrainAE():
                                 mean_diff / len(self.train_loader.dataset) )
             out_str += ", L1 loss:{:.2f}".format(L1_loss / len(self.train_loader.dataset))
             if self.calc_DA_MAE and (epoch % test_every == 0):
-                out_str +=  ", DA_ratio:{:.4f}".format(train_DA_ratio)
+                out_str +=  ", -DA_%:{:.2f}%".format(train_DA_ratio * 100)
             out_str += ", time taken (m): {:.2f}m".format( (t_end - t_start) / 60.)
             print(out_str)
 
@@ -228,7 +228,7 @@ class TrainAE():
             if epoch % print_every == 0 or epoch == num_epoch - 1:
                 out_str = "epoch [{}/{}], TEST: -loss:{:.4f}".format(epoch + 1, num_epoch, test_loss / len(self.test_loader.dataset))
                 if self.calc_DA_MAE and (epoch % test_every == 0):
-                    out_str +=  ", -DA_ratio:{:.4f}".format(train_DA_MAE)
+                    out_str +=  ", -DA_%:{:.2f}%".format(test_DA_ratio * 100)
                 out_str += ", time taken(m): {:.2f}m".format( (t_end - t_start) / 60.)
                 print(out_str)
 
@@ -319,7 +319,7 @@ class TrainAE():
                 u_c = u_c.squeeze(1)
 
             if self.small_debug:
-                u_c = u_c[:4]
+                u_c = u_c[:8]
 
             csv_fp = "{}{}_{}.csv".format(self.expdir, self.epoch, test_valid)
             batcher = BatchDA(self.settings, u_c, csv_fp=csv_fp, AEModel=self.model,
@@ -330,7 +330,13 @@ class TrainAE():
 
             ref_mae = results["ref_MAE_mean"]
             da_mae =  results["da_MAE_mean"]
+
+            #Previously I was using:
             ratio_improve_mae = (ref_mae - da_mae)/ref_mae
+
+            #but actually we need average ratio improvement:
+            ratio_improve_mae = results["percent_improvement"] / 100
+            
             time = results["time"]
 
             return da_mae, ratio_improve_mae, time

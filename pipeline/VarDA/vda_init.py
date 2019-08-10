@@ -124,6 +124,9 @@ class VDAInit:
 
         mean = np.mean(X, axis=0)
 
+        if settings.NORMALIZE:
+            assert np.allclose(mean, np.zeros_like(mean))
+
         V = (X - mean)
 
         # V = (M - 1) ** (- 0.5) * V
@@ -221,20 +224,20 @@ class VDAInit:
         """helper function to get observations and H_0 and d in reduced space"""
         if len(u_c.shape) not in [1, 3]:
             raise ValueError("This function does not accept batched input with {} dimensions".format(len(u_c.shape)))
-        w_c = encoder(u_c)
-        w_0 = encoder(u_0)
+        z_c = encoder(u_c)
+        z_0 = encoder(u_0)
         if False: #TODO - rationalize
 
 
             observations, _, nobs = VDAInit.select_obs(settings, w_c)
 
             H_0 = np.eye(nobs) #i.e. using all observations
-            d = observations - H_0 @ w_0.flatten()
+            d = observations - H_0 @ z_0.flatten()
         else:
 
-            H_0 = np.eye(len(w_c))
-            d = w_c - w_0
-            observations = w_c
+            H_0 = np.eye(len(z_c))
+            d = z_c - z_0
+            observations = z_c
 
         return observations, H_0, None, d
 

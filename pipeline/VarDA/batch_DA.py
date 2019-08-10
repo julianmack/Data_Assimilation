@@ -136,8 +136,9 @@ class BatchDA():
             result["ref_MAE_mean"] =  DA_results["ref_MAE_mean"]
             result["da_MAE_mean"] = DA_results["da_MAE_mean"]
             result["counts"] = DA_results["counts"]
-            result["l1_loss"] = l1.detach().cpu().numpy()
-            result["l2_loss"] = l2.detach().cpu().numpy()
+            if self.reconstruction:
+                result["l1_loss"] = l1.detach().cpu().numpy()
+                result["l2_loss"] = l2.detach().cpu().numpy()
             result["time"] = t2 - t1
             #add to results list (that will become a .csv)
             results.append(result)
@@ -169,6 +170,7 @@ class BatchDA():
         data = {}
         data["ref_MAE_mean"] = results_df["ref_MAE_mean"].mean()
         data["da_MAE_mean"] = results_df["da_MAE_mean"].mean()
+        data["percent_improvement"] = results_df["percent_improvement"].mean()
         time = results_df["time"]
         time = time[1:] #ignore the first one as this can occud offline
 

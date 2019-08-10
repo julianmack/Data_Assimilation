@@ -15,8 +15,8 @@ resNext_k = {"layers": 0, "cardinality": 2}
 # CONFIGS = [Res34AE, ResNeXt, Baseline1Block, Cho2019]
 # KWARGS = (0, resNext_k, 0, 0)
 
-CONFIGS = [ResNeXt,]
-KWARGS = (resNext_k,)
+CONFIGS = [ResNeXt, Baseline1Block, Baseline1]
+KWARGS = (resNext_k, 0, 0)
 
 PRINT_MODEL = True
 

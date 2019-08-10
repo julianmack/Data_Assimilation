@@ -72,7 +72,8 @@ class DAPipeline():
         if self.settings.REDUCED_SPACE:
             if self.data.get("V_trunc") is None or force_init: #only init if not already init
                 V_red = VDAInit.create_V_red(self.data.get("train_X"),
-                                            self.data.get("encoder"), self.settings.get_number_modes(),
+                                            self.data.get("encoder"),
+                                            self.settings.get_number_modes(),
                                             self.settings)
                 self.data["V_trunc"] = V_red.T #tau x M
 
@@ -198,7 +199,7 @@ class DAPipeline():
             print("u_DA:   ", u_DA.flatten()[:size])
             print("ref_MAE:", ref_MAE.flatten()[:size])
             print("da_MAE: ", da_MAE.flatten()[:size])
-
+            print("%", percent_improvement, "da_MAE", da_MAE_mean,"ref_MAE", ref_MAE_mean)
         results_data = {"ref_MAE": ref_MAE,
                     "da_MAE": da_MAE,
                     "u_DA": u_DA,

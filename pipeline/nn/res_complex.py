@@ -35,6 +35,7 @@ class ResNextBlock(nn.Module):
             #nn.BatchNorm3d(Cin))
 
     def forward(self, x):
+        
         h = self.ResLayers(x)
         return h + x
 
@@ -81,7 +82,6 @@ class resResNeXt(nn.Module):
                                     nn.BatchNorm3d(Cin))
 
     def forward(self, x):
-
         h = self.resRes(x)
         h = h / 100. #To give less importance to residual network (at least initially)
         return h + x
