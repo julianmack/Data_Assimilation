@@ -225,9 +225,8 @@ class VDAInit:
         if len(u_c.shape) not in [1, 3]:
             raise ValueError("This function does not accept batched input with {} dimensions".format(len(u_c.shape)))
         z_c = encoder(u_c)
-        z_0 = encoder(u_0)
         if False: #TODO - rationalize
-
+            z_0 = encoder(u_0)
 
             observations, _, nobs = VDAInit.select_obs(settings, w_c)
 
@@ -236,7 +235,8 @@ class VDAInit:
         else:
 
             H_0 = np.eye(len(z_c))
-            d = z_c - z_0
+            #d = z_c - z_0
+            d = z_c
             observations = z_c
 
         return observations, H_0, None, d
@@ -285,53 +285,35 @@ class VDAInit:
         return data
 
     @staticmethod
-    def create_V_red(X, encoder, num_modes, settings):
+    def create_V_red(X, encoder, settings, number_modes=None):
         V = VDAInit.create_V_from_X(X, settings)
-        assert V.shape[0] >= num_modes
-        if True: #TODO - rationalize this
-            res = []
-            BATCH = 16
-            if V.shape[0] > BATCH:
-                i_start = 0
-                for i in range(BATCH, V.shape[0] + BATCH, BATCH):
 
-                    idx_end = i if i < V.shape[0] else V.shape[0]
-                    inp = V[i_start:idx_end]
+        res = []
+        BATCH = 16
+        if V.shape[0] > BATCH:
+            i_start = 0
+            for i in range(BATCH, V.shape[0] + BATCH, BATCH):
 
-                    v = encoder(inp)
-                    res.append(v)
+                idx_end = i if i < V.shape[0] else V.shape[0]
+                inp = V[i_start:idx_end]
 
-                    i_start = i
-                V_red = np.concatenate(res, axis=0)
+                v = encoder(inp)
+                res.append(v)
 
-            else:
-                raise ValueError("Must have more timesteps available than in BATCH")
-
+                i_start = i
+            V_red = np.concatenate(res, axis=0)
 
         else:
-            #take random selection of V:
-            #idxs = random.sample(range(V.shape[0]), num_modes)
+            raise ValueError("Must have more timesteps available than in BATCH")
 
+        if number_modes:
             #take evenly spaced states
-            step = V.shape[0] / num_modes
-            idxs = [int(x * step) for x in range(num_modes)]
+            step = V_red.shape[0] / number_modes
+            idxs = [int(x * step) for x in range(number_modes)]
 
-            assert len(idxs) == num_modes
+            assert len(idxs) == number_modes
 
-            V_selected = V[idxs]
-
-            V_red = encoder(V_selected)
-            # #choose values that vary most
-            # V_mean = V_red.mean(axis=0)
-            # V_std = V_red.std(axis=0)
-            #
-            # V_normal = (V_red - V_mean) / V_std
-            #
-            # largest_var = V_normal.sum(axis=1)
-            # smallest_idx = np.argmin(largest_var)
-            # idxs = list(np.argpartition(largest_var, -(num_modes-1))[-(num_modes-1):])
-            #
-            # idxs.append(smallest_idx)
+            V_red = V_red[idxs]
         return V_red
 
     @staticmethod

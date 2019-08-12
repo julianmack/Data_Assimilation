@@ -73,7 +73,6 @@ class DAPipeline():
             if self.data.get("V_trunc") is None or force_init: #only init if not already init
                 V_red = VDAInit.create_V_red(self.data.get("train_X"),
                                             self.data.get("encoder"),
-                                            self.settings.get_number_modes(),
                                             self.settings)
                 self.data["V_trunc"] = V_red.T #tau x M
 
@@ -106,7 +105,7 @@ class DAPipeline():
             else:
                 raise NotImplementedError("Not implemented for non normalized SVD")
             #w_0 = np.zeros((W.shape[-1],)) #TODO - I'm not sure about this - can we assume is it 0?
-            
+
             self.data["V_trunc"] = V_trunc
             self.data["V"] = V
             self.data["w_0"] = w_0
