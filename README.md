@@ -1,5 +1,4 @@
-
-### Data Assimilation MSc Project
+## Data Assimilation MSc Project
 
 
 ## Introduction
