@@ -136,6 +136,9 @@ def plot_results_loss_epochs(results, ylim = None):
         ########################
 
         model_name = sttn.__class__.__name__
+
+        res_next = get_resNeXt_details(sttn)
+
         try:
             latent = sttn.get_number_modes()
         except:
@@ -172,8 +175,14 @@ def plot_results_loss_epochs(results, ylim = None):
         except:
             num_layers = "??"
 
+        title = "{}: {}, {}, aug={}, drop={}, \nlr={}, latent={}, layers={}"
+        title = title.format(model_name, activation, BN, aug, drop, lr, latent, num_layers)
+        if get_resNeXt_details != {}:
+            cardinality = res_next.get("cardinality")
+            layers =  res_next.get("layers")
+            title += "\nResNext: layers={}, cardinality={}".format(layers, cardinality)
         #ax.set_title(idx)
-        ax.set_title("{}: {}, {}, aug={}, drop={}, \nlr={}, latent={}, layers={}".format(model_name, activation, BN, aug, drop, lr, latent, num_layers))
+        ax.set_title(title)
     plt.show()
 
 
@@ -252,3 +261,20 @@ def create_res_df(results, remove_duplicates=False):
         df_res = df_res_new
 
     return df_res
+
+
+def get_resNeXt_details(settings):
+    for val in settings.BLOCKS[1:]:
+        assert isinstance(val, tuple)
+        if len(val) == 2:
+            continue
+        elif len(val) == 3:
+            _, typ, params = val
+        else:
+            raise ValueError()
+        results = {}
+        if typ == "resResNeXt":
+            results = {"cardinality": params.get("N"),
+                       "layers": params.get("L"),}
+            break
+    return results
