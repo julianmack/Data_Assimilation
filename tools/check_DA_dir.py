@@ -6,7 +6,7 @@ from tools.check_train_load_DA import run_DA_batch
 import shutil
 
 
-DIR = "experiments/train/00c_baseResNext/"
+DIR = "experiments/train/01_resNeXt_3/0/0/"
 
 
 CONFIGS = [DIR]
