@@ -6,7 +6,8 @@ from tools.check_train_load_DA import run_DA_batch
 import shutil
 
 
-DIR = "experiments/train/01_resNeXt_3/0/0/"
+DIR = "experiments/train/01_resNeXt_3/0/2/"
+DIR = "experiments/train/baseline_0b/2/"
 
 
 CONFIGS = [DIR]
@@ -36,7 +37,7 @@ def check_DA_dir(dir, kwargs, all_data, expdir):
     try:
         model, settings = ML_utils.load_model_and_settings_from_dir(dir)
         df = run_DA_batch(settings, model, all_data, expdir)
-        print(df.tail())
+        print(df.tail(10))
     except Exception as e:
         try:
             shutil.rmtree(expdir, ignore_errors=False, onerror=None)

@@ -108,7 +108,7 @@ def check_train_load_DA(config, config_kwargs, small_debug=True, all_data=False)
 
         res_AE = run_DA_batch(settings, model, all_data, expdir)
 
-        print(res_AE.tail())
+        print(res_AE.tail(10))
         shutil.rmtree(expdir, ignore_errors=False, onerror=None)
     except Exception as e:
         try:

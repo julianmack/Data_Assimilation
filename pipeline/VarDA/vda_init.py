@@ -235,7 +235,7 @@ class VDAInit:
         else:
 
             H_0 = np.eye(len(z_c))
-            #d = z_c - z_0
+            #d = z_c - encoder(u_0)
             d = z_c
             observations = z_c
 
