@@ -1,4 +1,6 @@
 # Data Assimilation
+This module is used to create AutoEncoders that are useful for Data Assimilation. A  user can define, create and train an AE for Data Assimilation with just a few lines of code.
+
 ## Introduction
 
 Data Assimilation (DA) is an uncertainty quantification technique used to reduce the error in  predictions by combining forecasting data with observation of the state. The most common techniques for DA are Variational approaches and Kalman Filters.
@@ -8,14 +10,14 @@ In this work, I propose a method of using Autoencoders to model the Background e
 ## Installation
 
 ## Getting Started
-
+Defined for Fluidity data
 
 ### Data Assimilation
 
 ### AE Define and Train
 
 ## Repo Structure
-
+To run tests ...: 
 ### Config classes
 
 ## Using this repo to training your own models

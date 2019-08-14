@@ -7,7 +7,7 @@ import shutil
 
 
 DIR = "experiments/train/01_resNeXt_3/0/2/"
-DIR = "experiments/train/baseline_0b/2/"
+DIR = "experiments/train/00c_baseResNext/"
 
 
 CONFIGS = [DIR]
