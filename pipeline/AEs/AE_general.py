@@ -128,8 +128,6 @@ class GenCAE(BaseAE):
             layer_kwargs["encode"] = encode
             layer_kwargs["activation"] = self.activation
             return Build.conv(**layer_kwargs)
-        elif block == "resB":
-            return Build.resB(self.activation, **layer_kwargs)
         elif block == "ResNeXt":
             return Build.ResNeXt(self.activation, **layer_kwargs)
         elif block == "resResNeXt":

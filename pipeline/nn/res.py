@@ -4,6 +4,36 @@ from pipeline.nn.conv import FactorizedConv
 from pipeline.nn import init
 from torch.nn.parameter import Parameter
 
+class ResVanilla(nn.Module):
+    """Standard residual block (slightly adapted to our use case)
+    """
+    def __init__(self, activation_constructor, Cin, channel_small=None,
+                    down_sf=4, Cout=None, residual=True):
+        super(ResVanilla, self).__init__()
+        self.residual = residual
+        if Cout is None:
+            Cout = Cin
+
+
+        conv1 = nn.Conv3d(Cin, Cin, kernel_size=(3, 3, 3), stride=(1,1,1), padding=(1,1,1))
+        conv2 = nn.Conv3d(Cin, Cout, kernel_size=(3, 3, 3), stride=(1,1,1), padding=(1,1,1))
+
+
+        #Initializations
+        init.conv(conv1.weight, activation_constructor)
+        init.conv(conv2.weight, activation_constructor)
+
+        #ADD batch norms automatically
+        self.ResLayers = nn.Sequential(conv1,
+            activation_constructor(Cin), nn.BatchNorm3d(Cin), conv2,
+            activation_constructor(Cout))
+
+    def forward(self, x):
+
+        h = self.ResLayers(x)
+        if self.residual:
+            h = h + x
+        return h
 
 class ResNextBlock(nn.Module):
     """Single res-block from arXiv:1611.05431v2
@@ -62,7 +92,13 @@ class ResNeXt(nn.Module):
                 assert Cs == 4, "Cs must be 4 when block is ResNextBlock"
             Cs = 4 #fixed for ResNextBlock system
             assert k is None, "k should not be initialized for ResNextBlock"
-        assert Cs is not None or block_kwargs.get("Csmall") is not None, "Cs must be initlized by user if Block is not ResNextBlock"
+        elif isinstance(init_block, ResVanilla):
+            pass
+        elif init_block.__class__.__name__ ==  "_DenseBlock":
+            assert Cs is not None or block_kwargs.get("Csmall") is not None, \
+                                    "Cs must be initlized by user if Block is _DenseBlock"
+        else:
+            raise NotImplementedError("Block must be in [ResNextBlock, ResVanilla]")
 
         blocks = nn.ModuleList([])
         for i in range(cardinality):
@@ -92,28 +128,6 @@ class ResNeXt(nn.Module):
             resblock = Block(**block_kwargs)
         return resblock
 
-class resResNeXt(nn.Module):
-    """Adds a skip connection over the whole ResNeXt module.
-    Also add a final Batch Norm to prevent gradients/values exploding
-    in resNext layers.
-    """
-
-    def __init__(self, activation_constructor, Cin, cardinality, layers, Cout=None,
-                    k=None, Cs=None):
-        super(resResNeXt, self).__init__()
-        blocks = []
-        for i in range(layers):
-            res = ResNeXt(activation_constructor, Cin, cardinality, Cout=Cout, k=k, Cs=Cs)
-            blocks.append(res)
-        self.resRes = nn.Sequential(*blocks, activation_constructor(Cin),
-                                    nn.BatchNorm3d(Cin))
-        self.attenuate_res = Parameter(torch.tensor([0.05], requires_grad=True))
-
-
-    def forward(self, x):
-        h = self.resRes(x)
-        h = h * self.attenuate_res #To give less importance to residual network (at least initially)
-        return h + x
 
 class ResBlockSlim(nn.Module):
 
@@ -163,3 +177,38 @@ class DRU(nn.Module):
         h = self.conv3(h)
         h = h + x
         return torch.cat([h, x])
+
+
+class ResBlock1x1(nn.Module):
+
+    def __init__(self, activation_fn, in_channels, out_channels):
+        super(ResBlock1x1, self).__init__()
+        self.act_fn = activation_fn
+
+        self.conv1x1 = nn.Conv3d(in_channels, out_channels, kernel_size=(1, 1, 1), stride=(1,1,1))
+        self.conv1 = nn.Conv3d(out_channels, out_channels, kernel_size=(3, 3, 3), stride=(1,1,1), padding=(1,1,1))
+        self.conv2 = nn.Conv3d(out_channels, in_channels, kernel_size=(3, 3, 3), stride=(1,1,1), padding=(1,1,1))
+
+    def forward(self, x):
+        h = self.act_fn(self.conv1x1(x))
+        h = self.act_fn(self.conv1(h))
+        h = self.conv2(h)
+        return h + x
+
+class ResBlockStack3(nn.Module):
+
+    def __init__(self, activation_fn, channel):
+        super(ResBlockStack3, self).__init__()
+        self.act_fn = activation_fn
+
+        self.res1 = ResBlock(activation_fn, channel)
+        self.res2 = ResBlock(activation_fn, channel)
+        self.res3 = ResBlock(activation_fn, channel)
+
+    def forward(self, x):
+        h = self.act_fn(self.res1(x))
+        h = self.act_fn(self.res2(h))
+        h = self.res3(h)
+        return h + x
+
+

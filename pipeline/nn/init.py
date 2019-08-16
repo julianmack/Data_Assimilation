@@ -1,7 +1,7 @@
 from torch import nn
 
 def conv(weight, activation_constructor):
-    return
+    return # the changes below reduced the accuracy
     act = __get_activation(activation_constructor)
 
     if act == "prelu":

@@ -17,7 +17,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.utils.checkpoint as cp
 from collections import OrderedDict
-from pipeline.nn.res_complex import ResNextBlock
+from pipeline.nn.res import ResNextBlock
 
 
 class _DenseBlock(nn.Module):

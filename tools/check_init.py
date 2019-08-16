@@ -22,7 +22,7 @@ KWARGS = (resNext_k, resNext3_k, resNext3_k2)
 
 
 
-PRINT_MODEL = True
+PRINT_MODEL = False
 
 def main():
 

@@ -16,8 +16,8 @@ from pipeline.settings.baseline_explore import Baseline1
 
 
 resNext_k = {"layers": 3, "cardinality": 2}
-resNext3_k = {"layers": 3, "cardinality": 2, "block_type": "NeXt"}
-resNext3_k2 = {"layers": 3, "cardinality": 2, "block_type": "NeXt",
+resNext3_k = {"layers": 3, "cardinality": 2, "block_type": "vanilla"}
+resNext3_k2 = {"layers": 3, "cardinality": 2, "block_type": "vanilla",
                 "module_type": "RDB3"}
 # CONFIGS = [Res34AE, ResNeXt, Baseline1Block, Cho2019]
 # KWARGS = (0, resNext_k, 0, 0)
@@ -25,7 +25,7 @@ resNext3_k2 = {"layers": 3, "cardinality": 2, "block_type": "NeXt",
 CONFIGS = [ResNeXt, ResStack3, ResStack3]
 KWARGS = (resNext_k, resNext3_k, resNext3_k2)##
 
-##################
+#################
 CONFIGS = CONFIGS[-1]
 KWARGS = (KWARGS[-1],)
 

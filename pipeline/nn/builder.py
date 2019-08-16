@@ -1,5 +1,5 @@
 from torch import nn
-from pipeline.nn import res_complex, res_simple, res_stacked, empty
+from pipeline.nn import res, res_stacked, empty
 from collections import OrderedDict
 from pipeline.nn import init
 
@@ -60,14 +60,14 @@ class NNBuilder():
     @staticmethod
     def ResNeXt(activation_fn, C, N, final=False):
         act_fn_constructor = NNBuilder.act_constr(activation_fn)
-        module = res_complex.ResNeXt(act_fn_constructor, C, N)
+        module = res.ResNeXt(act_fn_constructor, C, N)
         return NNBuilder.maybe_add_activation(module, act_fn_constructor, final, C)
     @staticmethod
     def resResNeXt(activation_fn, C, N, L, final=False):
         if L < 1 or C < 1:
             return nn.Sequential()
         act_fn_constructor = NNBuilder.act_constr(activation_fn)
-        module = res_complex.resResNeXt(act_fn_constructor, C, N, L)
+        module = res_stacked.resResNeXt(act_fn_constructor, C, N, L)
         return module #No activation - this is already in the resNext
 
     @staticmethod
@@ -103,7 +103,7 @@ class NNBuilder():
 
         These enforce that Cin == Cout == C"""
         act_fn_constructor = NNBuilder.act_constr(activation_fn)
-        module = res_simple.ResBlock(activation_fn, C)
+        module = res.ResBlock(activation_fn, C)
         return NNBuilder.maybe_add_activation(module, act_fn_constructor, final, C)
 
     @staticmethod
@@ -115,19 +115,19 @@ class NNBuilder():
 
         Note: enforce that Cin == Cout == C"""
         act_fn_constructor = NNBuilder.act_constr(activation_fn)
-        module =  res_simple.ResBlockStack3(activation_fn, C)
+        module =  res.ResBlockStack3(activation_fn, C)
         return NNBuilder.maybe_add_activation(module, act_fn_constructor, final, C)
 
     @staticmethod
     def resB1x1(activation_fn, I, O, final=False):
         act_fn_constructor = NNBuilder.act_constr(activation_fn)
-        module =  res_simple.ResBlock1x1(activation_fn, I, O)
+        module =  res.ResBlock1x1(activation_fn, I, O)
         return NNBuilder.maybe_add_activation(module, act_fn_constructor, final, O)
 
     @staticmethod
     def resBslim(activation_fn, I, O, final=False):
         act_fn_constructor = NNBuilder.act_constr(activation_fn)
-        module =  res_complex.ResBlockSlim(activation_fn, I, O)
+        module =  res.ResBlockSlim(activation_fn, I, O)
         return NNBuilder.maybe_add_activation(module, act_fn_constructor, final, O)
 
     @staticmethod
@@ -137,16 +137,16 @@ class NNBuilder():
         Note: enforce that Cin == Cout == C"""
         act_fn_constructor = NNBuilder.act_constr(activation_fn)
 
-        module =  res_complex.DRU(activation_fn, C)
+        module =  res.DRU(activation_fn, C)
         return NNBuilder.maybe_add_activation(module, act_fn_constructor, final, C)
 
     @staticmethod
     def get_block(block):
         assert isinstance(block, str)
         if block == "vanilla":
-            raise NotImplementedError("vanilla not implemented yet")
+            return res.ResVanilla
         elif block == "NeXt":
-            return res_complex.ResNextBlock
+            return res.ResNextBlock
 
         else:
             raise ValueError("`block` must be in [vanilla, NeXt]")
