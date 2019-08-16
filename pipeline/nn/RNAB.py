@@ -20,60 +20,63 @@ import torch.utils.checkpoint as cp
 from collections import OrderedDict
 from pipeline.nn.res import ResNextBlock, ResVanilla
 from pipeline.nn.explore.empty import Empty
+from pipeline.nn.helpers import get_activation
 
 class RNAB(nn.Module):
 
-    def __init__(self, activation_constructor, Cin, Block = ResVanilla, channel_small=None,
+    def __init__(self, encode, activation_constructor, Cin, Block = ResVanilla, channel_small=None,
                     down_sf=4, residual=True):
         super(RNAB, self).__init__()
         self.residual = residual
+        if get_activation(activation_constructor) == "GDN":
+            raise NotImplementedError("Must deal with GDN w. RNAB crossover")
 
         #init trunk: 3 res blocks
         self.trunk = nn.Sequential()
         for i in range(3):
-            res = Block(activation_constructor, Cin, channel_small)
+            res = Block(encode, activation_constructor, Cin, channel_small)
             self.trunk.add_module('res%d' % (i), res)
 
         #init mask
         self.mask = nn.Sequential()
         for i in range(2):
-            res = Block(activation_constructor, Cin, channel_small)
+            res = Block(encode, activation_constructor, Cin, channel_small)
             self.mask.add_module('res%d' % (i), res)
 
-        down = self.__build_downsample(activation_constructor, Cin, channel_small)
+        down = self.__build_downsample(encode, activation_constructor, Cin, channel_small)
         self.mask.add_module('downsample', down)
         for i in range(2, 4):
-            res = Block(activation_constructor, Cin, channel_small)
+            res = Block(encode, activation_constructor, Cin, channel_small)
             self.mask.add_module('res%d' % (i), res)
 
-        upsample = self.__build_upsample(activation_constructor, Cin, channel_small)
+        upsample = self.__build_upsample(encode, activation_constructor, Cin, channel_small)
         self.mask.add_module('upsample', upsample)
 
         for i in range(4, 6):
-            res = Block(activation_constructor, Cin, channel_small)
+            res = Block(encode, activation_constructor, Cin, channel_small)
             self.mask.add_module('res%d' % (i), res)
 
         self.mask.add_module('conv1x1', nn.Conv3d(Cin, Cin, kernel_size=(1, 1, 1)))
 
-    def __build_downsample(self, activation_constructor, Cin, channel_small):
+    def __build_downsample(self, encode, activation_constructor, Cin, channel_small):
         """This downsample is specific to out input size in this case of
         C, x, y, z = 32, 11, 11, 3"""
         conv1 = nn.Conv3d(Cin, Cin, kernel_size=(3, 3, 2), stride=(2,2,1))
         conv2 = nn.Conv3d(Cin, Cin, kernel_size=(3, 3, 2), stride=(2,2,1), padding=(1, 1, 0))
         conv3 = nn.Conv3d(Cin, Cin, kernel_size=(3, 3, 1), stride=(1,1,1),)
-        return nn.Sequential(conv1, activation_constructor(Cin),
-                            conv2, activation_constructor(Cin),
+        return nn.Sequential(conv1, activation_constructor(Cin, not encode),
+                            conv2, activation_constructor(Cin, not encode),
                             conv3, )
 
-    def __build_upsample(self, activation_constructor, Cin, channel_small):
+    def __build_upsample(self, encode, activation_constructor, Cin, channel_small):
         """This downsample is specific to out input size in this case of
         C, x, y, z = 32, 11, 11, 3"""
         conv1 = nn.ConvTranspose3d(Cin, Cin, kernel_size=(3, 3, 1), stride=(1,1,1),)
         conv2 = nn.ConvTranspose3d(Cin, Cin, kernel_size=(3, 3, 2), stride=(2,2,1), padding=(1, 1, 0))
         conv3 = nn.ConvTranspose3d(Cin, Cin, kernel_size=(3, 3, 2), stride=(2,2,1))
 
-        return nn.Sequential(conv1, activation_constructor(Cin),
-                            conv2, activation_constructor(Cin),
+        return nn.Sequential(conv1, activation_constructor(Cin, not encode),
+                            conv2, activation_constructor(Cin, not encode),
                             conv3)
 
     def forward(self, x):

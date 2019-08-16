@@ -19,19 +19,19 @@ class Res3(nn.Module):
 #res modules with an extra skip connection over every third:
 
 class ResNeXt3(Res3):
-    def __init__(self, activation_constructor, Cin, cardinality, layers, Block, k, Cs, subBlock):
+    def __init__(self, encode, activation_constructor, Cin, cardinality, layers, Block, k, Cs, subBlock):
         super(ResNeXt3, self).__init__()
 
-        self.l1of3 = res.ResNeXt(activation_constructor, Cin, cardinality, k, Cs, Block)
-        self.l2of3 = res.ResNeXt(activation_constructor, Cin, cardinality, k, Cs, Block)
-        self.l3of3 = res.ResNeXt(activation_constructor, Cin, cardinality, k, Cs, Block)
+        self.l1of3 = res.ResNeXt(encode, activation_constructor, Cin, cardinality, k, Cs, Block)
+        self.l2of3 = res.ResNeXt(encode, activation_constructor, Cin, cardinality, k, Cs, Block)
+        self.l3of3 = res.ResNeXt(encode, activation_constructor, Cin, cardinality, k, Cs, Block)
 
 class RBD3(nn.Module):
     """Creates an RDB3 module within the ResNeXt system.
     This is from the paper: https://arxiv.org/pdf/1608.06993.pdf
     with number_layers = 3 fixed
     """
-    def __init__(self, activation_constructor, Cin, cardinality, layers, Block,
+    def __init__(self, encode, activation_constructor, Cin, cardinality, layers, Block,
                     k, Cs, subBlock):
         super(RBD3, self).__init__()
         if k is None:
@@ -40,12 +40,13 @@ class RBD3(nn.Module):
             Cs = 64
         assert subBlock is None
 
-        dense_block_kwargs = { "activation_constructor": activation_constructor,
+        dense_block_kwargs = { "encode": "encode",
+                                "activation_constructor": activation_constructor,
                                 "Cin": Cin, "growth_rate": k,
                                 "Csmall": Cs, "Block": Block,
                                 "dense_layers": 3}
         Block_in_ResNext = _DenseBlock
-        self.rdb3 = res.ResNeXt(activation_constructor, Cin,
+        self.rdb3 = res.ResNeXt(encode, activation_constructor, Cin,
                                         cardinality, k, Cs, Block_in_ResNext,
                                         block_kwargs=dense_block_kwargs)
     def forward(self, x):
@@ -54,11 +55,11 @@ class RBD3(nn.Module):
 
 class ResBespoke(nn.Module):
     """Adds a single bespoke module"""
-    def __init__(self, activation_constructor, Cin, cardinality, layers, Block, k, Cs, subBlock=None):
+    def __init__(self, encode, activation_constructor, Cin, cardinality, layers, Block, k, Cs, subBlock=None):
         super(ResBespoke, self).__init__()
         assert subBlock is not None
-        
-        self.res = Block(activation_constructor, Cin, channel_small=Cs, Block=subBlock)
+
+        self.res = Block(encode, activation_constructor, Cin, channel_small=Cs, Block=subBlock)
     def forward(self, x):
         h = self.res(x)
         return x + h
@@ -73,15 +74,15 @@ class resOver(nn.Module):
     the old scheme
     """
 
-    def __init__(self, activation_constructor, Cin, cardinality, layers, block,
+    def __init__(self, encode, activation_constructor, Cin, cardinality, layers, block,
                     k, Csmall=None, module=ResNeXt3, subBlock=None):
         super(resOver, self).__init__()
         blocks = []
         for i in range(layers):
-            res = module(activation_constructor, Cin, cardinality, layers,
+            res = module(encode, activation_constructor, Cin, cardinality, layers,
                             block, k=k, Cs=Csmall, subBlock=subBlock)
             blocks.append(res)
-        self.resRes = nn.Sequential(*blocks, activation_constructor(Cin),
+        self.resRes = nn.Sequential(*blocks, activation_constructor(Cin, not encode),
                                     nn.BatchNorm3d(Cin))
         self.attenuate_res = Parameter(torch.tensor([0.05], requires_grad=True))
 
@@ -99,14 +100,14 @@ class resResNeXt(nn.Module):
     in resNext layers.
     """
 
-    def __init__(self, activation_constructor, Cin, cardinality, layers, Cout=None,
+    def __init__(self, encode, activation_constructor, Cin, cardinality, layers, Cout=None,
                     k=None, Cs=None):
         super(resResNeXt, self).__init__()
         blocks = []
         for i in range(layers):
-            reslayer = res.ResNeXt(activation_constructor, Cin, cardinality, Cout=Cout, k=k, Cs=Cs)
+            reslayer = res.ResNeXt(encode, activation_constructor, Cin, cardinality, Cout=Cout, k=k, Cs=Cs)
             blocks.append(reslayer)
-        self.resRes = nn.Sequential(*blocks, activation_constructor(Cin),
+        self.resRes = nn.Sequential(*blocks, activation_constructor(Cin, not encode),
                                     nn.BatchNorm3d(Cin))
         self.attenuate_res = Parameter(torch.tensor([0.05], requires_grad=True))
 

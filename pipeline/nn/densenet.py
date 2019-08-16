@@ -21,12 +21,12 @@ from pipeline.nn.res import ResNextBlock
 
 
 class _DenseBlock(nn.Module):
-    def __init__(self, activation_constructor, Cin, growth_rate, Csmall,
+    def __init__(self, encode, activation_constructor, Cin, growth_rate, Csmall,
                     dense_layers, Block=ResNextBlock):
         super(_DenseBlock, self).__init__()
         for i in range(dense_layers):
 
-            layer = Block(activation_constructor,
+            layer = Block(encode, activation_constructor,
                 Cin = Cin + i * growth_rate,
                 channel_small = Csmall,
                 Cout = growth_rate,

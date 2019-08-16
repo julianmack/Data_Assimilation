@@ -3,6 +3,8 @@ from pipeline.nn import res, res_stacked
 from collections import OrderedDict
 from pipeline.nn import init
 from pipeline.nn.RNAB import RNAB
+from pipeline.nn.pytorch_gdn.gdn import GDN
+from pipeline import ML_utils
 
 class NNBuilder():
     """Class to build nn blocks"""
@@ -46,32 +48,32 @@ class NNBuilder():
 
 
         if not final:
-            layer.update({"3": act_fn_constructor(conv_kwargs["out_channels"])})
+            layer.update({"3": act_fn_constructor(conv_kwargs["out_channels"], not encode)})
         conv = nn.Sequential(layer)
 
         return conv
 
     @staticmethod
-    def conv1x1(D, I, final=False):
+    def conv1x1(encode, D, I, final=False):
         channel_down = (channel // D) if (channel // D > 0) else 1
         module = nn.Conv3d(I, channel_down, kernel_size=(1, 1, 1), stride=(1,1,1))
-        return NNBuilder.maybe_add_activation(module, act_fn_constructor, final, I)
+        return NNBuilder.maybe_add_activation(encode, module, act_fn_constructor, final, I)
 
     @staticmethod
-    def ResNeXt(activation_fn, C, N, final=False):
+    def ResNeXt(encode, activation_fn, C, N, final=False):
         act_fn_constructor = NNBuilder.act_constr(activation_fn)
-        module = res.ResNeXt(act_fn_constructor, C, N)
-        return NNBuilder.maybe_add_activation(module, act_fn_constructor, final, C)
+        module = res.ResNeXt(encode, act_fn_constructor, C, N)
+        return NNBuilder.maybe_add_activation(encode, module, act_fn_constructor, final, C)
     @staticmethod
-    def resResNeXt(activation_fn, C, N, L, final=False):
+    def resResNeXt(encode, activation_fn, C, N, L, final=False):
         if L < 1 or C < 1:
             return nn.Sequential()
         act_fn_constructor = NNBuilder.act_constr(activation_fn)
-        module = res_stacked.resResNeXt(act_fn_constructor, C, N, L)
+        module = res_stacked.resResNeXt(encode, act_fn_constructor, C, N, L)
         return module #No activation - this is already in the resNext
 
     @staticmethod
-    def ResNeXt3(activation_fn, C, N, L, B, CS, k, SB, final=False):
+    def ResNeXt3(encode, activation_fn, C, N, L, B, CS, k, SB, final=False):
         if L < 1 or C < 1:
             return nn.Sequential()
         assert L % 3 == 0
@@ -80,48 +82,48 @@ class NNBuilder():
         resOver_layers =  int(L / 3)
         block = NNBuilder.get_block(B)
         act_fn_constructor = NNBuilder.act_constr(activation_fn)
-        module = res_stacked.resOver(act_fn_constructor, C, N,
+        module = res_stacked.resOver(encode, act_fn_constructor, C, N,
                             resOver_layers, block, k, CS,
                             res_stacked.ResNeXt3)
         return module
 
-    def ResBespoke(activation_fn, C, N, L, B, CS, k, SB, final=False):
+    def ResBespoke(encode, activation_fn, C, N, L, B, CS, k, SB, final=False):
         if L < 1:
             return nn.Sequential()
         block = NNBuilder.get_block(B)
         subBlock = NNBuilder.get_block(SB)
 
         act_fn_constructor = NNBuilder.act_constr(activation_fn)
-        module = res_stacked.resOver(act_fn_constructor, C, N,
+        module = res_stacked.resOver(encode, act_fn_constructor, C, N,
                             L, block, k, CS, module=res_stacked.ResBespoke,
                             subBlock=subBlock)
         return module
 
     @staticmethod
-    def ResNeXtRDB3(activation_fn, C, N, L, B, CS, k, SB, final=False):
+    def ResNeXtRDB3(encode, activation_fn, C, N, L, B, CS, k, SB, final=False):
         if L < 1 or C < 1:
             return nn.Sequential()
         assert SB is None
         resOver_layers =  int(L / 3)
         block = NNBuilder.get_block(B)
         act_fn_constructor = NNBuilder.act_constr(activation_fn)
-        module = res_stacked.resOver(act_fn_constructor, C, N,
+        module = res_stacked.resOver(encode, act_fn_constructor, C, N,
                             resOver_layers, block, k, CS,
                             res_stacked.RBD3)
         return module
 
     @staticmethod
-    def resB(activation_fn, C, final=False):
+    def resB(encode, activation_fn, C, final=False):
         """Returns Residual block of structure:
         conv -> activation -> conv -> sum both conv.
 
         These enforce that Cin == Cout == C"""
         act_fn_constructor = NNBuilder.act_constr(activation_fn)
-        module = res.ResBlock(activation_fn, C)
-        return NNBuilder.maybe_add_activation(module, act_fn_constructor, final, C)
+        module = res.ResBlock(encode, activation_fn, C)
+        return NNBuilder.maybe_add_activation(encode, module, act_fn_constructor, final, C)
 
     @staticmethod
-    def resB_3(activation_fn, C, final=False):
+    def resB_3(encode, activation_fn, C, final=False):
         """Returns 3 stacked residual blocks each of structure:
             conv -> activation -> conv -> sum both conv.
         There is then a skip connection from first to output of stacked
@@ -129,30 +131,30 @@ class NNBuilder():
 
         Note: enforce that Cin == Cout == C"""
         act_fn_constructor = NNBuilder.act_constr(activation_fn)
-        module =  res.ResBlockStack3(activation_fn, C)
-        return NNBuilder.maybe_add_activation(module, act_fn_constructor, final, C)
+        module =  res.ResBlockStack3(encode, activation_fn, C)
+        return NNBuilder.maybe_add_activation(encode, module, act_fn_constructor, final, C)
 
     @staticmethod
-    def resB1x1(activation_fn, I, O, final=False):
+    def resB1x1(encode, activation_fn, I, O, final=False):
         act_fn_constructor = NNBuilder.act_constr(activation_fn)
-        module =  res.ResBlock1x1(activation_fn, I, O)
-        return NNBuilder.maybe_add_activation(module, act_fn_constructor, final, O)
+        module =  res.ResBlock1x1(encode, activation_fn, I, O)
+        return NNBuilder.maybe_add_activation(encode, module, act_fn_constructor, final, O)
 
     @staticmethod
-    def resBslim(activation_fn, I, O, final=False):
+    def resBslim(encode, activation_fn, I, O, final=False):
         act_fn_constructor = NNBuilder.act_constr(activation_fn)
-        module =  res.ResBlockSlim(activation_fn, I, O)
-        return NNBuilder.maybe_add_activation(module, act_fn_constructor, final, O)
+        module =  res.ResBlockSlim(encode, activation_fn, I, O)
+        return NNBuilder.maybe_add_activation(encode, module, act_fn_constructor, final, O)
 
     @staticmethod
-    def DRU(activation_fn, C, final=False):
+    def DRU(encode, activation_fn, C, final=False):
         """Returns A Dense Residual Unit
 
         Note: enforce that Cin == Cout == C"""
         act_fn_constructor = NNBuilder.act_constr(activation_fn)
 
-        module =  res.DRU(activation_fn, C)
-        return NNBuilder.maybe_add_activation(module, act_fn_constructor, final, C)
+        module =  res.DRU(encode, activation_fn, C)
+        return NNBuilder.maybe_add_activation(encode, module, act_fn_constructor, final, C)
 
     @staticmethod
     def get_block(block):
@@ -173,22 +175,26 @@ class NNBuilder():
     @staticmethod
     def act_constr(activation_fn):
         if  activation_fn == "relu":
-            activation_constructor = lambda x: nn.ReLU()()
+            activation_constructor = lambda x, y: nn.ReLU()()
         elif activation_fn == "lrelu":
-            activation_constructor = lambda x: nn.LeakyReLU(0.05)
+            activation_constructor = lambda x, y: nn.LeakyReLU(0.05)
+        elif activation_fn == "GDN":
+            activation_constructor = lambda x, y: GDN(x,  ML_utils.get_device(), y)
         elif callable(activation_fn):
-            activation_constructor = lambda x: activation_fn
+            activation_constructor = lambda x, y: activation_fn
         elif activation_fn == "prelu": # must be initilalized in situ
-            activation_constructor = nn.PReLU
+            activation_constructor = lambda x, y: nn.PReLU(x)
         else:
             raise NotImplementedError("Activation function not implemented")
         return activation_constructor
 
     @staticmethod
-    def maybe_add_activation(module, act_fn_constructor, final, C):
+    def maybe_add_activation(encode, module, act_fn_constructor, final, C):
         if final:
             return module
         else:
-            return nn.Sequential(module, act_fn_constructor(C))
+            return nn.Sequential(module, act_fn_constructor(C, not encode))
             # BN = nn.BatchNorm3d(C)
             #return nn.Sequential(BN, module, act_fn_constructor(C))
+
+

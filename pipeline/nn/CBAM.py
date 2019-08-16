@@ -15,7 +15,7 @@ import torch.nn.functional as F
 class BasicConv(nn.Module):
     """This is edited so that it works for 3D case"""
 
-    def __init__(self, activation_constructor, in_planes, out_planes, kernel_size,
+    def __init__(self, encode, activation_constructor, in_planes, out_planes, kernel_size,
                 stride=1, padding=0, dilation=1, groups=1, activation=True,
                 bn=True, bias=False):
         super(BasicConv, self).__init__()
@@ -24,7 +24,7 @@ class BasicConv(nn.Module):
                             stride=stride, padding=padding, dilation=dilation,
                             groups=groups, bias=bias)
         self.bn = nn.BatchNorm3d(out_planes,eps=1e-5, momentum=0.01, affine=True) if bn else None
-        self.act = activation_constructor(out_planes) if activation else None
+        self.act = activation_constructor(out_planes, not encode) if activation else None
 
     def forward(self, x):
         x = self.conv(x)
@@ -39,14 +39,14 @@ class Flatten(nn.Module):
         return x.view(x.size(0), -1)
 
 class ChannelGate(nn.Module):
-    def __init__(self, activation_constructor, gate_channels,
+    def __init__(self, encode, activation_constructor, gate_channels,
                 reduction_ratio=8, pool_types=['avg', 'max']):
         super(ChannelGate, self).__init__()
         self.gate_channels = gate_channels
         self.mlp = nn.Sequential(
             Flatten(),
             nn.Linear(gate_channels, gate_channels // reduction_ratio),
-            activation_constructor(gate_channels // reduction_ratio),
+            activation_constructor(gate_channels // reduction_ratio, not encode),
             nn.Linear(gate_channels // reduction_ratio, gate_channels)
             )
         self.pool_types = pool_types
@@ -91,11 +91,11 @@ class ChannelPool(nn.Module):
         return torch.cat( (torch.max(x,1)[0].unsqueeze(1), torch.mean(x,1).unsqueeze(1)), dim=1 )
 
 class SpatialGate(nn.Module):
-    def __init__(self, activation_constructor):
+    def __init__(self, encode, activation_constructor):
         super(SpatialGate, self).__init__()
         kernel_size = 7
         self.compress = ChannelPool()
-        self.spatial = BasicConv(activation_constructor, 2, 1, kernel_size,
+        self.spatial = BasicConv(encode, activation_constructor, 2, 1, kernel_size,
                                     stride=1, padding=(kernel_size-1) // 2,
                                     activation=False)
     def forward(self, x):
@@ -105,14 +105,14 @@ class SpatialGate(nn.Module):
         return x * scale
 
 class CBAM(nn.Module):
-    def __init__(self, activation_constructor, gate_channels, reduction_ratio=8,
+    def __init__(self, encode, activation_constructor, gate_channels, reduction_ratio=8,
                     pool_types=['avg', 'max'], no_spatial=False):
         super(CBAM, self).__init__()
-        self.channelgate = ChannelGate(activation_constructor, gate_channels,
+        self.channelgate = ChannelGate(encode, activation_constructor, gate_channels,
                             reduction_ratio, pool_types)
         self.no_spatial=no_spatial
         if not no_spatial:
-            self.spatialgate = SpatialGate(activation_constructor)
+            self.spatialgate = SpatialGate(encode, activation_constructor)
     def forward(self, x):
         x_out = self.channelgate(x)
         if not self.no_spatial:

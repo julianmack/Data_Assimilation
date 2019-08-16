@@ -8,7 +8,7 @@ from pipeline.nn.CBAM import CBAM
 class ResVanilla(nn.Module):
     """Standard residual block (slightly adapted to our use case)
     """
-    def __init__(self, activation_constructor, Cin, channel_small=None,
+    def __init__(self, encode, activation_constructor, Cin, channel_small=None,
                     down_sf=4, Cout=None, residual=True):
         super(ResVanilla, self).__init__()
         self.residual = residual
@@ -26,8 +26,8 @@ class ResVanilla(nn.Module):
 
         #ADD batch norms automatically
         self.ResLayers = nn.Sequential(conv1,
-            activation_constructor(channel_small), nn.BatchNorm3d(channel_small), conv2,
-            activation_constructor(Cout))
+            activation_constructor(channel_small, not encode), nn.BatchNorm3d(channel_small), conv2,
+            activation_constructor(Cout, not encode))
 
     def forward(self, x):
         h = self.ResLayers(x)
@@ -41,7 +41,7 @@ class ResNextBlock(nn.Module):
     It is really just a standard res_block with sqeezed 1x1 convs
     at input and output
     """
-    def __init__(self, activation_constructor, Cin, channel_small=None,
+    def __init__(self, encode, activation_constructor, Cin, channel_small=None,
                     down_sf=4, Cout=None, residual=True):
         super(ResNextBlock, self).__init__()
         self.residual = residual
@@ -65,9 +65,9 @@ class ResNextBlock(nn.Module):
 
         #ADD batch norms automatically
         self.ResLayers = nn.Sequential(conv1x1_1,
-            activation_constructor(channel_small), nn.BatchNorm3d(channel_small), conv3x3,
-            activation_constructor(channel_small), nn.BatchNorm3d(channel_small),
-            conv1x1_2, activation_constructor(Cout))
+            activation_constructor(channel_small, not encode), nn.BatchNorm3d(channel_small), conv3x3,
+            activation_constructor(channel_small, not encode), nn.BatchNorm3d(channel_small),
+            conv1x1_2, activation_constructor(Cout, not encode))
             #nn.BatchNorm3d(Cin))
 
     def forward(self, x):
@@ -86,25 +86,25 @@ class CBAMBlock(nn.Module):
         return x + h
 
 class CBAM_vanilla(CBAMBlock):
-    def __init__(self, activation_constructor, Cin, channel_small=None,
+    def __init__(self, encode, activation_constructor, Cin, channel_small=None,
                     down_sf=4, Cout=None, residual=True):
         super(CBAM_vanilla, self).__init__()
         if Cout is None:
             Cout = Cin
-        self.block = ResVanilla(activation_constructor, Cin, channel_small,
+        self.block = ResVanilla(encode, activation_constructor, Cin, channel_small,
                         down_sf, Cout, False)
-        self.cbam = CBAM(activation_constructor, Cout, reduction_ratio=down_sf,
+        self.cbam = CBAM(encode, activation_constructor, Cout, reduction_ratio=down_sf,
                     pool_types=['avg', 'max'])
 
 class CBAM_NeXt(CBAMBlock):
-    def __init__(self, activation_constructor, Cin, channel_small=None,
+    def __init__(self, encode, activation_constructor, Cin, channel_small=None,
                     down_sf=4, Cout=None, residual=True):
         super(CBAM_NeXt, self).__init__()
         if Cout is None:
             Cout = Cin
-        self.block = ResNextBlock(activation_constructor, Cin, channel_small,
+        self.block = ResNextBlock(encode, activation_constructor, Cin, channel_small,
                         down_sf, Cout, False)
-        self.cbam = CBAM(activation_constructor, Cout, reduction_ratio=down_sf,
+        self.cbam = CBAM(encode, activation_constructor, Cout, reduction_ratio=down_sf,
                     pool_types=['avg', 'max'])
 
 
@@ -114,11 +114,11 @@ class ResNeXt(nn.Module):
     """Full ResNext module from : arXiv:1611.05431v2
     """
 
-    def __init__(self, activation_constructor, Cin, cardinality, k, Cs,
+    def __init__(self, encode, activation_constructor, Cin, cardinality, k, Cs,
                     Block=ResNextBlock, Cout=None, block_kwargs=None):
         super(ResNeXt, self).__init__()
 
-        init_block = self.__init_block_helper(Block, activation_constructor, Cin, Cs,
+        init_block = self.__init_block_helper(Block, encode, activation_constructor, Cin, Cs,
                                 Cout, block_kwargs)
         if isinstance(init_block, ResNextBlock):
             if Cs:
@@ -135,7 +135,7 @@ class ResNeXt(nn.Module):
 
         blocks = nn.ModuleList([])
         for i in range(cardinality):
-            resblock = self.__init_block_helper(Block, activation_constructor,
+            resblock = self.__init_block_helper(Block, encode, activation_constructor,
                                     Cin, Cs, Cout, block_kwargs)
             blocks.append(resblock)
         self.resblocks = blocks
@@ -152,10 +152,10 @@ class ResNeXt(nn.Module):
 
         return h + x
 
-    def __init_block_helper(self, Block, activation_constructor, Cin, Cs,
+    def __init_block_helper(self, Block, encode, activation_constructor, Cin, Cs,
                             Cout, block_kwargs):
         if block_kwargs is None:
-            resblock = Block(activation_constructor, Cin,
+            resblock = Block(encode, activation_constructor, Cin,
                             channel_small=Cs, Cout=Cout)
         else:
             resblock = Block(**block_kwargs)

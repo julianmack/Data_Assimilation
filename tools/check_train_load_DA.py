@@ -13,17 +13,13 @@ from pipeline.settings.block_models import Res34AE, Res34AE_Stacked, Cho2019
 from pipeline.settings.models_.resNeXt import Baseline1Block, ResNeXt, ResStack3
 from pipeline.settings.baseline_explore import Baseline1
 
-
+ACTIVATION = "prelu"
 
 resNext_k = {"layers": 0, "cardinality": 0}
-resNext3_k = {"layers": 27, "cardinality": 1, "block_type": "vanilla",
+resNext3_k = {"layers": 3, "cardinality": 1, "block_type": "CBAM_vanilla",
+                "module_type": "ResNeXt3"}
+resNext3_k2 = {"layers": 3, "cardinality": 2, "block_type": "CBAM_NeXt",
                 "module_type": "RDB3"}
-resNext3_k2 = {"layers": 3, "cardinality": 1, "block_type": "CBAM_NeXt",
-                "module_type": "RDB3"}
-
-# CONFIGS = [Res34AE, ResNeXt, Baseline1Block, Cho2019]
-# KWARGS = (0, resNext_k, 0, 0)
-
 CONFIGS = [ResNeXt, ResStack3, ResStack3]
 KWARGS = (resNext_k, resNext3_k, resNext3_k2)##
 
@@ -47,11 +43,12 @@ def main():
     assert len(configs) == len(KWARGS)
 
     for idx, conf in enumerate(configs):
-        check_train_load_DA(configs[idx], KWARGS[idx], SMALL_DEBUG_DOM, ALL_DATA)
+        check_train_load_DA(configs[idx], KWARGS[idx], SMALL_DEBUG_DOM, ALL_DATA, ACTIVATION)
         print()
 
 def run_DA_batch(settings, model, all_data, expdir):
     settings.DEBUG = False
+
     #set control_states
     #Load data
     loader, splitter = GetData(), SplitData()
@@ -77,7 +74,7 @@ def run_DA_batch(settings, model, all_data, expdir):
 
     return batch_DA_AE.run(print_every=print_every, print_small=True)
 
-def check_train_load_DA(config, config_kwargs, small_debug=True, all_data=False):
+def check_train_load_DA(config, config_kwargs,  small_debug=True, all_data=False, activation=None,):
     expdir = "experiments/CTL/"
     try:
         if not config_kwargs:
@@ -86,6 +83,8 @@ def check_train_load_DA(config, config_kwargs, small_debug=True, all_data=False)
 
         settings = config(**config_kwargs)
         settings.DEBUG = False
+        if activation:
+            settings.ACTIVATION = activation
 
         calc_DA_MAE = True
         num_epochs_cv = 0

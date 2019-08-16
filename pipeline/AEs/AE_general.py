@@ -124,24 +124,27 @@ class GenCAE(BaseAE):
             raise ValueError("blocks must be of type str or list. Received type {}".format(type(blocks)))
 
     def parse_blocks_str(self, block, encode, layer_kwargs):
-        if block == "conv": #this is poorly named - simple conv?
+        if layer_kwargs.get("encode") is None:
             layer_kwargs["encode"] = encode
+
+        
+        if block == "conv": #this is poorly named - simple conv?
             layer_kwargs["activation"] = self.activation
             return Build.conv(**layer_kwargs)
         elif block == "ResNeXt":
-            return Build.ResNeXt(self.activation, **layer_kwargs)
+            return Build.ResNeXt(activation_fn = self.activation, **layer_kwargs)
         elif block == "resResNeXt":
-            return Build.resResNeXt(self.activation, **layer_kwargs)
+            return Build.resResNeXt(activation_fn = self.activation, **layer_kwargs)
         elif block == "ResNeXt3":
-            return Build.ResNeXt3(self.activation, **layer_kwargs)
+            return Build.ResNeXt3(activation_fn = self.activation, **layer_kwargs)
         elif block == "RDB3":
-            return Build.ResNeXtRDB3(self.activation, **layer_kwargs)
+            return Build.ResNeXtRDB3(activation_fn = self.activation, **layer_kwargs)
         elif block == "Bespoke":
-            return Build.ResBespoke(self.activation, **layer_kwargs)
+            return Build.ResBespoke(activation_fn = self.activation, **layer_kwargs)
         elif block == "resBslim":
-            return Build.resBslim(self.activation, **layer_kwargs)
+            return Build.resBslim(activation_fn = self.activation, **layer_kwargs)
         elif block == "DRU":
-            return Build.DRU(self.activation, **layer_kwargs)
+            return Build.DRU(activation_fn = self.activation, **layer_kwargs)
         elif block == "1x1":
             Build.conv1x1(layer_kwargs)
         else:
@@ -162,7 +165,7 @@ class GenCAE(BaseAE):
         elif activation == "prelu":
             fn = "prelu" #defer until NNBuilder()
         elif activation == "GDN":
-            raise NotImplementedError()
+            fn = "GDN"
         else:
             raise NotImplemtedError("Activation function must be in {`relu`, `lrelu`, `prelu`, `GDN`}")
         self.activation = fn
