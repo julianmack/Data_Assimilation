@@ -28,8 +28,10 @@ class ResNeXt3(Res3):
         self.l3of3 = res.ResNeXt(activation_constructor, Cin, cardinality, k, Cs, Block)
 
 class RBD3(nn.Module):
-    """Creates an RDB3 module within the ResNeXt system"""
-
+    """Creates an RDB3 module within the ResNeXt system.
+    This is from the paper: https://arxiv.org/pdf/1608.06993.pdf
+    with number_layers = 3 fixed
+    """
     def __init__(self, activation_constructor, Cin, cardinality, layers, Block, k, Cs):
         super(RBD3, self).__init__()
         if k is None:
