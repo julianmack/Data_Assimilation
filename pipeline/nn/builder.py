@@ -1,5 +1,5 @@
 from torch import nn
-from pipeline.nn import res_complex, res_simple, empty
+from pipeline.nn import res_complex, res_simple, res_stacked, empty
 from collections import OrderedDict
 from pipeline.nn import init
 
@@ -71,6 +71,32 @@ class NNBuilder():
         return module #No activation - this is already in the resNext
 
     @staticmethod
+    def ResNeXt3(activation_fn, C, N, L, B, CS, k, final=False):
+        if L < 1 or C < 1:
+            return nn.Sequential()
+        assert L % 3 == 0
+        resOver_layers =  int(L / 3)
+        block = NNBuilder.get_block(B)
+        act_fn_constructor = NNBuilder.act_constr(activation_fn)
+        module = res_stacked.resOver(act_fn_constructor, C, N,
+                            resOver_layers, block, k, CS,
+                            res_stacked.ResNeXt3)
+        return module
+
+    @staticmethod
+    def ResNeXtRDB3(activation_fn, C, N, L, B, CS, k, final=False):
+        if L < 1 or C < 1:
+            return nn.Sequential()
+
+        resOver_layers =  int(L / 3)
+        block = NNBuilder.get_block(B)
+        act_fn_constructor = NNBuilder.act_constr(activation_fn)
+        module = res_stacked.resOver(act_fn_constructor, C, N,
+                            resOver_layers, block, k, CS,
+                            res_stacked.RBD3)
+        return module
+
+    @staticmethod
     def resB(activation_fn, C, final=False):
         """Returns Residual block of structure:
         conv -> activation -> conv -> sum both conv.
@@ -113,6 +139,17 @@ class NNBuilder():
 
         module =  res_complex.DRU(activation_fn, C)
         return NNBuilder.maybe_add_activation(module, act_fn_constructor, final, C)
+
+    @staticmethod
+    def get_block(block):
+        assert isinstance(block, str)
+        if block == "vanilla":
+            raise NotImplementedError("vanilla not implemented yet")
+        elif block == "NeXt":
+            return res_complex.ResNextBlock
+
+        else:
+            raise ValueError("`block` must be in [vanilla, NeXt]")
 
     @staticmethod
     def act_constr(activation_fn):

@@ -11,8 +11,12 @@ class ResNextBlock(nn.Module):
     It is really just a standard res_block with sqeezed 1x1 convs
     at input and output
     """
-    def __init__(self, activation_constructor, Cin, channel_small=None, down_sf=4):
+    def __init__(self, activation_constructor, Cin, channel_small=None,
+                    down_sf=4, Cout=None, residual=True):
         super(ResNextBlock, self).__init__()
+        self.residual = residual
+        if Cout is None:
+            Cout = Cin
 
         if not channel_small:
             #Minimum of 4 channels
@@ -21,7 +25,7 @@ class ResNextBlock(nn.Module):
 
         conv1x1_1 = nn.Conv3d(Cin, channel_small, kernel_size=(1, 1, 1), stride=(1,1,1))
         conv3x3 = nn.Conv3d(channel_small, channel_small, kernel_size=(3, 3, 3), stride=(1,1,1), padding=(1,1,1))
-        conv1x1_2 = nn.Conv3d(channel_small, Cin, kernel_size=(1, 1, 1), stride=(1,1,1))
+        conv1x1_2 = nn.Conv3d(channel_small, Cout, kernel_size=(1, 1, 1), stride=(1,1,1))
 
 
         #Initializations
@@ -33,40 +37,60 @@ class ResNextBlock(nn.Module):
         self.ResLayers = nn.Sequential(conv1x1_1,
             activation_constructor(channel_small), nn.BatchNorm3d(channel_small), conv3x3,
             activation_constructor(channel_small), nn.BatchNorm3d(channel_small),
-            conv1x1_2, activation_constructor(Cin))
+            conv1x1_2, activation_constructor(Cout))
             #nn.BatchNorm3d(Cin))
 
     def forward(self, x):
 
         h = self.ResLayers(x)
-        return h + x
+        if self.residual:
+            h = h + x
+        return h
 
 class ResNeXt(nn.Module):
     """Full ResNext module from : arXiv:1611.05431v2
     """
 
-    def __init__(self, activation_constructor, Cin, cardinality):
+    def __init__(self, activation_constructor, Cin, cardinality, k, Cs,
+                    Block=ResNextBlock, Cout=None, block_kwargs=None):
         super(ResNeXt, self).__init__()
 
-        channel_small = 4 #fixed for ResNeXt system
+        init_block = self.__init_block_helper(Block, activation_constructor, Cin, Cs,
+                                Cout, block_kwargs)
+        if isinstance(init_block, ResNextBlock):
+            if Cs:
+                assert Cs == 4, "Cs must be 4 when block is ResNextBlock"
+            Cs = 4 #fixed for ResNextBlock system
+            assert k is None, "k should not be initialized for ResNextBlock"
+        assert Cs is not None or block_kwargs.get("Csmall") is not None, "Cs must be initlized by user if Block is not ResNextBlock"
+
         blocks = nn.ModuleList([])
         for i in range(cardinality):
-            resblock = ResNextBlock(activation_constructor, Cin, channel_small=4)
+            resblock = self.__init_block_helper(Block, activation_constructor,
+                                    Cin, Cs, Cout, block_kwargs)
             blocks.append(resblock)
         self.resblocks = blocks
         self.ResNeXtBN = nn.BatchNorm3d(Cin)
 
     def forward(self, x):
-        for idx, block in enumerate(self.resblocks):
+        for idx, Block in enumerate(self.resblocks):
             if idx == 0:
-                h = block(x)
+                h = Block(x)
             else:
-                h += block(x)
+                h += Block(x)
         h = h
         h = self.ResNeXtBN(h)
 
         return h + x
 
+    def __init_block_helper(self, Block, activation_constructor, Cin, Cs,
+                            Cout, block_kwargs):
+        if block_kwargs is None:
+            resblock = Block(activation_constructor, Cin,
+                            channel_small=Cs, Cout=Cout)
+        else:
+            resblock = Block(**block_kwargs)
+        return resblock
 
 class resResNeXt(nn.Module):
     """Adds a skip connection over the whole ResNeXt module.
@@ -74,11 +98,12 @@ class resResNeXt(nn.Module):
     in resNext layers.
     """
 
-    def __init__(self, activation_constructor, Cin, cardinality, layers):
+    def __init__(self, activation_constructor, Cin, cardinality, layers, Cout=None,
+                    k=None, Cs=None):
         super(resResNeXt, self).__init__()
         blocks = []
         for i in range(layers):
-            res = ResNeXt(activation_constructor, Cin, cardinality)
+            res = ResNeXt(activation_constructor, Cin, cardinality, Cout=Cout, k=k, Cs=Cs)
             blocks.append(res)
         self.resRes = nn.Sequential(*blocks, activation_constructor(Cin),
                                     nn.BatchNorm3d(Cin))

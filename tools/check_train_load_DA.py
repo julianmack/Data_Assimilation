@@ -10,21 +10,25 @@ import shutil
 ################# Import models
 from pipeline.settings.block_models import BaselineRes
 from pipeline.settings.block_models import Res34AE, Res34AE_Stacked, Cho2019
-from pipeline.settings.models_.resNeXt import Baseline1Block, ResNeXt
+from pipeline.settings.models_.resNeXt import Baseline1Block, ResNeXt, ResStack3
 from pipeline.settings.baseline_explore import Baseline1
 
 
 
-#################### Models to init
-resNext_1 = {"layers": 2, "cardinality": 2}
-resNext_2 = {"layers": 4, "cardinality": 4}
-resNext_3 = {"layers": 2, "cardinality": 2}
+resNext_k = {"layers": 3, "cardinality": 2}
+resNext3_k = {"layers": 3, "cardinality": 2, "block_type": "NeXt"}
+resNext3_k2 = {"layers": 3, "cardinality": 2, "block_type": "NeXt",
+                "module_type": "RDB3"}
+# CONFIGS = [Res34AE, ResNeXt, Baseline1Block, Cho2019]
+# KWARGS = (0, resNext_k, 0, 0)
 
-CONFIGS = [ResNeXt, ResNeXt, ResNeXt]
-KWARGS = (resNext_1,  resNext_2, resNext_3)
+CONFIGS = [ResNeXt, ResStack3, ResStack3]
+KWARGS = (resNext_k, resNext3_k, resNext3_k2)##
+
 ##################
-CONFIGS = CONFIGS[2]
-KWARGS = (KWARGS[2],)
+CONFIGS = CONFIGS[-1]
+KWARGS = (KWARGS[-1],)
+
 
 #global variables for DA and training:
 EPOCHS = 1

@@ -53,6 +53,8 @@ def load_model_from_settings(settings, device=None):
     return model
 
 def load_model_and_settings_from_dir(dir):
+    if dir[-1] != "/":
+        dir += "/"
     #get files
     model, settings = None, None
 

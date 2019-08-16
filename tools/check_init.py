@@ -4,19 +4,23 @@ It should print the number of parameters and channels"""
 from pipeline.settings.block_models import Res34AE, Res34AE_Stacked, Cho2019
 from pipeline.settings.config import Config
 
-from pipeline.settings.models_.resNeXt import Baseline1Block, ResNeXt
+from pipeline.settings.models_.resNeXt import Baseline1Block, ResNeXt, ResStack3
 from pipeline.settings.baseline_explore import Baseline1
 from pipeline import ML_utils
 from types import ModuleType
 
 
-resNext_k = {"layers": 0, "cardinality": 0}
-
+resNext_k = {"layers": 3, "cardinality": 2}
+resNext3_k = {"layers": 3, "cardinality": 2, "block_type": "vanilla"}
+resNext3_k2 = {"layers": 3, "cardinality": 2, "block_type": "vanilla",
+                "module_type": "RDB3"}
 # CONFIGS = [Res34AE, ResNeXt, Baseline1Block, Cho2019]
 # KWARGS = (0, resNext_k, 0, 0)
 
-CONFIGS = [ResNeXt, Baseline1Block, Baseline1]
-KWARGS = (resNext_k, 0, 0)
+CONFIGS = [ResNeXt, ResStack3, ResStack3]
+KWARGS = (resNext_k, resNext3_k, resNext3_k2)
+
+
 
 PRINT_MODEL = True
 

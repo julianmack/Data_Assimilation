@@ -32,3 +32,19 @@ class ResNeXt(Baseline1Block):
         down_z = [[0, 0, 1, 1, 1,], [], [0, 0]]
         self.DOWNSAMPLE__  = (down, down, down_z)
 
+
+class ResStack3(ResNeXt):
+    def __init__(self, layers, cardinality, block_type="NeXt",
+                    module_type="ResNeXt3", Csmall=None, k=None):
+        assert block_type in ["NeXt", "vanilla"]
+        assert module_type in ["ResNeXt3", "RDB3"]
+        assert layers % 3 == 0, "layers must be a multiple of three for a ResStack3. Consider using ResNeXt instead."
+        
+        super(ResStack3, self).__init__(layers, cardinality)
+        kwargs = {"C": 32, "L": layers, "N": cardinality, "B":
+                    block_type, "CS": Csmall, "k": k}
+
+        self.BLOCKS = [M.S, (5, "conv"), (1, module_type, kwargs), (2, "conv")]
+        down = [[0, 0, 1, 1, 1,], [], [1, 1]]
+        down_z = [[0, 0, 1, 1, 1,], [], [0, 0]]
+        self.DOWNSAMPLE__  = (down, down, down_z)

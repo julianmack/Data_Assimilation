@@ -1,0 +1,82 @@
+import torch
+from torch import nn
+from pipeline.nn.conv import FactorizedConv
+from pipeline.nn import res_complex, res_simple
+from pipeline.nn.densenet import _DenseBlock
+from torch.nn.parameter import Parameter
+
+class Res3(nn.Module):
+    """Module that implements a skip connection
+    over every third residual block"""
+    def __init__(self, **kwargs):
+        super(Res3, self).__init__()
+
+    def forward(self, x):
+        h = self.l1of3(x)
+        h = self.l2of3(h)
+        h = self.l3of3(h)
+        return x + h
+
+#res_complex modules with an extra skip connection over every third:
+
+class ResNeXt3(Res3):
+    def __init__(self, activation_constructor, Cin, cardinality, layers, Block, k, Cs):
+        super(ResNeXt3, self).__init__()
+
+        self.l1of3 = res_complex.ResNeXt(activation_constructor, Cin, cardinality, k, Cs, Block)
+        self.l2of3 = res_complex.ResNeXt(activation_constructor, Cin, cardinality, k, Cs, Block)
+        self.l3of3 = res_complex.ResNeXt(activation_constructor, Cin, cardinality, k, Cs, Block)
+
+class RBD3(nn.Module):
+    """Creates an RDB3 module within the ResNeXt system"""
+
+    def __init__(self, activation_constructor, Cin, cardinality, layers, Block, k, Cs):
+        super(RBD3, self).__init__()
+        if k is None:
+            k = 16
+        if Cs is None:
+            Cs = 64
+        
+        dense_block_kwargs = { "activation_constructor": activation_constructor,
+                                "Cin": Cin, "growth_rate": k,
+                                "Csmall": Cs, "Block": Block,
+                                "dense_layers": 3}
+        Block_in_ResNext = _DenseBlock
+        self.rdb3 = res_complex.ResNeXt(activation_constructor, Cin,
+                                        cardinality, k, Cs, Block_in_ResNext,
+                                        block_kwargs=dense_block_kwargs)
+    def forward(self, x):
+        h = self.rdb3(x)
+        return x + h
+
+class resOver(nn.Module):
+    """Adds a skip connection and attentuation over the whole module.
+    Also add a final Batch Norm to prevent gradients/values exploding
+    in resNext layers.
+
+    This is an extension of res_complex.resResNeXt - the original
+    class is kept so that it is possible to load models trained under
+    the old scheme
+    """
+
+    def __init__(self, activation_constructor, Cin, cardinality, layers, block,
+                    k, Csmall=None, module=ResNeXt3):
+        super(resOver, self).__init__()
+        blocks = []
+        for i in range(layers):
+            res = module(activation_constructor, Cin, cardinality, layers,
+                            block, k=k, Cs=Csmall)
+            blocks.append(res)
+        self.resRes = nn.Sequential(*blocks, activation_constructor(Cin),
+                                    nn.BatchNorm3d(Cin))
+        self.attenuate_res = Parameter(torch.tensor([0.05], requires_grad=True))
+
+
+    def forward(self, x):
+        h = self.resRes(x)
+        h = h * self.attenuate_res #To give less importance to residual network (at least initially)
+        return h + x
+
+
+
+
