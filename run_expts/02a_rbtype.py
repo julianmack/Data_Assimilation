@@ -55,9 +55,9 @@ def main():
         expt = ExptConfig()
 
     idx = 0
-    for struct in structures:
+    for block in blocks:
         for substruct in substructures:
-            for block in blocks:
+            for struct in structures:
                 idx += 1
                 #split work across 2 gpus:
                 if idx - 1 < 4 and GPU_DEVICE == 1:

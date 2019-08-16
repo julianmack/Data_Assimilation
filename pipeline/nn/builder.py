@@ -1,5 +1,5 @@
 from torch import nn
-from pipeline.nn import res, res_stacked, empty
+from pipeline.nn import res, res_stacked
 from collections import OrderedDict
 from pipeline.nn import init
 
