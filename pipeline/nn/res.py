@@ -2,6 +2,8 @@ import torch
 from torch import nn
 from pipeline.nn import init
 from torch.nn.parameter import Parameter
+from pipeline.nn.CBAM import CBAM
+
 
 class ResVanilla(nn.Module):
     """Standard residual block (slightly adapted to our use case)
@@ -24,11 +26,10 @@ class ResVanilla(nn.Module):
 
         #ADD batch norms automatically
         self.ResLayers = nn.Sequential(conv1,
-            activation_constructor(Cin), nn.BatchNorm3d(Cin), conv2,
+            activation_constructor(channel_small), nn.BatchNorm3d(channel_small), conv2,
             activation_constructor(Cout))
 
     def forward(self, x):
-
         h = self.ResLayers(x)
         if self.residual:
             h = h + x
@@ -70,11 +71,44 @@ class ResNextBlock(nn.Module):
             #nn.BatchNorm3d(Cin))
 
     def forward(self, x):
-
         h = self.ResLayers(x)
         if self.residual:
             h = h + x
         return h
+
+class CBAMBlock(nn.Module):
+    def __init__(self, ):
+        super(CBAMBlock, self).__init__()
+
+    def forward(self, x):
+        h = self.block(x)
+        x = self.cbam(h)
+        return x + h
+
+class CBAM_vanilla(CBAMBlock):
+    def __init__(self, activation_constructor, Cin, channel_small=None,
+                    down_sf=4, Cout=None, residual=True):
+        super(CBAM_vanilla, self).__init__()
+        if Cout is None:
+            Cout = Cin
+        self.block = ResVanilla(activation_constructor, Cin, channel_small,
+                        down_sf, Cout, False)
+        self.cbam = CBAM(activation_constructor, Cout, reduction_ratio=down_sf,
+                    pool_types=['avg', 'max'])
+
+class CBAM_NeXt(CBAMBlock):
+    def __init__(self, activation_constructor, Cin, channel_small=None,
+                    down_sf=4, Cout=None, residual=True):
+        super(CBAM_NeXt, self).__init__()
+        if Cout is None:
+            Cout = Cin
+        self.block = ResNextBlock(activation_constructor, Cin, channel_small,
+                        down_sf, Cout, False)
+        self.cbam = CBAM(activation_constructor, Cout, reduction_ratio=down_sf,
+                    pool_types=['avg', 'max'])
+
+
+
 
 class ResNeXt(nn.Module):
     """Full ResNext module from : arXiv:1611.05431v2
@@ -91,13 +125,13 @@ class ResNeXt(nn.Module):
                 assert Cs == 4, "Cs must be 4 when block is ResNextBlock"
             Cs = 4 #fixed for ResNextBlock system
             assert k is None, "k should not be initialized for ResNextBlock"
-        elif isinstance(init_block, ResVanilla):
+        elif isinstance(init_block, (ResVanilla, CBAM_NeXt, CBAM_vanilla)):
             pass
         elif init_block.__class__.__name__ ==  "_DenseBlock":
             assert Cs is not None or block_kwargs.get("Csmall") is not None, \
                                     "Cs must be initlized by user if Block is _DenseBlock"
         else:
-            raise NotImplementedError("Block must be in [ResNextBlock, ResVanilla]")
+            raise NotImplementedError("Block must be in [ResNextBlock, ResVanilla, CBAM_NeXt, CBAM_vanilla]")
 
         blocks = nn.ModuleList([])
         for i in range(cardinality):

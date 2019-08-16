@@ -161,6 +161,10 @@ class NNBuilder():
             return res.ResVanilla
         elif block == "NeXt":
             return res.ResNextBlock
+        elif block == "CBAM_NeXt":
+            return res.CBAM_NeXt
+        elif block == "CBAM_vanilla":
+            return res.CBAM_vanilla
         elif block == "RNAB":
             return RNAB
         else:

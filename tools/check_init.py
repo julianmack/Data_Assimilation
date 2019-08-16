@@ -1,4 +1,4 @@
-"""This is used to check that a new model sucessfully initializes
+"""This is used to check that a new model sucessfully initializes from settings
 It should print the number of parameters and channels"""
 
 from pipeline.settings.block_models import Res34AE, Res34AE_Stacked, Cho2019
@@ -10,12 +10,15 @@ from pipeline import ML_utils
 from types import ModuleType
 
 
-resNext_k = {"layers": 0, "cardinality": 0}
-resNext3_k = {"layers": 3, "cardinality": 1, "block_type": "vanilla",
-                "module_type": "RDB3"}
-resNext3_k2 = {"layers": 1, "cardinality": 1, "block_type": "RNAB",
+resNext3_k2 = {"layers": 27, "cardinality": 1, "block_type": "RNAB",
                 "module_type": "Bespoke",
                 "subBlock": "NeXt"}
+########
+resNext_k = {"layers": 0, "cardinality": 0}
+resNext3_k = {"layers": 27, "cardinality": 1, "block_type": "CBAM_vanilla",
+                "module_type": "RDB3"}
+resNext3_k2 = {"layers": 3, "cardinality": 1, "block_type": "CBAM_NeXt",
+                "module_type": "RDB3"}
 
 # CONFIGS = [Res34AE, ResNeXt, Baseline1Block, Cho2019]
 # KWARGS = (0, resNext_k, 0, 0)
@@ -24,11 +27,11 @@ CONFIGS = [ResNeXt, ResStack3, ResStack3]
 KWARGS = (resNext_k, resNext3_k, resNext3_k2)
 
 ###########
-CONFIGS = CONFIGS[-1]
-KWARGS = (KWARGS[-1],)
+CONFIGS = CONFIGS[1]
+KWARGS = (KWARGS[1],)
 
 
-PRINT_MODEL = False
+PRINT_MODEL = True
 
 def main():
 
