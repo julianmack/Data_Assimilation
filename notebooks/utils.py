@@ -5,6 +5,8 @@ import numpy as np
 import pickle
 import sys
 import matplotlib.pyplot as plt
+from pipeline import ML_utils
+
 plt.style.use('seaborn-white')
 
 def get_DA_info(exp_dir_base):
@@ -35,6 +37,7 @@ def get_DA_info(exp_dir_base):
     mean_DF = pd.DataFrame(mean_DA)
 
     return DA_data, mean_DF, last_df
+
 
 
 #Extract results files from sub directories
@@ -79,6 +82,7 @@ def extract_res_from_files(exp_dir_base):
 
             if test and train and settings:
                 test_DA_df = get_DA_info(path)
+                encode_att, decode_att = get_attenuation_from_dir(path)
                 DA_data, mean_DF, last_df = get_DA_info(path)
 
                 dftest = pd.read_csv(test)
@@ -90,7 +94,9 @@ def extract_res_from_files(exp_dir_base):
                              "test_DA_df_final": last_df,
                              "DA_mean_DF": mean_DF,
                              "settings":stt,
-                             "path": path}
+                             "path": path,
+                             "attenuate_enc": encode_att,
+                             "attenuate_dec": decode_att}
                 results.append(data_dict)
 
     print("{} experiments conducted".format(len(results)))
@@ -109,7 +115,8 @@ def plot_results_loss_epochs(results, ylim = None):
         plt.ylim(ylim[0], ylim[1])
 
     for idx, ax in enumerate(axs.flatten()):
-
+        if idx + 1 > len(results):
+            break
         test_df = results[idx]["test_df"]
         train_df = results[idx]["train_df"]
         sttn = results[idx]["settings"]
@@ -177,10 +184,13 @@ def plot_results_loss_epochs(results, ylim = None):
 
         title = "{}: {}, {}, aug={}, drop={}, \nlr={}, latent={}, layers={}"
         title = title.format(model_name, activation, BN, aug, drop, lr, latent, num_layers)
-        if get_resNeXt_details != {}:
+        if res_next != {}:
+            attenuate_enc = results[idx]["attenuate_enc"]
+            attenuate_dec = results[idx]["attenuate_dec"]
             cardinality = res_next.get("cardinality")
             layers =  res_next.get("layers")
-            title += "\nResNext: layers={}, cardinality={}".format(layers, cardinality)
+            title += "\nResNext layers={}, cardinality={}".format(layers, cardinality)
+            title += ", enc={:.2f}, dec={:.2f}".format(attenuate_enc, attenuate_dec)
         #ax.set_title(idx)
         ax.set_title(title)
     plt.show()
@@ -262,6 +272,15 @@ def create_res_df(results, remove_duplicates=False):
 
     return df_res
 
+def get_attenuation_from_dir(dir):
+    model, settings = ML_utils.load_model_and_settings_from_dir(dir)
+    encode, decode = None, None
+    for k, v in model.named_parameters():
+        if k == "layers_encode.1.attenuate_res":
+            encode =  v.item()
+        if k == "layers_decode.1.attenuate_res":
+            decode =  v.item()
+    return encode, decode
 
 def get_resNeXt_details(settings):
     for val in settings.BLOCKS[1:]:
