@@ -136,8 +136,8 @@ class GenCAE(BaseAE):
             return Build.ResNeXt3(self.activation, **layer_kwargs)
         elif block == "RDB3":
             return Build.ResNeXtRDB3(self.activation, **layer_kwargs)
-        elif block == "resB1x1":
-            return Build.resB1x1(self.activation, **layer_kwargs)
+        elif block == "Bespoke":
+            return Build.ResBespoke(self.activation, **layer_kwargs)
         elif block == "resBslim":
             return Build.resBslim(self.activation, **layer_kwargs)
         elif block == "DRU":

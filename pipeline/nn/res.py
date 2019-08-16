@@ -1,6 +1,5 @@
 import torch
 from torch import nn
-from pipeline.nn.conv import FactorizedConv
 from pipeline.nn import init
 from torch.nn.parameter import Parameter
 
@@ -13,10 +12,10 @@ class ResVanilla(nn.Module):
         self.residual = residual
         if Cout is None:
             Cout = Cin
-
-
-        conv1 = nn.Conv3d(Cin, Cin, kernel_size=(3, 3, 3), stride=(1,1,1), padding=(1,1,1))
-        conv2 = nn.Conv3d(Cin, Cout, kernel_size=(3, 3, 3), stride=(1,1,1), padding=(1,1,1))
+        if channel_small is None:
+            channel_small = Cin
+        conv1 = nn.Conv3d(Cin, channel_small, kernel_size=(3, 3, 3), stride=(1,1,1), padding=(1,1,1))
+        conv2 = nn.Conv3d(channel_small, Cout, kernel_size=(3, 3, 3), stride=(1,1,1), padding=(1,1,1))
 
 
         #Initializations

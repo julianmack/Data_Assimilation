@@ -10,16 +10,22 @@ from pipeline import ML_utils
 from types import ModuleType
 
 
-resNext_k = {"layers": 3, "cardinality": 2}
-resNext3_k = {"layers": 3, "cardinality": 2, "block_type": "vanilla"}
-resNext3_k2 = {"layers": 3, "cardinality": 2, "block_type": "vanilla",
+resNext_k = {"layers": 0, "cardinality": 0}
+resNext3_k = {"layers": 3, "cardinality": 1, "block_type": "vanilla",
                 "module_type": "RDB3"}
+resNext3_k2 = {"layers": 1, "cardinality": 1, "block_type": "RNAB",
+                "module_type": "Bespoke",
+                "subBlock": "NeXt"}
+
 # CONFIGS = [Res34AE, ResNeXt, Baseline1Block, Cho2019]
 # KWARGS = (0, resNext_k, 0, 0)
 
 CONFIGS = [ResNeXt, ResStack3, ResStack3]
 KWARGS = (resNext_k, resNext3_k, resNext3_k2)
 
+###########
+CONFIGS = CONFIGS[-1]
+KWARGS = (KWARGS[-1],)
 
 
 PRINT_MODEL = False

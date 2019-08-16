@@ -2,7 +2,7 @@ from torch import nn
 from pipeline.nn import res, res_stacked
 from collections import OrderedDict
 from pipeline.nn import init
-
+from pipeline.nn.RNAB import RNAB
 
 class NNBuilder():
     """Class to build nn blocks"""
@@ -71,10 +71,12 @@ class NNBuilder():
         return module #No activation - this is already in the resNext
 
     @staticmethod
-    def ResNeXt3(activation_fn, C, N, L, B, CS, k, final=False):
+    def ResNeXt3(activation_fn, C, N, L, B, CS, k, SB, final=False):
         if L < 1 or C < 1:
             return nn.Sequential()
         assert L % 3 == 0
+        assert SB is None
+
         resOver_layers =  int(L / 3)
         block = NNBuilder.get_block(B)
         act_fn_constructor = NNBuilder.act_constr(activation_fn)
@@ -83,11 +85,23 @@ class NNBuilder():
                             res_stacked.ResNeXt3)
         return module
 
+    def ResBespoke(activation_fn, C, N, L, B, CS, k, SB, final=False):
+        if L < 1:
+            return nn.Sequential()
+        block = NNBuilder.get_block(B)
+        subBlock = NNBuilder.get_block(SB)
+
+        act_fn_constructor = NNBuilder.act_constr(activation_fn)
+        module = res_stacked.resOver(act_fn_constructor, C, N,
+                            L, block, k, CS, module=res_stacked.ResBespoke,
+                            subBlock=subBlock)
+        return module
+
     @staticmethod
-    def ResNeXtRDB3(activation_fn, C, N, L, B, CS, k, final=False):
+    def ResNeXtRDB3(activation_fn, C, N, L, B, CS, k, SB, final=False):
         if L < 1 or C < 1:
             return nn.Sequential()
-
+        assert SB is None
         resOver_layers =  int(L / 3)
         block = NNBuilder.get_block(B)
         act_fn_constructor = NNBuilder.act_constr(activation_fn)
@@ -147,9 +161,10 @@ class NNBuilder():
             return res.ResVanilla
         elif block == "NeXt":
             return res.ResNextBlock
-
+        elif block == "RNAB":
+            return RNAB
         else:
-            raise ValueError("`block` must be in [vanilla, NeXt]")
+            raise ValueError("`block`={} is not in [vanilla, NeXt]".format(block))
 
     @staticmethod
     def act_constr(activation_fn):

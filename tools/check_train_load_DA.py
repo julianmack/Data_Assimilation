@@ -17,8 +17,9 @@ from pipeline.settings.baseline_explore import Baseline1
 
 resNext_k = {"layers": 3, "cardinality": 2}
 resNext3_k = {"layers": 3, "cardinality": 2, "block_type": "vanilla"}
-resNext3_k2 = {"layers": 3, "cardinality": 2, "block_type": "vanilla",
-                "module_type": "RDB3"}
+resNext3_k2 = {"layers": 1, "cardinality": 1, "block_type": "RNAB",
+                "module_type": "Bespoke",
+                "subBlock": "NeXt"}
 # CONFIGS = [Res34AE, ResNeXt, Baseline1Block, Cho2019]
 # KWARGS = (0, resNext_k, 0, 0)
 

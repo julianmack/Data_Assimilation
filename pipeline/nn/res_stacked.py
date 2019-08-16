@@ -1,6 +1,5 @@
 import torch
 from torch import nn
-from pipeline.nn.conv import FactorizedConv
 from pipeline.nn import res
 from pipeline.nn.densenet import _DenseBlock
 from torch.nn.parameter import Parameter
@@ -20,7 +19,7 @@ class Res3(nn.Module):
 #res modules with an extra skip connection over every third:
 
 class ResNeXt3(Res3):
-    def __init__(self, activation_constructor, Cin, cardinality, layers, Block, k, Cs):
+    def __init__(self, activation_constructor, Cin, cardinality, layers, Block, k, Cs, subBlock):
         super(ResNeXt3, self).__init__()
 
         self.l1of3 = res.ResNeXt(activation_constructor, Cin, cardinality, k, Cs, Block)
@@ -32,12 +31,14 @@ class RBD3(nn.Module):
     This is from the paper: https://arxiv.org/pdf/1608.06993.pdf
     with number_layers = 3 fixed
     """
-    def __init__(self, activation_constructor, Cin, cardinality, layers, Block, k, Cs):
+    def __init__(self, activation_constructor, Cin, cardinality, layers, Block,
+                    k, Cs, subBlock):
         super(RBD3, self).__init__()
         if k is None:
             k = 16
         if Cs is None:
             Cs = 64
+        assert subBlock is None
 
         dense_block_kwargs = { "activation_constructor": activation_constructor,
                                 "Cin": Cin, "growth_rate": k,
@@ -51,6 +52,17 @@ class RBD3(nn.Module):
         h = self.rdb3(x)
         return x + h
 
+class ResBespoke(nn.Module):
+    """Adds a single bespoke module"""
+    def __init__(self, activation_constructor, Cin, cardinality, layers, Block, k, Cs, subBlock=None):
+        super(ResBespoke, self).__init__()
+        assert subBlock is not None
+        
+        self.res = Block(activation_constructor, Cin, channel_small=Cs, Block=subBlock)
+    def forward(self, x):
+        h = self.res(x)
+        return x + h
+
 class resOver(nn.Module):
     """Adds a skip connection and attentuation over the whole module.
     Also add a final Batch Norm to prevent gradients/values exploding
@@ -62,12 +74,12 @@ class resOver(nn.Module):
     """
 
     def __init__(self, activation_constructor, Cin, cardinality, layers, block,
-                    k, Csmall=None, module=ResNeXt3):
+                    k, Csmall=None, module=ResNeXt3, subBlock=None):
         super(resOver, self).__init__()
         blocks = []
         for i in range(layers):
             res = module(activation_constructor, Cin, cardinality, layers,
-                            block, k=k, Cs=Csmall)
+                            block, k=k, Cs=Csmall, subBlock=subBlock)
             blocks.append(res)
         self.resRes = nn.Sequential(*blocks, activation_constructor(Cin),
                                     nn.BatchNorm3d(Cin))

@@ -13,7 +13,7 @@ class Empty(nn.Module):
         #Debug inside here:
 
         print(x[0,0,0,0])
-
+        print(x.shape)
 
 
         ###################
