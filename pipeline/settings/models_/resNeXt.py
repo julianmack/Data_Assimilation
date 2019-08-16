@@ -39,7 +39,7 @@ class ResStack3(ResNeXt):
         assert block_type in ["NeXt", "vanilla"]
         assert module_type in ["ResNeXt3", "RDB3"]
         assert layers % 3 == 0, "layers must be a multiple of three for a ResStack3. Consider using ResNeXt instead."
-        
+
         super(ResStack3, self).__init__(layers, cardinality)
         kwargs = {"C": 32, "L": layers, "N": cardinality, "B":
                     block_type, "CS": Csmall, "k": k}

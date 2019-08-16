@@ -30,6 +30,7 @@ class Block(Config3D):
         self.BATCH_NORM = False
         self.AUGMENTATION = True
         self.DROPOUT = False
+        self.DEBUG = False
 
 
     def get_kwargs(self):
