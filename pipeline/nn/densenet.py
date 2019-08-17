@@ -9,6 +9,9 @@ implementation directly because:
     2) The order of convolution, BN, Activation of (BN -> ReLU -> conv -> BN -> ...) is not
     typically used anymore (Now BN -> conv -> ReLU -> BN) is more common
 
+
+LICENCE: this is licenced under the BSD 3-Clause License
+see: https://github.com/pytorch/vision/blob/master/LICENSE
 """
 
 import re

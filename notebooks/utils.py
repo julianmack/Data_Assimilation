@@ -295,5 +295,5 @@ def get_resNeXt_details(settings):
         if typ == "resResNeXt":
             results = {"cardinality": params.get("N"),
                        "layers": params.get("L"),}
-            break
+        elif typ == 
     return results

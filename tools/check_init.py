@@ -9,7 +9,7 @@ from pipeline.settings.baseline_explore import Baseline1
 from pipeline import ML_utils
 from types import ModuleType
 
-ACTIVATION = "GDN"
+ACTIVATION = "prelu"
 
 resNext3_k2 = {"layers": 27, "cardinality": 1, "block_type": "RNAB",
                 "module_type": "Bespoke",
@@ -40,11 +40,11 @@ CONFIGS.extend([ResStack3, ResStack3, ResStack3])
 KWARGS += (resNext3_k0, resNext3_k, resNext3_k2)
 
 ###########
-# CONFIGS = CONFIGS[1]
-# KWARGS = (KWARGS[1],)
+CONFIGS = CONFIGS[0]
+KWARGS = (KWARGS[0],)
 
 
-PRINT_MODEL = False
+PRINT_MODEL = True
 
 def main():
 

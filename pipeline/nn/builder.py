@@ -2,6 +2,7 @@ from torch import nn
 from pipeline.nn import res, res_stacked
 from collections import OrderedDict
 from pipeline.nn import init
+from pipeline.nn.explore.empty import Empty
 from pipeline.nn.RNAB import RNAB
 from pipeline.nn.pytorch_gdn.gdn import GDN
 from pipeline import ML_utils
@@ -32,7 +33,7 @@ class NNBuilder():
 
         #else
         layer = OrderedDict()
-
+        layer.update({"00": Empty()})
         if dropout:
             #TODO - make dropout rate variable
             layer.update({"0": nn.Dropout3d(0.33)})
@@ -46,9 +47,10 @@ class NNBuilder():
         init.conv(conv.weight, act_fn_constructor)
         layer.update({"2": conv})
 
-
+        layer.update({"2a": Empty()})
         if not final:
             layer.update({"3": act_fn_constructor(conv_kwargs["out_channels"], not encode)})
+
         conv = nn.Sequential(layer)
 
         return conv

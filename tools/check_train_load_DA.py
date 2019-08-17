@@ -16,7 +16,7 @@ from pipeline.settings.baseline_explore import Baseline1
 ACTIVATION = "prelu"
 
 resNext_k = {"layers": 0, "cardinality": 0}
-resNext3_k = {"layers": 3, "cardinality": 1, "block_type": "CBAM_vanilla",
+resNext3_k = {"layers": 3, "cardinality": 1, "block_type": "vanilla",
                 "module_type": "ResNeXt3"}
 resNext3_k2 = {"layers": 3, "cardinality": 2, "block_type": "CBAM_NeXt",
                 "module_type": "RDB3"}
@@ -24,8 +24,8 @@ CONFIGS = [ResNeXt, ResStack3, ResStack3]
 KWARGS = (resNext_k, resNext3_k, resNext3_k2)##
 
 #################
-CONFIGS = CONFIGS[1]
-KWARGS = (KWARGS[1],)
+CONFIGS = CONFIGS[0]
+KWARGS = (KWARGS[0],)
 
 
 #global variables for DA and training:
@@ -82,7 +82,7 @@ def check_train_load_DA(config, config_kwargs,  small_debug=True, all_data=False
         assert isinstance(config_kwargs, dict)
 
         settings = config(**config_kwargs)
-        settings.DEBUG = False
+        settings.DEBUG = True
         if activation:
             settings.ACTIVATION = activation
 
