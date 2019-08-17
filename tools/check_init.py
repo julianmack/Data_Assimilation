@@ -3,7 +3,7 @@ It should print the number of parameters and channels"""
 
 from pipeline.settings.block_models import Res34AE, Res34AE_Stacked, Cho2019
 from pipeline.settings.config import Config
-
+from pipeline.settings.models_.CLIC import CLIC
 from pipeline.settings.models_.resNeXt import Baseline1Block, ResNeXt, ResStack3
 from pipeline.settings.baseline_explore import Baseline1
 from pipeline import ML_utils
@@ -17,11 +17,10 @@ resNext_k = {"layers": 0, "cardinality": 0}
 resNext3_k = {"layers": 27, "cardinality": 1, "block_type": "RNAB",
                 "module_type": "Bespoke",
                 "subBlock": "NeXt"}
-resNext3_k2 = {"layers": 3, "cardinality": 2, "block_type": "CBAM_NeXt",
-                "module_type": "RDB3"}
+clic_K = {"model_name": "Tucodec", "block_type": "vanilla"}
 
-CONFIGS = [ResNeXt, ResStack3, ResStack3]
-KWARGS = (resNext_k, resNext3_k, resNext3_k2)
+CONFIGS = [ResNeXt, ResStack3, CLIC]
+KWARGS = (resNext_k, resNext3_k, clic_K)
 
 
 ###########

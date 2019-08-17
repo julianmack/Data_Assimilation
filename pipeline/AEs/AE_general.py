@@ -43,17 +43,19 @@ class GenCAE(BaseAE):
 
 
     """
-    def __init__(self, blocks, activation = "relu", latent_sz=None):
+    def __init__(self, blocks, activation = "relu", latent_sz=None, rem_final=True):
 
         super(GenCAE, self).__init__()
 
         self.__init_activation(activation)
 
         self.layers_encode = self.parse_blocks(blocks, encode=True)
-        self.layers_encode = self.remove_final_activation(self.layers_encode)
+        if rem_final:
+            self.layers_encode = self.remove_final_activation(self.layers_encode)
 
         self.layers_decode = self.parse_blocks(blocks, encode=False)
-        self.layers_decode = self.remove_final_activation(self.layers_decode)
+        if rem_final:
+            self.layers_decode = self.remove_final_activation(self.layers_decode)
 
         self.latent_sz = latent_sz
 
@@ -130,9 +132,6 @@ class GenCAE(BaseAE):
 
         layer_kwargs["encode"] = encode
 
-
-
-
         if block == "conv": #this is poorly named - simple conv?
             layer_kwargs["activation"] = self.activation
             return Build.conv(**layer_kwargs)
@@ -146,8 +145,8 @@ class GenCAE(BaseAE):
             return Build.ResNeXtRDB3(activation_fn = self.activation, **layer_kwargs)
         elif block == "Bespoke":
             return Build.ResBespoke(activation_fn = self.activation, **layer_kwargs)
-        elif block == "resBslim":
-            return Build.resBslim(activation_fn = self.activation, **layer_kwargs)
+        elif block == "Tucodec":
+            return Build.Tucodec(activation_fn = self.activation, **layer_kwargs)
         elif block == "DRU":
             return Build.DRU(activation_fn = self.activation, **layer_kwargs)
         elif block == "1x1":

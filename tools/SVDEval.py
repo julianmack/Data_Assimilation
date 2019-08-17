@@ -5,9 +5,7 @@ from pipeline.VarDA.batch_DA import BatchDA
 from pipeline import GetData, SplitData
 import numpy as np
 
-NUMBER_MODES = 8 #Set this to None for calculation of `optimal` truncation
-csv_fp = None #Set this to None to avoid saving
-DEBUG = True
+DEBUG = False
 SINGLE_STATE = False
 
 def VarDASVD(num_modes, csv_fp=None, debug = DEBUG, single_state = False):
@@ -38,11 +36,10 @@ def VarDASVD(num_modes, csv_fp=None, debug = DEBUG, single_state = False):
     res = batcher.run(print_every=5, print_small=True)
 
 
-
 if __name__ == "__main__":
     modes = [1, 2, 4, 8, 16, 33, 150,  750]
     exp_base = "experiments/TSVD/"
     for mode in modes:
         print(mode)
         csv_fp = "{}modes{}.csv".format(exp_base, str(mode))
-        VarDASVD(mode, csv_fp, False, SINGLE_STATE)
+        VarDASVD(mode, csv_fp, DEBUG, SINGLE_STATE)

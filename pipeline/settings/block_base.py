@@ -31,7 +31,7 @@ class Block(Config3D):
         self.AUGMENTATION = True
         self.DROPOUT = False
         self.DEBUG = False
-
+        self.REM_FINAL = True
 
     def get_kwargs(self):
         assert hasattr(self, "BLOCKS"), "Must init self.BLOCKS"
@@ -41,7 +41,8 @@ class Block(Config3D):
         latent_sz = None
         kwargs =   {"blocks": blocks,
                     "activation": self.ACTIVATION,
-                    "latent_sz": latent_sz}
+                    "latent_sz": latent_sz,
+                    "rem_final": self.REM_FINAL}
         return kwargs
 
     def gen_blocks_with_kwargs(self):
@@ -68,7 +69,7 @@ class Block(Config3D):
 
         blocks_w_kwargs = self.gen_block_kwargs_recursive(self.BLOCKS, channels,
                                 init_data=init_data_not_flat, reset_idx=True)
-        
+
         return blocks_w_kwargs
 
     def gen_channels(self):

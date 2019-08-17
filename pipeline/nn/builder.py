@@ -4,6 +4,8 @@ from collections import OrderedDict
 from pipeline.nn import init
 from pipeline.nn.explore.empty import Empty
 from pipeline.nn.RNAB import RNAB
+from pipeline.nn import CLIC_models
+from pipeline.nn.CLIC_models import tucodec
 from pipeline.nn.pytorch_gdn.gdn import GDN
 from pipeline import ML_utils
 
@@ -157,7 +159,13 @@ class NNBuilder():
 
         module =  res.DRU(encode, activation_fn, C)
         return NNBuilder.maybe_add_activation(encode, module, act_fn_constructor, final, C)
+    ################## CLIC models
+    def Tucodec(encode, activation_fn, B):
+        act_fn_constructor = NNBuilder.act_constr(activation_fn)
+        Block = NNBuilder.get_block(B)
+        module =  tucodec.Tucodec(act_fn_constructor, Block)
 
+    #################
     @staticmethod
     def get_block(block):
         assert isinstance(block, str)
