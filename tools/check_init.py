@@ -27,24 +27,13 @@ resNext3_k2 = {"layers": 3, "cardinality": 2, "block_type": "CBAM_NeXt",
 CONFIGS = [ResNeXt, ResStack3, ResStack3]
 KWARGS = (resNext_k, resNext3_k, resNext3_k2)
 
-resNext3_k0 = {"layers": 0, "cardinality": 0}
-resNext3_k = {"layers": 3, "cardinality": 1, "block_type": "vanilla",
-                "module_type": "RDB3"}
-resNext3_k2 = {"layers": 3, "cardinality": 2, "block_type": "NeXt",
-                "module_type": "ResNeXt3"}
-
-# CONFIGS = [Res34AE, ResNeXt, Baseline1Block, Cho2019]
-# KWARGS = (0, resNext_k, 0, 0)
-
-CONFIGS.extend([ResStack3, ResStack3, ResStack3])
-KWARGS += (resNext3_k0, resNext3_k, resNext3_k2)
 
 ###########
-CONFIGS = CONFIGS[0]
-KWARGS = (KWARGS[0],)
+# CONFIGS = CONFIGS[-1]
+# KWARGS = (KWARGS[-1],)
 
 
-PRINT_MODEL = True
+PRINT_MODEL = False
 
 def main():
 
@@ -79,6 +68,7 @@ def check_init(config, config_kwargs, prnt, activation):
         print(end="\n")
     if prnt:
         print(model.layers_encode)
+        print(model.layers_decode)
 
     num_params = sum(p.numel() for p in model.parameters())
     print("num params", num_params)

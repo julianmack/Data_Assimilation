@@ -124,10 +124,15 @@ class GenCAE(BaseAE):
             raise ValueError("blocks must be of type str or list. Received type {}".format(type(blocks)))
 
     def parse_blocks_str(self, block, encode, layer_kwargs):
-        if layer_kwargs.get("encode") is None:
-            layer_kwargs["encode"] = encode
 
-        
+        if layer_kwargs.get("encode"):
+            del layer_kwargs["encode"]
+
+        layer_kwargs["encode"] = encode
+
+
+
+
         if block == "conv": #this is poorly named - simple conv?
             layer_kwargs["activation"] = self.activation
             return Build.conv(**layer_kwargs)

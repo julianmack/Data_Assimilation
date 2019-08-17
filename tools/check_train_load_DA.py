@@ -24,8 +24,8 @@ CONFIGS = [ResNeXt, ResStack3, ResStack3]
 KWARGS = (resNext_k, resNext3_k, resNext3_k2)##
 
 #################
-CONFIGS = CONFIGS[0]
-KWARGS = (KWARGS[0],)
+CONFIGS = CONFIGS[-1]
+KWARGS = (KWARGS[-1],)
 
 
 #global variables for DA and training:
@@ -82,7 +82,7 @@ def check_train_load_DA(config, config_kwargs,  small_debug=True, all_data=False
         assert isinstance(config_kwargs, dict)
 
         settings = config(**config_kwargs)
-        settings.DEBUG = True
+        settings.DEBUG = False
         if activation:
             settings.ACTIVATION = activation
 

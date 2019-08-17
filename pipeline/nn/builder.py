@@ -33,7 +33,7 @@ class NNBuilder():
 
         #else
         layer = OrderedDict()
-        layer.update({"00": Empty()})
+        #layer.update({"00": Empty()})
         if dropout:
             #TODO - make dropout rate variable
             layer.update({"0": nn.Dropout3d(0.33)})
@@ -47,7 +47,7 @@ class NNBuilder():
         init.conv(conv.weight, act_fn_constructor)
         layer.update({"2": conv})
 
-        layer.update({"2a": Empty()})
+        #layer.update({"2a": Empty()})
         if not final:
             layer.update({"3": act_fn_constructor(conv_kwargs["out_channels"], not encode)})
 

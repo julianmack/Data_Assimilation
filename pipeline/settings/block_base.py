@@ -68,7 +68,7 @@ class Block(Config3D):
 
         blocks_w_kwargs = self.gen_block_kwargs_recursive(self.BLOCKS, channels,
                                 init_data=init_data_not_flat, reset_idx=True)
-
+        
         return blocks_w_kwargs
 
     def gen_channels(self):

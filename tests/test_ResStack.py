@@ -28,15 +28,15 @@ class TestZoo():
                 print(e)
                 pytest.fail("Unable to init model")
 
-    def test_resStackLoad(self):
-        configs, kwargs = self.__get_configs_kwargs(2)
-
-        for idx, conf in enumerate(configs):
-            try:
-                check_train_load_DA(configs[idx], kwargs[idx], True, False, "lrelu")
-            except Exception as e:
-                print(e)
-                pytest.fail("Unable to init model")
+    # def test_resStackLoad(self):
+    #     configs, kwargs = self.__get_configs_kwargs(1)
+    #
+    #     for idx, conf in enumerate(configs):
+    #         try:
+    #             check_train_load_DA(configs[idx], kwargs[idx], True, False, "lrelu")
+    #         except Exception as e:
+    #             print(e)
+    #             pytest.fail("Unable to init model")
 
 
 
