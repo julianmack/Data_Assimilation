@@ -11,8 +11,8 @@ from run_expts.expt_config import ExptConfigTest
 from pipeline.settings.models_.resNeXt import ResStack3
 
 
-TEST = True
-GPU_DEVICE = 1
+TEST = False
+GPU_DEVICE = 3
 exp_base = "experiments/train/01cREPEAT/"
 
 #global variables for DA and training:

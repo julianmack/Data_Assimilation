@@ -89,7 +89,7 @@ def get_device(use_gpu=True, device_idx=None):
         device_idx = os.environ.get("GPU_DEVICE")
         if device_idx == None:
             raise NameError("GPU_DEVICE environment variable has not been initialized. Do this manually or initialize a Config class")
-    if False:
+    if use_gpu:
         device = torch.device("cuda:" + str(device_idx) if torch.cuda.is_available() else "cpu")
     else:
         device = torch.device("cpu")
