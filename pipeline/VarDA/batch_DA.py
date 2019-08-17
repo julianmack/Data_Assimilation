@@ -1,7 +1,8 @@
 import torch
 import time
 
-from pipeline import ML_utils, DAPipeline
+from pipeline import ML_utils
+from pipeline.VarDA import DAPipeline
 from pipeline.VarDA import SVD, VDAInit
 from pipeline.utils.expdir import init_expdir
 

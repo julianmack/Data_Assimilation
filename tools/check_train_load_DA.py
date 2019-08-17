@@ -18,7 +18,7 @@ ACTIVATION = "prelu"
 resNext_k = {"layers": 0, "cardinality": 0}
 resNext3_k = {"layers": 3, "cardinality": 1, "block_type": "vanilla",
                 "module_type": "ResNeXt3"}
-resNext3_k2 = {"layers": 3, "cardinality": 2, "block_type": "CBAM_NeXt",
+resNext3_k2 = {"layers": 3, "cardinality": 2, "block_type": "NeXt",
                 "module_type": "RDB3"}
 CONFIGS = [ResNeXt, ResStack3, ResStack3]
 KWARGS = (resNext_k, resNext3_k, resNext3_k2)##
@@ -47,7 +47,12 @@ def main():
         print()
 
 def run_DA_batch(settings, model, all_data, expdir):
+    """By default it evaluates over the whole test set"""
     settings.DEBUG = False
+    settings.NORMALIZE = True
+    settings.UNDO_NORMALIZE = True
+    settings.SHUFFLE_DATA = True
+    settings.OBS_VARIANCE = 0.0005
 
     #set control_states
     #Load data
@@ -57,12 +62,15 @@ def run_DA_batch(settings, model, all_data, expdir):
     train_X, test_X, u_c_std, X, mean, std = splitter.train_test_DA_split_maybe_normalize(X, settings)
 
     if all_data:
-        control_states = X
-        print_every = 50
+        control_states = test_X
+        if settings.COMPRESSION_METHOD == "AE":
+            print_every = 50
+        else:
+            print_every = 5
     else:
         NUM_STATES = 5
         START = 100
-        control_states = train_X[START:NUM_STATES + START]
+        control_states = test_X[START:NUM_STATES + START]
         print_every = 10
     if settings.COMPRESSION_METHOD == "AE":
         out_fp = expdir + "AE.csv" #this will be written and then deleted
@@ -113,7 +121,7 @@ def check_train_load_DA(config, config_kwargs,  small_debug=True, all_data=False
 
         res_AE = run_DA_batch(settings, model, all_data, expdir)
 
-        print(res_AE.tail(10))
+        print(res_AE.head(10))
         shutil.rmtree(expdir, ignore_errors=False, onerror=None)
     except Exception as e:
         try:
