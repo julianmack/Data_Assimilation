@@ -11,6 +11,7 @@ import torch
 import math
 import torch.nn as nn
 import torch.nn.functional as F
+from pipeline.nn.helpers import get_activation
 
 class BasicConv(nn.Module):
     """This is edited so that it works for 3D case"""
@@ -108,6 +109,8 @@ class CBAM(nn.Module):
     def __init__(self, encode, activation_constructor, gate_channels, reduction_ratio=8,
                     pool_types=['avg', 'max'], no_spatial=False):
         super(CBAM, self).__init__()
+        if get_activation(activation_constructor) == "GDN":
+            raise NotImplementedError("Must deal with GDN w. CBAM crossover")
         self.channelgate = ChannelGate(encode, activation_constructor, gate_channels,
                             reduction_ratio, pool_types)
         self.no_spatial=no_spatial

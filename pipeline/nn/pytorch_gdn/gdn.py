@@ -63,7 +63,6 @@ class GDN(nn.Module):
         self.pedestal = self.pedestal.to(device)
 
     def forward(self, inputs):
-        print("inverse", self.inverse)
         unfold = False
         if inputs.dim() == 5:
             unfold = True
