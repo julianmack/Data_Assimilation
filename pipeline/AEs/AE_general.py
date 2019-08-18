@@ -179,7 +179,9 @@ class GenCAE(BaseAE):
     @staticmethod
     def remove_final_activation(module_list, rem_final):
         """Final activation from encoder and decoder must be removed after initialization"""
-
+        if not rem_final:
+            return module_list
+            
         recursion_depth = 20
         final = module_list
         prev = module_list

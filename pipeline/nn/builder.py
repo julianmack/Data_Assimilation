@@ -160,10 +160,14 @@ class NNBuilder():
         module =  res.DRU(encode, activation_fn, C)
         return NNBuilder.maybe_add_activation(encode, module, act_fn_constructor, final, C)
     ################## CLIC models
-    def Tucodec(encode, activation_fn, B):
+    def Tucodec(encode, activation_fn, B, Cstd):
         act_fn_constructor = NNBuilder.act_constr(activation_fn)
         Block = NNBuilder.get_block(B)
-        module =  tucodec.Tucodec(act_fn_constructor, Block)
+        if encode:
+            module =  tucodec.TucodecEncode(act_fn_constructor, Block, Cstd)
+        else:
+            module =  tucodec.TucodecDecode(act_fn_constructor, Block, Cstd)
+        return nn.Sequential(module)
 
     #################
     @staticmethod

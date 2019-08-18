@@ -12,16 +12,18 @@ from pipeline.settings.block_models import BaselineRes
 from pipeline.settings.block_models import Res34AE, Res34AE_Stacked, Cho2019
 from pipeline.settings.models_.resNeXt import Baseline1Block, ResNeXt, ResStack3
 from pipeline.settings.baseline_explore import Baseline1
+from pipeline.settings.models_.CLIC import CLIC
 
+VAR = 0.05
+TOL = 1e-2
 ACTIVATION = "prelu"
 
 resNext_k = {"layers": 0, "cardinality": 0}
 resNext3_k = {"layers": 3, "cardinality": 1, "block_type": "vanilla",
                 "module_type": "ResNeXt3"}
-resNext3_k2 = {"layers": 3, "cardinality": 2, "block_type": "NeXt",
-                "module_type": "RDB3"}
-CONFIGS = [ResNeXt, ResStack3, ResStack3]
-KWARGS = (resNext_k, resNext3_k, resNext3_k2)##
+clic_K = {"model_name": "Tucodec", "block_type": "vanilla"}
+CONFIGS = [ResNeXt, ResStack3, CLIC]
+KWARGS = (resNext_k, resNext3_k, clic_K)
 
 #################
 CONFIGS = CONFIGS[-1]
@@ -82,7 +84,7 @@ def run_DA_batch(settings, model, all_data, expdir, params):
 
     return batch_DA_AE.run(print_every=print_every, print_small=True)
 
-def check_train_load_DA(config, config_kwargs,  small_debug=True, all_data=False, activation=None,):
+def check_train_load_DA(config, config_kwargs,  small_debug=True, all_data=False, activation=None,params={"var": VAR, "tol": TOL}):
     expdir = "experiments/CTL/"
     try:
         if not config_kwargs:
@@ -119,7 +121,7 @@ def check_train_load_DA(config, config_kwargs,  small_debug=True, all_data=False
 
         x_fp = settings.get_X_fp(True) #force init X_FP
 
-        res_AE = run_DA_batch(settings, model, all_data, expdir)
+        res_AE = run_DA_batch(settings, model, all_data, expdir, params)
 
         print(res_AE.head(10))
         shutil.rmtree(expdir, ignore_errors=False, onerror=None)

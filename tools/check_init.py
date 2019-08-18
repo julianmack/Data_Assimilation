@@ -17,7 +17,7 @@ resNext_k = {"layers": 0, "cardinality": 0}
 resNext3_k = {"layers": 27, "cardinality": 1, "block_type": "RNAB",
                 "module_type": "Bespoke",
                 "subBlock": "NeXt"}
-clic_K = {"model_name": "Tucodec", "block_type": "vanilla"}
+clic_K = {"model_name": "Tucodec", "block_type": "vanilla", "Cstd": 64}
 
 CONFIGS = [ResNeXt, ResStack3, CLIC]
 KWARGS = (resNext_k, resNext3_k, clic_K)

@@ -25,8 +25,10 @@ from pipeline.nn.helpers import get_activation
 class RNAB(nn.Module):
 
     def __init__(self, encode, activation_constructor, Cin, Block = ResVanilla, channel_small=None,
-                    down_sf=4, residual=True):
+                    down_sf=4, residual=True, downsample=None, upsample=None):
         super(RNAB, self).__init__()
+        if downsample is not None:
+            assert upsample is not None
         self.residual = residual
         if get_activation(activation_constructor) == "GDN":
             raise NotImplementedError("Must deal with GDN w. RNAB crossover")
@@ -42,14 +44,14 @@ class RNAB(nn.Module):
         for i in range(2):
             res = Block(encode, activation_constructor, Cin, channel_small)
             self.mask.add_module('res%d' % (i), res)
-
-        down = self.__build_downsample(encode, activation_constructor, Cin, channel_small)
-        self.mask.add_module('downsample', down)
+        if not downsample:
+            downsample = self.__build_downsample(encode, activation_constructor, Cin, channel_small)
+        self.mask.add_module('downsample', downsample)
         for i in range(2, 4):
             res = Block(encode, activation_constructor, Cin, channel_small)
             self.mask.add_module('res%d' % (i), res)
-
-        upsample = self.__build_upsample(encode, activation_constructor, Cin, channel_small)
+        if not upsample:
+            upsample = self.__build_upsample(encode, activation_constructor, Cin, channel_small)
         self.mask.add_module('upsample', upsample)
 
         for i in range(4, 6):
@@ -64,8 +66,8 @@ class RNAB(nn.Module):
         conv1 = nn.Conv3d(Cin, Cin, kernel_size=(3, 3, 2), stride=(2,2,1))
         conv2 = nn.Conv3d(Cin, Cin, kernel_size=(3, 3, 2), stride=(2,2,1), padding=(1, 1, 0))
         conv3 = nn.Conv3d(Cin, Cin, kernel_size=(3, 3, 1), stride=(1,1,1),)
-        return nn.Sequential(conv1, activation_constructor(Cin, not encode),
-                            conv2, activation_constructor(Cin, not encode),
+        return nn.Sequential(conv1, activation_constructor(Cin, False),
+                            conv2, activation_constructor(Cin, False),
                             conv3, )
 
     def __build_upsample(self, encode, activation_constructor, Cin, channel_small):
@@ -75,13 +77,14 @@ class RNAB(nn.Module):
         conv2 = nn.ConvTranspose3d(Cin, Cin, kernel_size=(3, 3, 2), stride=(2,2,1), padding=(1, 1, 0))
         conv3 = nn.ConvTranspose3d(Cin, Cin, kernel_size=(3, 3, 2), stride=(2,2,1))
 
-        return nn.Sequential(conv1, activation_constructor(Cin, not encode),
-                            conv2, activation_constructor(Cin, not encode),
+        return nn.Sequential(conv1, activation_constructor(Cin, True),
+                            conv2, activation_constructor(Cin, True),
                             conv3)
 
     def forward(self, x):
         mask = self.mask(x)
         trunk = self.trunk(x)
+        
         h = trunk * mask
 
         if self.residual:

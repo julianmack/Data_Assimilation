@@ -7,7 +7,7 @@ import shutil
 
 
 DIR = "experiments/train/01_resNeXt_3/0/2/"
-DIR = "experiments/train/00c_baseResNext/"
+DIR = "experiments/train/00c_baseResNext/" #DA4/DA3
 
 
 CONFIGS = [DIR]
@@ -49,6 +49,8 @@ def check_DA_dir(dir, kwargs, all_data, expdir, params, prnt):
 
 
 if __name__ == "__main__":
+    main(params = {"var": 0.005, "tol":1e-3})
+    exit()
     prnt = False
     for tol in [1e-5, 1e-4, 1e-3, 1e-2]:
         for var in [5, 0.5, 0.005, 0.0005, 0.00005]:

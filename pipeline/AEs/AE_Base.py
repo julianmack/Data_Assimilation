@@ -44,12 +44,12 @@ class BaseAE(nn.Module):
 
     def __check_instance_vars(self):
         try:
-            x = self.layers_decode
-            y = self.layers_encode
+            decode = self.layers_decode
+            encode = self.layers_encode
         except:
             raise ValueError("Must init model with instance variables layers_decode and layers_encode")
-        assert isinstance(x, (nn.ModuleList, nn.Sequential)), "model.layers_decode must be of type nn.ModuleList"
-        assert isinstance(y, (nn.ModuleList, nn.Sequential)), "model.layers_encode must be of type nn.ModuleList"
+        assert isinstance(decode, (nn.ModuleList, nn.Sequential)), "model.layers_decode must be of type nn.ModuleList"
+        assert isinstance(encode, (nn.ModuleList, nn.Sequential)), "model.layers_encode must be of type nn.ModuleList"
 
     def __flatten_encode(self, x):
         """Flattens input after encoding and saves latent_sz.

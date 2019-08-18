@@ -46,7 +46,7 @@ class Config():
 
         #VarDA hyperparams
         self.ALPHA = 0.1
-        self.OBS_VARIANCE = 0.5 #TODO - CHECK this is specific to the sensors (in this case - the error in model predictions)
+        self.OBS_VARIANCE = 0.05 #TODO - CHECK this is specific to the sensors (in this case - the error in model predictions)
 
         self.REDUCED_SPACE = False
         self.COMPRESSION_METHOD = "SVD" # "SVD"/"AE"
@@ -54,7 +54,7 @@ class Config():
             # If NUMBER_MODES = None (and COMPRESSION_METHOD = "SVD"), we use
             # the Rossella et al. method for selection of truncation parameter
 
-        self.TOL = 1e-3 #Tolerance in VarDA minimization routine
+        self.TOL = 1e-2 #Tolerance in VarDA minimization routine
         self.JAC_NOT_IMPLEM = True #whether explicit jacobian has been implemented
         self.export_env_vars()
 
