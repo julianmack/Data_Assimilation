@@ -16,11 +16,11 @@ KWARGS = [0,]
 
 
 #global variables for DA:
-ALL_DATA = True
+ALL_DATA = False
 EXPDIR = "experiments/DA/load/"
 SAVE = False
 
-def main():
+def main(params, prnt=True):
 
     if isinstance(CONFIGS, list):
         configs = CONFIGS
@@ -29,15 +29,16 @@ def main():
     assert len(configs) == len(KWARGS)
 
     for idx, conf in enumerate(configs):
-        check_DA_dir(configs[idx], KWARGS[idx], ALL_DATA, EXPDIR)
+        check_DA_dir(configs[idx], KWARGS[idx], ALL_DATA, EXPDIR, params, prnt)
         print()
 
 
-def check_DA_dir(dir, kwargs, all_data, expdir):
+def check_DA_dir(dir, kwargs, all_data, expdir, params, prnt):
     try:
         model, settings = ML_utils.load_model_and_settings_from_dir(dir)
-        df = run_DA_batch(settings, model, all_data, expdir)
-        print(df.tail(10))
+        df = run_DA_batch(settings, model, all_data, expdir, params)
+        if prnt:
+            print(df.tail(10))
     except Exception as e:
         try:
             shutil.rmtree(expdir, ignore_errors=False, onerror=None)
@@ -48,5 +49,12 @@ def check_DA_dir(dir, kwargs, all_data, expdir):
 
 
 if __name__ == "__main__":
-    main()
+    prnt = False
+    for tol in [1e-5, 1e-4, 1e-3, 1e-2]:
+        for var in [5, 0.5, 0.005, 0.0005, 0.00005]:
+            params = {"var": var, "tol":tol}
+            print("var: {:.5f}, tol: {:.5f}".format(var, tol))
+            main(params, prnt)
+
+
 

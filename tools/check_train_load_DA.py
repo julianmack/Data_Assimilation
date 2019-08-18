@@ -46,15 +46,14 @@ def main():
         check_train_load_DA(configs[idx], KWARGS[idx], SMALL_DEBUG_DOM, ALL_DATA, ACTIVATION)
         print()
 
-def run_DA_batch(settings, model, all_data, expdir):
+def run_DA_batch(settings, model, all_data, expdir, params):
     """By default it evaluates over the whole test set"""
     settings.DEBUG = False
     settings.NORMALIZE = True
     settings.UNDO_NORMALIZE = True
     settings.SHUFFLE_DATA = True
-    settings.OBS_VARIANCE = 0.0005
-    settings.TOL = 1e-4
-
+    settings.OBS_VARIANCE = params.get("var") if params.get("var") else 0.005
+    settings.TOL = params.get("tol") if params.get("tol") else 1e-2
     #set control_states
     #Load data
     loader, splitter = GetData(), SplitData()
@@ -67,7 +66,7 @@ def run_DA_batch(settings, model, all_data, expdir):
         if settings.COMPRESSION_METHOD == "AE":
             print_every = 50
         else:
-            print_every = 5
+            print_every = 500 #i.e. don't print
     else:
         NUM_STATES = 5
         START = 100

@@ -50,12 +50,12 @@ class GenCAE(BaseAE):
         self.__init_activation(activation)
 
         self.layers_encode = self.parse_blocks(blocks, encode=True)
-        if rem_final:
-            self.layers_encode = self.remove_final_activation(self.layers_encode)
+
+        self.layers_encode = self.remove_final_activation(self.layers_encode, rem_final)
 
         self.layers_decode = self.parse_blocks(blocks, encode=False)
-        if rem_final:
-            self.layers_decode = self.remove_final_activation(self.layers_decode)
+
+        self.layers_decode = self.remove_final_activation(self.layers_decode, rem_final)
 
         self.latent_sz = latent_sz
 
@@ -177,7 +177,7 @@ class GenCAE(BaseAE):
 
 
     @staticmethod
-    def remove_final_activation(module_list):
+    def remove_final_activation(module_list, rem_final):
         """Final activation from encoder and decoder must be removed after initialization"""
 
         recursion_depth = 20
@@ -190,15 +190,20 @@ class GenCAE(BaseAE):
                 prev = save
             except (IndexError, TypeError):
                 break
+        if rem_final:
+            idx = -1
+        else:
+            idx = None
+
 
         if depth == 1:
-            module_list = nn.Sequential(*list(prev.children())[:-1])
+            module_list = nn.Sequential(*list(prev.children())[:idx])
         elif depth == 2:
-            module_list[-1] = nn.Sequential(*list(prev.children())[:-1])
+            module_list[-1] = nn.Sequential(*list(prev.children())[:idx])
         elif depth == 3:
-            module_list[-1][-1] = nn.Sequential(*list(prev.children())[:-1])
+            module_list[-1][-1] = nn.Sequential(*list(prev.children())[:idx])
         elif depth == 4:
-            module_list[-1][-1][-1] = nn.Sequential(*list(prev.children())[:-1])
+            module_list[-1][-1][-1] = nn.Sequential(*list(prev.children())[:idx])
         else:
             raise NotImplementedError("Must implement activation removal to depth of {}".format(depth))
 

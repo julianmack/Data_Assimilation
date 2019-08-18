@@ -20,7 +20,7 @@ def VarDASVD(num_modes, csv_fp=None, debug = DEBUG, single_state = False):
     settings.OBS_VARIANCE = 0.5
     settings.NUMBER_MODES = num_modes
     settings.DEBUG = debug
-    settings.TOL = 1e-2
+    settings.TOL = 1e-3
 
     loader, splitter = GetData(), SplitData()
     X = loader.get_X(settings)
