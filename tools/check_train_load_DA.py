@@ -12,19 +12,19 @@ from pipeline.settings.block_models import BaselineRes
 from pipeline.settings.block_models import Res34AE, Res34AE_Stacked, Cho2019
 from pipeline.settings.models_.resNeXt import Baseline1Block, ResNeXt, ResStack3
 from pipeline.settings.baseline_explore import Baseline1
-from pipeline.settings.models_.CLIC import CLIC
+from pipeline.settings.models_.CLIC import CLIC, GRDNBaseline
 
 VAR = 0.05
 TOL = 1e-2
 ACTIVATION = "prelu"
 
-resNext_k = {"layers": 0, "cardinality": 0}
 resNext3_k = {"layers": 3, "cardinality": 1, "block_type": "vanilla",
                 "module_type": "ResNeXt3"}
 clic_K = {"model_name": "Tucodec", "block_type": "vanilla"}
-CONFIGS = [ResNeXt, ResStack3, CLIC]
-KWARGS = (resNext_k, resNext3_k, clic_K)
+grdn_k = {"block_type": "NeXt", "Cstd": 32}
 
+CONFIGS = [ResStack3, CLIC, GRDNBaseline]
+KWARGS = ( resNext3_k, clic_K, grdn_k)
 #################
 CONFIGS = CONFIGS[-1]
 KWARGS = (KWARGS[-1],)

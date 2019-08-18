@@ -5,6 +5,8 @@ Implementation of CBAM: Convolutional Block Attention Module
 
 This is based on the following opensource implementation:
 https://github.com/Jongchan/attention-module/blob/master/MODELS/cbam.py
+
+Released under MIT licence: https://github.com/Jongchan/attention-module/blob/master/LICENSE
 """
 
 import torch
@@ -52,12 +54,14 @@ class ChannelGate(nn.Module):
             )
         self.pool_types = pool_types
     def forward(self, x):
+
         channel_att_sum = None
 
         k_size = (x.size(2), x.size(3), x.size(4))
         for pool_type in self.pool_types:
             if pool_type=='avg':
                 avg_pool = F.avg_pool3d( x, k_size, stride=k_size)
+                
                 channel_att_raw = self.mlp( avg_pool )
             elif pool_type=='max':
                 max_pool = F.max_pool3d( x, k_size, stride=k_size)

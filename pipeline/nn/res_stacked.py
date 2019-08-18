@@ -40,7 +40,7 @@ class RBD3(nn.Module):
             Cs = 64
         assert subBlock is None
 
-        dense_block_kwargs = { "encode": "encode",
+        dense_block_kwargs = { "encode": encode,
                                 "activation_constructor": activation_constructor,
                                 "Cin": Cin, "growth_rate": k,
                                 "Csmall": Cs, "Block": Block,

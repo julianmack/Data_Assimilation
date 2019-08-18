@@ -12,12 +12,9 @@ implementation directly because:
     1) It is for 2d input rather than 3D
 """
 
-import re
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import torch.utils.checkpoint as cp
-from collections import OrderedDict
 from pipeline.nn.res import ResNextBlock, ResVanilla
 from pipeline.nn.explore.empty import Empty
 from pipeline.nn.helpers import get_activation
@@ -84,7 +81,7 @@ class RNAB(nn.Module):
     def forward(self, x):
         mask = self.mask(x)
         trunk = self.trunk(x)
-        
+
         h = trunk * mask
 
         if self.residual:

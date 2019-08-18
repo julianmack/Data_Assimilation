@@ -147,6 +147,8 @@ class GenCAE(BaseAE):
             return Build.ResBespoke(activation_fn = self.activation, **layer_kwargs)
         elif block == "Tucodec":
             return Build.Tucodec(activation_fn = self.activation, **layer_kwargs)
+        elif block == "GRDN":
+            return Build.GRDN(activation_fn = self.activation, **layer_kwargs)
         elif block == "DRU":
             return Build.DRU(activation_fn = self.activation, **layer_kwargs)
         elif block == "1x1":
@@ -181,7 +183,7 @@ class GenCAE(BaseAE):
         """Final activation from encoder and decoder must be removed after initialization"""
         if not rem_final:
             return module_list
-            
+
         recursion_depth = 20
         final = module_list
         prev = module_list

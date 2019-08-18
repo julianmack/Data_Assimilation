@@ -89,6 +89,15 @@ class Block(Config3D):
                 raise NotImplementedError("Parallel channel generation not implemented")
         return channels_flat
 
+    def update_channels(self, new):
+        assert isinstance(new, list)
+        assert all(type(x) == int for x in new)
+        old_channels = self.get_channels()
+        assert len(old_channels) == len(new)
+        self.CHANNELS = new
+        return self.CHANNELS
+
+
     @staticmethod
     def channels_default(num_layers):
         """Returns default channel schedule of length

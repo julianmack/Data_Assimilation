@@ -1,5 +1,5 @@
 from torch import nn
-from pipeline.nn import res, res_stacked
+from pipeline.nn import res, res_stacked, GRDN
 from collections import OrderedDict
 from pipeline.nn import init
 from pipeline.nn.explore.empty import Empty
@@ -58,12 +58,6 @@ class NNBuilder():
         return conv
 
     @staticmethod
-    def conv1x1(encode, D, I, final=False):
-        channel_down = (channel // D) if (channel // D > 0) else 1
-        module = nn.Conv3d(I, channel_down, kernel_size=(1, 1, 1), stride=(1,1,1))
-        return NNBuilder.maybe_add_activation(encode, module, act_fn_constructor, final, I)
-
-    @staticmethod
     def ResNeXt(encode, activation_fn, C, N, final=False):
         act_fn_constructor = NNBuilder.act_constr(activation_fn)
         module = res.ResNeXt(encode, act_fn_constructor, C, N)
@@ -116,6 +110,45 @@ class NNBuilder():
                             res_stacked.RBD3)
         return module
 
+
+    ################## CLIC models
+    def Tucodec(encode, activation_fn, B, Cstd):
+        act_fn_constructor = NNBuilder.act_constr(activation_fn)
+        Block = NNBuilder.get_block(B)
+        if encode:
+            module =  tucodec.TucodecEncode(act_fn_constructor, Block, Cstd)
+        else:
+            module =  tucodec.TucodecDecode(act_fn_constructor, Block, Cstd)
+        return nn.Sequential(module)
+
+    def GRDN(encode, activation_fn, B, Cstd):
+        activation_constructor = NNBuilder.act_constr(activation_fn)
+        Block = NNBuilder.get_block(B)
+
+        #Design decisions
+        k = 12 #as in original paper
+        Cs = 32
+        num_rdu = 8  #residual dense units per rdb
+        num_rdb = 16 #residual dense blocks
+
+        RDB_kwargs = { "encode": encode,
+                            "activation_constructor": activation_constructor,
+                            "Cin": Cstd, "growth_rate": k,
+                            "Csmall": Cs, "Block": Block,
+                            "dense_layers": num_rdu, "residual": True}
+        module = GRDN.GRDN(encode, activation_constructor, Cstd, Block,
+                            RDB_kwargs, num_rdb)
+
+        return module
+    #################
+
+    @staticmethod
+    def conv1x1(encode, D, I, final=False):
+        channel_down = (channel // D) if (channel // D > 0) else 1
+        module = nn.Conv3d(I, channel_down, kernel_size=(1, 1, 1), stride=(1,1,1))
+        return NNBuilder.maybe_add_activation(encode, module, act_fn_constructor, final, I)
+
+
     @staticmethod
     def resB(encode, activation_fn, C, final=False):
         """Returns Residual block of structure:
@@ -159,17 +192,6 @@ class NNBuilder():
 
         module =  res.DRU(encode, activation_fn, C)
         return NNBuilder.maybe_add_activation(encode, module, act_fn_constructor, final, C)
-    ################## CLIC models
-    def Tucodec(encode, activation_fn, B, Cstd):
-        act_fn_constructor = NNBuilder.act_constr(activation_fn)
-        Block = NNBuilder.get_block(B)
-        if encode:
-            module =  tucodec.TucodecEncode(act_fn_constructor, Block, Cstd)
-        else:
-            module =  tucodec.TucodecDecode(act_fn_constructor, Block, Cstd)
-        return nn.Sequential(module)
-
-    #################
     @staticmethod
     def get_block(block):
         assert isinstance(block, str)

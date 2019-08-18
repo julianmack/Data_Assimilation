@@ -25,8 +25,9 @@ from pipeline.nn.res import ResNextBlock
 
 class _DenseBlock(nn.Module):
     def __init__(self, encode, activation_constructor, Cin, growth_rate, Csmall,
-                    dense_layers, Block=ResNextBlock):
+                    dense_layers, Block=ResNextBlock, residual=False):
         super(_DenseBlock, self).__init__()
+        self.residual = residual
         for i in range(dense_layers):
 
             layer = Block(encode, activation_constructor,
@@ -50,6 +51,9 @@ class _DenseBlock(nn.Module):
             new_features = layer(torch.cat(features, 1))
             features.append(new_features)
         h = torch.cat(features, 1)
-        return self.denseSqueeze(h)
+        h = self.denseSqueeze(h)
+        if self.residual:
+            h = h + init_features
+        return h
 
 
