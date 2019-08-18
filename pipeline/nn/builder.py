@@ -126,7 +126,7 @@ class NNBuilder():
         Block = NNBuilder.get_block(B)
 
         #Design decisions
-        k = 12 #as in original paper
+        k = 6 #12 in original paper
         Cs = 32
         num_rdu = 8  #residual dense units per rdb
         num_rdb = 16 #residual dense blocks

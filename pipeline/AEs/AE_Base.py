@@ -21,7 +21,6 @@ class BaseAE(nn.Module):
         return x
 
     def encode(self, x):
-        print("entering encode")
         x = self.__maybe_convert_to_batched(x)
         layers = self.layers_encode
         for layer in layers[:-1]:
@@ -29,7 +28,6 @@ class BaseAE(nn.Module):
         x = layers[-1](x) #no activation function for latent space
         x = self.__flatten_encode(x)
         x = self.__maybe_convert_to_non_batched(x)
-        print("exiting encode", x.shape)
         return x
 
     def decode(self, x, latent_sz=None):

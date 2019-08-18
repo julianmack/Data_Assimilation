@@ -29,6 +29,6 @@ class GRDNBaseline(CLIC):
         self.DOWNSAMPLE__  = (down, down, down_z)
         channels  = self.get_channels()
         channels[0] = 1
-        channels[1] = 2
+        channels[1] = 1
         self.update_channels(channels)
 

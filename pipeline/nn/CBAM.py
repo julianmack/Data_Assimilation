@@ -46,6 +46,7 @@ class ChannelGate(nn.Module):
                 reduction_ratio=8, pool_types=['avg', 'max']):
         super(ChannelGate, self).__init__()
         self.gate_channels = gate_channels
+        
         self.mlp = nn.Sequential(
             Flatten(),
             nn.Linear(gate_channels, gate_channels // reduction_ratio),
@@ -61,7 +62,7 @@ class ChannelGate(nn.Module):
         for pool_type in self.pool_types:
             if pool_type=='avg':
                 avg_pool = F.avg_pool3d( x, k_size, stride=k_size)
-                
+
                 channel_att_raw = self.mlp( avg_pool )
             elif pool_type=='max':
                 max_pool = F.max_pool3d( x, k_size, stride=k_size)

@@ -17,6 +17,7 @@ from pipeline.settings.models_.CLIC import CLIC, GRDNBaseline
 VAR = 0.05
 TOL = 1e-2
 ACTIVATION = "prelu"
+EXPDIR = "experiments/CTL/"
 
 resNext3_k = {"layers": 3, "cardinality": 1, "block_type": "vanilla",
                 "module_type": "ResNeXt3"}
@@ -85,7 +86,7 @@ def run_DA_batch(settings, model, all_data, expdir, params):
     return batch_DA_AE.run(print_every=print_every, print_small=True)
 
 def check_train_load_DA(config, config_kwargs,  small_debug=True, all_data=False, activation=None,params={"var": VAR, "tol": TOL}):
-    expdir = "experiments/CTL/"
+    expdir = EXPDIR
     try:
         if not config_kwargs:
             config_kwargs = {}
