@@ -53,6 +53,7 @@ def run_DA_batch(settings, model, all_data, expdir):
     settings.UNDO_NORMALIZE = True
     settings.SHUFFLE_DATA = True
     settings.OBS_VARIANCE = 0.0005
+    settings.TOL = 1e-4
 
     #set control_states
     #Load data

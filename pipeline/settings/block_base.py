@@ -39,10 +39,11 @@ class Block(Config3D):
         blocks = self.gen_blocks_with_kwargs()
 
         latent_sz = None
+        rem_final = False if not hasattr(self, "REM_FINAL") else self.REM_FINAL
         kwargs =   {"blocks": blocks,
                     "activation": self.ACTIVATION,
                     "latent_sz": latent_sz,
-                    "rem_final": self.REM_FINAL}
+                    "rem_final": rem_final}
         return kwargs
 
     def gen_blocks_with_kwargs(self):
