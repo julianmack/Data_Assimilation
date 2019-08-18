@@ -5,14 +5,18 @@ from torch.nn import functional as F
 from torchvision import datasets, transforms
 from torchvision.utils import save_image
 from torch.autograd import Function
-
+import warnings
+#from warnings import UserWarning
 
 class LowerBound(Function):
+
+
     def forward(ctx, inputs, bound):
         b = torch.ones(inputs.size())*bound
         b = b.to(inputs.device)
         ctx.save_for_backward(inputs, b)
         return torch.max(inputs, b)
+
 
     def backward(ctx, grad_output):
         inputs, b = ctx.saved_tensors
@@ -45,6 +49,7 @@ class GDN(nn.Module):
         self.build(ch, torch.device(device))
 
     def build(self, ch, device):
+
         self.pedestal = self.reparam_offset**2
         self.beta_bound = (self.beta_min + self.reparam_offset**2)**.5
         self.gamma_bound = self.reparam_offset
@@ -63,33 +68,36 @@ class GDN(nn.Module):
         self.pedestal = self.pedestal.to(device)
 
     def forward(self, inputs):
-        unfold = False
-        if inputs.dim() == 5:
-            unfold = True
-            bs, ch, d, w, h = inputs.size()
-            inputs = inputs.view(bs, ch, d*w, h)
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', UserWarning) #this catches a Pytorch warning
 
-        _, ch, _, _ = inputs.size()
+            unfold = False
+            if inputs.dim() == 5:
+                unfold = True
+                bs, ch, d, w, h = inputs.size()
+                inputs = inputs.view(bs, ch, d*w, h)
 
-        # Beta bound and reparam
-        beta = LowerBound()(self.beta, self.beta_bound)
-        beta = beta**2 - self.pedestal
+            _, ch, _, _ = inputs.size()
 
-        # Gamma bound and reparam
-        gamma = LowerBound()(self.gamma, self.gamma_bound)
-        gamma = gamma**2 - self.pedestal
-        gamma  = gamma.view(ch, ch, 1, 1)
+            # Beta bound and reparam
+            beta = LowerBound()(self.beta, self.beta_bound)
+            beta = beta**2 - self.pedestal
 
-        # Norm pool calc
-        norm_ = nn.functional.conv2d(inputs**2, gamma, beta)
-        norm_ = torch.sqrt(norm_)
+            # Gamma bound and reparam
+            gamma = LowerBound()(self.gamma, self.gamma_bound)
+            gamma = gamma**2 - self.pedestal
+            gamma  = gamma.view(ch, ch, 1, 1)
 
-        # Apply norm
-        if self.inverse:
-            outputs = inputs * norm_
-        else:
-            outputs = inputs / norm_
+            # Norm pool calc
+            norm_ = nn.functional.conv2d(inputs**2, gamma, beta)
+            norm_ = torch.sqrt(norm_)
 
-        if unfold:
-            outputs = outputs.view(bs, ch, d, w, h)
-        return outputs
+            # Apply norm
+            if self.inverse:
+                outputs = inputs * norm_
+            else:
+                outputs = inputs / norm_
+
+            if unfold:
+                outputs = outputs.view(bs, ch, d, w, h)
+            return outputs
