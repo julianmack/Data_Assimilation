@@ -85,7 +85,7 @@ class NNBuilder():
                             res_stacked.ResNeXt3)
         return module
 
-    def ResBespoke(encode, activation_fn, C, N, L, B, CS, k, SB, final=False):
+    def ResBespoke(encode, activation_fn, C, N, L, B, CS, k, SB, A, final=False):
         if L < 1:
             return nn.Sequential()
         block = NNBuilder.get_block(B)
@@ -94,7 +94,7 @@ class NNBuilder():
         act_fn_constructor = NNBuilder.act_constr(activation_fn)
         module = res_stacked.resOver(encode, act_fn_constructor, C, N,
                             L, block, k, CS, module=res_stacked.ResBespoke,
-                            subBlock=subBlock)
+                            subBlock=subBlock, attentuation=A)
         return module
 
     @staticmethod

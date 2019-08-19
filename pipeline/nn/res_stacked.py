@@ -3,6 +3,7 @@ from torch import nn
 from pipeline.nn import res
 from pipeline.nn.densenet import _DenseBlock
 from torch.nn.parameter import Parameter
+from pipeline import ML_utils
 
 class Res3(nn.Module):
     """Module that implements a skip connection
@@ -75,7 +76,7 @@ class resOver(nn.Module):
     """
 
     def __init__(self, encode, activation_constructor, Cin, cardinality, layers, block,
-                    k, Csmall=None, module=ResNeXt3, subBlock=None):
+                    k, Csmall=None, module=ResNeXt3, subBlock=None, attentuation=True):
         super(resOver, self).__init__()
         blocks = []
         for i in range(layers):
@@ -84,7 +85,10 @@ class resOver(nn.Module):
             blocks.append(res)
         self.resRes = nn.Sequential(*blocks, activation_constructor(Cin, not encode),
                                     nn.BatchNorm3d(Cin))
-        self.attenuate_res = Parameter(torch.tensor([0.05], requires_grad=True))
+        if attentuation:
+            self.attenuate_res = Parameter(torch.tensor([0.05], requires_grad=True))
+        else:
+            self.attenuate_res = 1.
 
 
     def forward(self, x):

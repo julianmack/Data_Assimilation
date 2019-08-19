@@ -36,7 +36,7 @@ class ResNeXt(Baseline1Block):
 class ResStack3(ResNeXt):
     def __init__(self, layers, cardinality, block_type="NeXt",
                     module_type="ResNeXt3", Csmall=None, k=None,
-                    subBlock="vanilla"):
+                    subBlock="vanilla", attenuation=True):
         assert block_type in ["NeXt", "vanilla", "RNAB", "CBAM_NeXt", "CBAM_vanilla"]
         if module_type in ["ResNeXt3", "RDB3"]:
             subBlock = None #this is not used
@@ -47,7 +47,8 @@ class ResStack3(ResNeXt):
             raise NotImplementedError("Only `ResNeXt3`, `RDB3` and `Bespoke` implemented for config ResStack3")
         super(ResStack3, self).__init__(layers, cardinality)
         kwargs = {"C": 32, "L": layers, "N": cardinality, "B":
-                    block_type, "CS": Csmall, "k": k, "SB": subBlock}
+                    block_type, "CS": Csmall, "k": k, "SB": subBlock,
+                    "A": attenuation}
 
         self.BLOCKS = [M.S, (5, "conv"), (1, module_type, kwargs), (2, "conv")]
 

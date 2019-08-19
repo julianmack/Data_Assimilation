@@ -82,7 +82,9 @@ def extract_res_from_files(exp_dir_base):
 
             if test and train and settings:
                 test_DA_df = get_DA_info(path)
+
                 encode_att, decode_att = get_attenuation_from_dir(path)
+                print(encode_att, decode_att)
                 DA_data, mean_DF, last_df = get_DA_info(path)
 
                 dftest = pd.read_csv(test)
@@ -191,6 +193,10 @@ def plot_results_loss_epochs(results, ylim = None):
             layers =  res_next.get("layers")
             title += "\nResNext layers={}, cardinality={}".format(layers, cardinality)
             title += ", enc={:.2f}, dec={:.2f}".format(attenuate_enc, attenuate_dec)
+            block = res_next.get("block_type")
+            subblock = res_next.get("subBlock")
+            if block and subblock:
+                title += " B={}, SB={}".format(block, subblock)
         #ax.set_title(idx)
         ax.set_title(title)
     plt.show()
@@ -276,10 +282,11 @@ def get_attenuation_from_dir(dir):
     model, settings = ML_utils.load_model_and_settings_from_dir(dir)
     encode, decode = None, None
     for k, v in model.named_parameters():
-        if k == "layers_encode.1.attenuate_res":
-            encode =  v.item()
-        if k == "layers_decode.1.attenuate_res":
-            decode =  v.item()
+        if "attenuate_res" in k:
+            if "encode" in k:
+                encode =  v.item()
+            else:
+                decode =  v.item()
     return encode, decode
 
 def get_resNeXt_details(settings):
@@ -292,8 +299,10 @@ def get_resNeXt_details(settings):
         else:
             raise ValueError()
         results = {}
-        if typ == "resResNeXt":
+        if typ in ["resResNeXt", "ResNeXt3", "RDB3", "Bespoke"]:
             results = {"cardinality": params.get("N"),
                        "layers": params.get("L"),}
-        elif typ == 
+            results["block_type"] = params.get("B")
+            results["subBlock"] = params.get("SB")
+            print(results["subBlock"])
     return results

@@ -33,7 +33,7 @@ def main():
     blocks = ["NeXt", "vanilla"]
     channels = [32, 64]
 
-
+    
 
     if TEST:
         expt = ExptConfigTest()
@@ -54,7 +54,7 @@ def main():
             settings = CLIC(**kwargs)
             settings.GPU_DEVICE = GPU_DEVICE
             settings.export_env_vars()
-            
+
             expdir = exp_base + str(idx - 1) + "/"
 
 
