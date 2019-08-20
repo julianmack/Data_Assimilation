@@ -59,7 +59,7 @@ def main():
             expdir = exp_base + str(idx - 1) + "/"
 
 
-            trainer = TrainAE(settings, expdir, expt.calc_DA_MAE)
+            trainer = TrainAE(settings, expdir, expt.calc_DA_MAE, batch_sz=8)
             expdir = trainer.expdir #get full path
 
 

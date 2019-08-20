@@ -1,8 +1,9 @@
 """
-Train Tucodec model: CLIC winner 2019: http://openaccess.thecvf.com/content_CVPRW_2019/papers/CLIC 2019/Zhou_End-to-end_Optimized_Image_Compression_with_Attention_Mechanism_CVPRW_2019_paper.pdf
-Train for two block types and two #channels:
-    blocks = ["NeXt", "vanilla"]
-    Cstd = [32, 64]
+After success of first experiment (particularly with vanilla blocks)
+ I want to investigate the effect of
+ 1) Increasing the number of channels
+ 2) Increasing the amount of augmentation (as overfitting was a problem)
+        i.e. I have removed the FieldJitter(0, 0) augmentation
 
 """
 
@@ -15,9 +16,9 @@ from pipeline.VarDA.batch_DA import BatchDA
 from run_expts.expt_config import ExptConfigTest
 
 
-TEST = False
+TEST = True
 GPU_DEVICE = 0
-exp_base = "experiments/train/06a/"
+exp_base = "experiments/train/06a2/"
 
 #global variables for DA and training:
 class ExptConfig():
@@ -30,9 +31,9 @@ class ExptConfig():
     test_every = 10
 
 def main():
-    blocks = ["NeXt", "vanilla"]
-    channels = [32, 64]
-
+    blocks = ["vanilla"]
+    channels = [128, 196]
+    augmentation = []
 
 
     if TEST:
