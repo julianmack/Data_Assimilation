@@ -154,6 +154,19 @@ class TrainAE():
 
     def train_one_epoch(self, epoch, print_every, test_every, num_epoch):
         train_loss_res, test_loss_res = None, None
+
+        train_loss_res = self.train_loop(epoch, print_every, test_every, num_epoch)
+
+        test_loss_res = self.test_loop( epoch, print_every, test_every, num_epoch)
+
+        if epoch % test_every == 0 and self.model_dir != None:
+            model_fp_new = "{}{}.pth".format(self.model_dir, epoch)
+            torch.save(self.model.state_dict(), model_fp_new)
+
+
+        return train_loss_res, test_loss_res
+
+    def train_loop(self, epoch, print_every, test_every, num_epoch):
         train_loss = 0
         mean_diff = 0
         self.model.to(self.device)
@@ -209,8 +222,9 @@ class TrainAE():
             out_str += ", time taken (m): {:.2f}m".format( (t_end - t_start) / 60.)
             print(out_str)
 
+        return train_loss_res
 
-
+    def test_loop(self, epoch, print_every, test_every, num_epoch):
         self.model.eval()
         if epoch % test_every == 0 or epoch == num_epoch - 1:
             t_start = time.time()
@@ -231,13 +245,7 @@ class TrainAE():
                 print(out_str)
 
             test_loss_res = (epoch, test_loss/len(self.test_loader.dataset), test_DA_MAE, test_DA_ratio, test_DA_time, t_end - t_start)
-
-        if epoch % test_every == 0 and self.model_dir != None:
-            model_fp_new = "{}{}.pth".format(self.model_dir, epoch)
-            torch.save(self.model.state_dict(), model_fp_new)
-
-
-        return train_loss_res, test_loss_res
+            return test_loss_res
 
     def __maybe_cross_val_lr(self, test_every, num_epochs_cv = 8):
         if not num_epochs_cv:

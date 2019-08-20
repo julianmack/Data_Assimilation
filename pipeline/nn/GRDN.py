@@ -47,7 +47,7 @@ class GRDN(nn.Module):
         Cin = Cstd #`Cin` is an alias for Cstd since the true Cin=1 for the GRDN
         activation = get_activation(activation_constructor)
 
-        self.conv1  = nn.Conv3d(1, 2, kernel_size=3, stride=1, padding=1)
+        self.conv1  = nn.Conv3d(1, 2, kernel_size=1, stride=1)
         self.downsample, self.upsample = self.get_updown(Cin, activation)
         # Note that downsample and upsample already contain the `conv`
         # shown in Figure 3 of: http://openaccess.thecvf.com/content_CVPRW_2019/html/CLIC_2019/Cho_Low_Bit-rate_Image_Compression_based_on_Post-processing_with_Grouped_Residual_CVPRW_2019_paper.html
@@ -60,10 +60,9 @@ class GRDN(nn.Module):
         self.conv2a = nn.Conv3d(Cin, 4, kernel_size=3, stride=1, padding=1)
 
         self.conv3 = nn.Conv3d(2, Cin, kernel_size=3, stride=1, padding=1)
-        self.cbam  = CBAM(encode, activation_constructor, Cin, reduction_ratio=8,
+        self.cbam  = CBAM(encode, activation_constructor, Cin, reduction_ratio=16,
                         pool_types=['avg', 'max'], no_spatial=False)
-        self.conv4  = nn.Conv3d(Cin, 2, kernel_size=3, stride=1, padding=1)
-        self.conv5  = nn.Conv3d(2, 1, kernel_size=(1, 1, 1), stride=(1,1,1))
+        self.conv4  = nn.Conv3d(Cin, 1, kernel_size=(1, 1, 1), stride=(1,1,1))
 
 
     def forward(self, x):
@@ -80,8 +79,7 @@ class GRDN(nn.Module):
         h = self.conv3(h)
         h = self.cbam(h)
         h = self.conv4(h)
-        h = self.conv5(h)
-        
+
         return h + x
 
     def get_updown(self, Cin, activation):

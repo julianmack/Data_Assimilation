@@ -58,8 +58,7 @@ class GetData():
                             transforms.RandomApply([FlipHorizontal("x"),
                                                     FlipHorizontal("y")], p=0.5),
                             transforms.RandomChoice([FieldJitter(0.01, 0.1),
-                                                    FieldJitter(0.005, 0.5),
-                                                    FieldJitter(0., 0.)], ),
+                                                    FieldJitter(0.005, 0.5),], ),
                             ])
 
 
@@ -70,10 +69,6 @@ class GetData():
         test_batch_sz = min(test_X.shape[0], batch_sz)
         test_loader = DataLoader(test_dataset, test_batch_sz)
 
-        # for batch_idx, data in enumerate(train_loader):
-        #     x, = data
-        #     print(batch_idx, x.shape)
-        # exit()
 
         #save train_X and test_X
         self.train_X = train_X
