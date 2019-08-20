@@ -1,7 +1,7 @@
 """
 After success of first experiment (particularly with vanilla blocks)
  I want to investigate the effect of
- 1) Increasing the number of channels
+ 1) Increasing the number of channels to [96, 128]
  2) Increasing the amount of augmentation (as overfitting was a problem)
         i.e. I have removed the FieldJitter(0, 0) augmentation
 
@@ -16,7 +16,7 @@ from pipeline.VarDA.batch_DA import BatchDA
 from run_expts.expt_config import ExptConfigTest
 
 
-TEST = True
+TEST = False
 GPU_DEVICE = 0
 exp_base = "experiments/train/06a2/"
 
@@ -32,8 +32,7 @@ class ExptConfig():
 
 def main():
     blocks = ["vanilla"]
-    channels = [128, 196]
-    augmentation = []
+    channels = [96, 128]
 
 
     if TEST:
