@@ -37,6 +37,8 @@ class ResStack3(ResNeXt):
     def __init__(self, layers, cardinality, block_type="NeXt",
                     module_type="ResNeXt3", Csmall=None, k=None,
                     subBlock="vanilla", attenuation=True):
+        #NOTE: the block refered to as an RNAB is actually a RAB by the
+        #definition in http://arxiv.org/abs/1903.10082
         assert block_type in ["NeXt", "vanilla", "RNAB", "CBAM_NeXt", "CBAM_vanilla"]
         if module_type in ["ResNeXt3", "RDB3"]:
             subBlock = None #this is not used

@@ -3,7 +3,7 @@ from pipeline.nn import res, res_stacked, GRDN
 from collections import OrderedDict
 from pipeline.nn import init
 from pipeline.nn.explore.empty import Empty
-from pipeline.nn.RNAB import RNAB
+from pipeline.nn.RAB import RAB
 from pipeline.nn import CLIC_models
 from pipeline.nn.CLIC_models import tucodec
 from pipeline.nn.pytorch_gdn.gdn import GDN
@@ -203,8 +203,8 @@ class NNBuilder():
             return res.CBAM_NeXt
         elif block == "CBAM_vanilla":
             return res.CBAM_vanilla
-        elif block == "RNAB":
-            return RNAB
+        elif block == "RAB":
+            return RAB
         else:
             raise ValueError("`block`={} is not in [vanilla, NeXt]".format(block))
 

@@ -3,8 +3,7 @@
 Implementation of  RESIDUAL NON-LOCAL ATTENTION NETWORKS FOR
 IMAGE RESTORATION for 3D case.
 
-Influneced by authors implementation at: https://github.com/yulunzhang/RNAN
-But more closely based on design in:
+We have implemented at RAB rather than a RNAB following the design in:
 http://openaccess.thecvf.com/content_CVPRW_2019/papers/CLIC%202019/Zhou_End-to-end_Optimized_Image_Compression_with_Attention_Mechanism_CVPRW_2019_paper.pdf
 
 It was not possible to use the original
@@ -19,16 +18,16 @@ from pipeline.nn.res import ResNextBlock, ResVanilla
 from pipeline.nn.explore.empty import Empty
 from pipeline.nn.helpers import get_activation
 
-class RNAB(nn.Module):
+class RAB(nn.Module):
 
     def __init__(self, encode, activation_constructor, Cin, Block = ResVanilla, channel_small=None,
                     down_sf=4, residual=True, downsample=None, upsample=None):
-        super(RNAB, self).__init__()
+        super(RAB, self).__init__()
         if downsample is not None:
             assert upsample is not None
         self.residual = residual
         if get_activation(activation_constructor) == "GDN":
-            raise NotImplementedError("Must deal with GDN w. RNAB crossover")
+            raise NotImplementedError("Must deal with GDN w. RAB crossover")
 
         #init trunk: 3 res blocks
         self.trunk = nn.Sequential()
