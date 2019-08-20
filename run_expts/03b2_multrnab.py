@@ -1,7 +1,8 @@
 """
-Train varying numbers of RNABs within basic structure.
+03b failed on the final experiment
+with 16 RNABs because of overflow
 
-Experiment with removing the attenuation
+Hence use attenuation here and perform for 12 and 16
 
 """
 
@@ -29,8 +30,8 @@ class ExptConfig():
 
 def main():
     kwargs = {"cardinality": 1, "block_type": "RNAB",
-                    "module_type": "Bespoke", "attenuation": False}
-    layers = [1, 2, 4, 8]
+                    "module_type": "Bespoke", "attenuation": True}
+    layers = [1, 2, 4, 8, 12, 16]
 
     if TEST:
         expt = ExptConfigTest()
@@ -43,7 +44,9 @@ def main():
         kwargs["subBlock"] = "NeXt" #this performed slightly better on first case
         kwargs["layers"] = layer
         idx += 1
-
+        #if not final layers = 12 or 16 experiment, don't perform (see 03b)
+        if (idx - 1) < 4:
+            continue
         for k, v in kwargs.items():
             print("{}={}, ".format(k, v), end="")
         print()

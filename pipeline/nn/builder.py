@@ -206,7 +206,7 @@ class NNBuilder():
         elif block == "RAB":
             return RAB
         else:
-            raise ValueError("`block`={} is not in [vanilla, NeXt]".format(block))
+            raise ValueError("`block`={} is not in [vanilla, NeXt, CBAM_NeXt, CBAM_vanilla, RAB]".format(block))
 
     @staticmethod
     def act_constr(activation_fn):

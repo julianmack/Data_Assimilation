@@ -38,8 +38,11 @@ class ResStack3(ResNeXt):
                     module_type="ResNeXt3", Csmall=None, k=None,
                     subBlock="vanilla", attenuation=True):
         #NOTE: the block refered to as an RNAB is actually a RAB by the
-        #definition in http://arxiv.org/abs/1903.10082
-        assert block_type in ["NeXt", "vanilla", "RNAB", "CBAM_NeXt", "CBAM_vanilla"]
+        #definition in http://arxiv.org/abs/1903.10082 so therefore:
+        if block_type == "RNAB":
+            block_type = "RAB"
+        assert block_type in ["NeXt", "vanilla", "RAB", "CBAM_NeXt", "CBAM_vanilla"]
+
         if module_type in ["ResNeXt3", "RDB3"]:
             subBlock = None #this is not used
             assert layers % 3 == 0, "layers must be a multiple of three for `ResNeXt3` and `RDB3`"
