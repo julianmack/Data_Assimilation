@@ -36,17 +36,18 @@ class TrainAE():
         err_msg = """AE_settings must be an AE configuration class"""
         assert self.settings.COMPRESSION_METHOD == "AE", err_msg
 
+        self.batch_sz = batch_sz
+        self.settings.batch_sz =  batch_sz
+
         self.expdir = init_expdir(expdir)
-
-
         self.test_fp = self.expdir + "test.csv"
         self.train_fp = self.expdir + "train.csv"
         self.settings_fp = self.expdir + "settings.txt"
         self.calc_DA_MAE = calc_DA_MAE
 
-        self.batch_sz = batch_sz
-        self.settings.batch_sz =  batch_sz
-
+        if self.settings.SAVE == True:
+            with open(self.settings_fp, "wb") as f:
+                pickle.dump(self.settings, f)
         ML_utils.set_seeds() #set seeds before init model
 
         self.model =  ML_utils.load_model_from_settings(AE_settings)

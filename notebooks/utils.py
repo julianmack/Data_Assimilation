@@ -6,6 +6,7 @@ import pickle
 import sys
 import matplotlib.pyplot as plt
 from pipeline import ML_utils
+from collections import OrderedDict
 
 plt.style.use('seaborn-white')
 
@@ -81,31 +82,35 @@ def extract_res_from_files(exp_dir_base):
                     settings = os.path.join(path, name)
 
             if test and train and settings:
-                test_DA_df = get_DA_info(path)
-
-                encode_att, decode_att = get_attenuation_from_dir(path)
-                print(encode_att, decode_att)
-                DA_data, mean_DF, last_df = get_DA_info(path)
-
                 dftest = pd.read_csv(test)
                 dftrain = pd.read_csv(train)
                 with open(settings, "rb") as f:
-                    stt = pickle.load(f)
+                    settings = pickle.load(f)
+
+                test_DA_df = get_DA_info(path)
+
+                model_data = get_model_specific_data(settings, path)
+
+                DA_data, mean_DF, last_df = get_DA_info(path)
+
+
                 data_dict = {"train_df": dftrain,
                              "test_df":dftest,
                              "test_DA_df_final": last_df,
                              "DA_mean_DF": mean_DF,
-                             "settings":stt,
+                             "settings":settings,
                              "path": path,
-                             "attenuate_enc": encode_att,
-                             "attenuate_dec": decode_att}
+                             "model_data": model_data,}
                 results.append(data_dict)
 
     print("{} experiments conducted".format(len(results)))
+    sort_res = sorted(results, key = lambda x: x['path']) 
+    return sort_res
 
-    return results
 
-def plot_results_loss_epochs(results, ylim = None):
+
+
+def plot_results_loss_epochs(results, ylim1 = None, ylim2=None):
     """Plots subplot with train/valid loss vs number epochs"""
 
     nx = 3
@@ -113,8 +118,8 @@ def plot_results_loss_epochs(results, ylim = None):
     fig, axs = plt.subplots(ny, nx,  sharey=True)
     fig.set_size_inches(nx * 5, ny * 4)
     print(axs.shape)
-    if ylim:
-        plt.ylim(ylim[0], ylim[1])
+    color1 = 'tab:red'
+    color = 'tab:blue'
 
     for idx, ax in enumerate(axs.flatten()):
         if idx + 1 > len(results):
@@ -123,17 +128,27 @@ def plot_results_loss_epochs(results, ylim = None):
         train_df = results[idx]["train_df"]
         sttn = results[idx]["settings"]
         DA_mean_DF = results[idx].get("DA_mean_DF")
+        model_data = results[idx]["model_data"]
+
         ax.plot(test_df.epoch, test_df.reconstruction_err, 'ro-')
         ax.plot(train_df.epoch, train_df.reconstruction_err, 'g+-')
-        ax.grid(True)
+        ax.grid(True, axis='y', color=color1 )
+        ax.grid(True, axis='x', )
         #############################
+
         # multiple line plot
-        ax.set_ylabel('MSE loss', color='r')
-        ax.tick_params(axis='y', labelcolor='r')
+        ax.set_ylabel('MSE loss', color=color1)
+        ax.tick_params(axis='y', labelcolor=color1)
 
         ax2 = ax.twinx()  # instantiate a second axes that shares the same x-axis
+        ax2.grid(True, axis='y', color=color)
+        #set axes:
+        if ylim1:
+            ax.set_ylim(ylim1[0], ylim1[1])
+        if ylim2:
+            ax2.set_ylim(ylim2[0], ylim2[1])
 
-        color = 'tab:blue'
+
         ax2.set_ylabel('Test DA percentage Improvement %', color=color)  # we already handled the x-label with ax1
 
         ax2.errorbar("epoch", 'mean', yerr=DA_mean_DF.std1, data=DA_mean_DF, marker='+', color=color, )
@@ -143,10 +158,6 @@ def plot_results_loss_epochs(results, ylim = None):
         fig.tight_layout()  # otherwise the right y-label is slightly clipped
 
         ########################
-
-        model_name = sttn.__class__.__name__
-
-        res_next = get_resNeXt_details(sttn)
 
         try:
             latent = sttn.get_number_modes()
@@ -184,20 +195,17 @@ def plot_results_loss_epochs(results, ylim = None):
         except:
             num_layers = "??"
 
-        title = "{}: {}, {}, aug={}, drop={}, \nlr={}, latent={}, layers={}"
-        title = title.format(model_name, activation, BN, aug, drop, lr, latent, num_layers)
-        if res_next != {}:
-            attenuate_enc = results[idx]["attenuate_enc"]
-            attenuate_dec = results[idx]["attenuate_dec"]
-            cardinality = res_next.get("cardinality")
-            layers =  res_next.get("layers")
-            title += "\nResNext layers={}, cardinality={}".format(layers, cardinality)
-            title += ", enc={:.2f}, dec={:.2f}".format(attenuate_enc, attenuate_dec)
-            block = res_next.get("block_type")
-            subblock = res_next.get("subBlock")
-            if block and subblock:
-                title += " B={}, SB={}".format(block, subblock)
-        #ax.set_title(idx)
+        title = "act={}, ".format(activation)
+
+        for idx, (key, value) in enumerate(model_data.items()):
+            if idx % 4 == 0 and idx > 0:
+                title += "\n"
+            if isinstance(value, float):
+                title += "{}={:.4f}, ".format(key, value)
+            else:
+                title += "{}={}, ".format(key, value)
+        title = title[:-1]
+
         ax.set_title(title)
     plt.show()
 
@@ -289,20 +297,51 @@ def get_attenuation_from_dir(dir):
                 decode =  v.item()
     return encode, decode
 
-def get_resNeXt_details(settings):
+def get_model_specific_data(settings, path):
+    """Helper funtion to get model data"""
+    cls_name = settings.__class__.__name__
+    assert cls_name in ["ResNeXt", "ResStack3", "CLIC", "GRDNBaseline"]
+    mod_typ, params = get_block_params(settings)
+
+    results = OrderedDict()
+    L = params.get("L")
+    N = params.get("N")
+    if N:
+        results["cardinality"]  = N
+    if L:
+        results["layers"]  = L
+    if (L and M )and (L > 0 and M > 0):
+        results["block_type"] = params.get("B")
+
+    if mod_typ and mod_typ != "Bespoke":
+        results["mod"] = mod_typ
+    if params.get("B"):
+        results["Block"] = params.get("B")
+    if params.get("SB"):
+        results["sBlock"] = params.get("SB")
+    if params.get("S"):
+        results["sigmoid"] = params.get("S")
+    if params.get("Cstd"):
+        results["Cstd"] = params.get("Cstd")
+
+    if cls_name in ["ResStack3", "ResNeXt"] and params.get("attenuation") in [None, True]:
+        encode_att, decode_att = get_attenuation_from_dir(path)
+        if encode_att:
+            results["enc"], results["dec"] = encode_att, decode_att
+
+    return results
+
+def get_block_params(settings):
+    res_typ, res_params = None, None
     for val in settings.BLOCKS[1:]:
         assert isinstance(val, tuple)
         if len(val) == 2:
             continue
         elif len(val) == 3:
             _, typ, params = val
+            if res_typ is not None:
+                raise NotImplementedError("This can only deal with a single BLOCK in settings")
+            res_typ, res_params = typ, params
         else:
             raise ValueError()
-        results = {}
-        if typ in ["resResNeXt", "ResNeXt3", "RDB3", "Bespoke"]:
-            results = {"cardinality": params.get("N"),
-                       "layers": params.get("L"),}
-            results["block_type"] = params.get("B")
-            results["subBlock"] = params.get("SB")
-            print(results["subBlock"])
-    return results
+    return res_typ, res_params

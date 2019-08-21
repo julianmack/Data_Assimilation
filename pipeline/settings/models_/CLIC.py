@@ -9,10 +9,12 @@ class CLIC(Baseline1Block):
         cardinality - width of each layer (in terms of number of res blocks)
     """
 
-    def __init__(self, model_name, block_type, Cstd, sigmoid=False):
+    def __init__(self, model_name, block_type, Cstd, sigmoid=None):
         super(CLIC, self).__init__()
         assert model_name in ["Tucodec"]
         assert block_type in ["vanilla", "NeXt"]
+        assert sigmoid is not None, "Comment out this line if you would like to overrule"
+
         self.BLOCKS = [M.S, (1, model_name, {"B": block_type,
                                             "Cstd": Cstd,
                                             "S": sigmoid})]

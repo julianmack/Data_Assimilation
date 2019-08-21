@@ -2,6 +2,10 @@ import pipeline
 import os
 
 def init_expdir(expdir, ow_permitted=False):
+    """Helper function to initialize experiment directory
+    Arguments
+        expdir (str/path) - directory to write experimental results to
+        ow_permitted (bool) - can previous results be overwitten (if expdir is already populated)"""
     expdir = pipeline.settings.helpers.win_to_unix_fp(expdir)
     wd = pipeline.settings.helpers.get_home_dir()
     try:
@@ -22,7 +26,10 @@ def init_expdir(expdir, ow_permitted=False):
 
     if os.path.isdir(expdir):
         if not ow_permitted:
-            if len(os.listdir(expdir)) > 0:
+            files = os.listdir(expdir)
+            if len(files) == 1 and files[0] == 'settings.txt': #allow overwrite
+                pass
+            elif len(files) > 0:
                 raise ValueError("Cannot overwrite files in expdir. Exit-ing.")
     else:
         os.makedirs(expdir)

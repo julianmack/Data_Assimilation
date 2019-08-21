@@ -1,12 +1,15 @@
 """
-After success of first experiment (particularly with vanilla blocks)
- I want to investigate the effect of
- 1) Increasing the number of channels to [96, 128]
- 2) Increasing the amount of augmentation (as overfitting was a problem)
-        i.e. I have removed the FieldJitter(0, 0) augmentation
+I latterly realised that the RNAB/RAB module had no sigmoid in the attention calc.
+The 6a [and 6a2] results are good though so I want to test here if addition of this
+sigmoid makes the results better/worse.
 
+6a2 is was *very* slow with 96 and the results were not better than w. 64.
+Therefore I will stick with Cstd = 64
 
-NOTE: 128 failed with a CUDA memory error
+Run on a subset of previous results:
+Cstd = 64, block = [vanilla, NeXt], sigmoid=True
+
+Only 2 but split between
 """
 
 from pipeline.settings.models_.resNeXt import ResStack3
@@ -19,8 +22,9 @@ from run_expts.expt_config import ExptConfigTest
 
 
 TEST = False
-GPU_DEVICE = 0
-exp_base = "experiments/train/06a2/"
+GPU_DEVICE = 1
+NUM_GPU = 2
+exp_base = "experiments/train/06a3/"
 
 #global variables for DA and training:
 class ExptConfig():
@@ -33,9 +37,9 @@ class ExptConfig():
     test_every = 10
 
 def main():
-    blocks = ["vanilla"]
-    channels = [96, 128]
-
+    blocks = ["NeXt", "vanilla",]
+    channels = [64]
+    sigmoid = True
 
     if TEST:
         expt = ExptConfigTest()
@@ -46,8 +50,12 @@ def main():
 
     for block in blocks:
         for Cstd in channels:
-            kwargs = {"model_name": "Tucodec", "block_type": block, "Cstd": Cstd}
+            kwargs = {"model_name": "Tucodec", "block_type": block,
+                    "Cstd": Cstd, "sigmoid": sigmoid}
+            idx_ = idx
             idx += 1
+            if idx_ % NUM_GPU != GPU_DEVICE:
+                continue
 
             for k, v in kwargs.items():
                 print("{}={}, ".format(k, v), end="")
