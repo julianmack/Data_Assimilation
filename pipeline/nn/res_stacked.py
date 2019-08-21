@@ -20,7 +20,8 @@ class Res3(nn.Module):
 #res modules with an extra skip connection over every third:
 
 class ResNeXt3(Res3):
-    def __init__(self, encode, activation_constructor, Cin, cardinality, layers, Block, k, Cs, subBlock):
+    def __init__(self, encode, activation_constructor, Cin, cardinality, layers,
+                Block, k, Cs, sigmoid, subBlock):
         super(ResNeXt3, self).__init__()
 
         self.l1of3 = res.ResNeXt(encode, activation_constructor, Cin, cardinality, k, Cs, Block)
@@ -33,7 +34,7 @@ class RBD3(nn.Module):
     with number_layers = 3 fixed
     """
     def __init__(self, encode, activation_constructor, Cin, cardinality, layers, Block,
-                    k, Cs, subBlock):
+                    k, Cs, sigmoid, subBlock):
         super(RBD3, self).__init__()
         if k is None:
             k = 16
@@ -56,11 +57,13 @@ class RBD3(nn.Module):
 
 class ResBespoke(nn.Module):
     """Adds a single bespoke module"""
-    def __init__(self, encode, activation_constructor, Cin, cardinality, layers, Block, k, Cs, subBlock=None):
+    def __init__(self, encode, activation_constructor, Cin, cardinality, layers,
+                    Block, k, Cs, sigmoid, subBlock=None):
         super(ResBespoke, self).__init__()
         assert subBlock is not None
 
-        self.res = Block(encode, activation_constructor, Cin, channel_small=Cs, Block=subBlock)
+        self.res = Block(encode, activation_constructor, Cin, channel_small=Cs,
+                        Block=subBlock, sigmoid=sigmoid)
     def forward(self, x):
         h = self.res(x)
         return x + h
@@ -76,12 +79,13 @@ class resOver(nn.Module):
     """
 
     def __init__(self, encode, activation_constructor, Cin, cardinality, layers, block,
-                    k, Csmall=None, module=ResNeXt3, subBlock=None, attentuation=True):
+                    k, Csmall=None, module=ResNeXt3, subBlock=None, attentuation=True,
+                    sigmoid=None):
         super(resOver, self).__init__()
         blocks = []
         for i in range(layers):
             res = module(encode, activation_constructor, Cin, cardinality, layers,
-                            block, k=k, Cs=Csmall, subBlock=subBlock)
+                            block, k=k, Cs=Csmall, sigmoid=sigmoid, subBlock=subBlock )
             blocks.append(res)
         self.resRes = nn.Sequential(*blocks, activation_constructor(Cin, not encode),
                                     nn.BatchNorm3d(Cin))

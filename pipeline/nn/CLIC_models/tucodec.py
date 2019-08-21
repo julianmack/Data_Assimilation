@@ -14,7 +14,7 @@ from pipeline.nn.explore.empty import Empty
 
 
 class TucodecEncode(nn.Module):
-    def __init__(self, activation_constructor, Block, Cstd):
+    def __init__(self, activation_constructor, Block, Cstd, sigmoid=False):
         super(TucodecEncode, self).__init__()
 
         device = get_device()
@@ -31,12 +31,12 @@ class TucodecEncode(nn.Module):
         self.gdn2 = GDN(Cstd, device, not encode)
         self.conv3 = nn.Conv3d(Cstd, Cstd, kernel_size=(2, 3, 2), stride=2, padding=(0, 1, 0))
         self.gdn4 = GDN(Cstd, device, not encode)
-        self.RAB5 = RAB(encode, activation_constructor, Cstd, Block,
+        self.rnab5 = RAB(encode, activation_constructor, Cstd, sigmoid, Block,
                         downsample=downsample1, upsample=upsample1)
         self.conv6 = nn.Conv3d(Cstd, Cstd, kernel_size=(3,4,2), stride=2)
         self.gdn7 = GDN(Cstd, device, not encode)
         self.conv8 = nn.Conv3d(Cstd, Cstd, kernel_size=(3, 2, 2), stride=2, padding=(1,1,0))
-        self.RAB9 = RAB(encode, activation_constructor, Cstd, Block,
+        self.rnab9 = RAB(encode, activation_constructor, Cstd, sigmoid, Block,
                         downsample=downsample2, upsample=upsample2)
 
         #multi-res path
@@ -68,16 +68,16 @@ class TucodecEncode(nn.Module):
 
         x = self.gdn4(x)
         xb = x
-        x = self.RAB5(x)
+        x = self.rnab5(x)
         x = self.conv6(x)
         x = self.gdn7(x)
         xc = x
         x = self.conv8(x)
-        x = self.RAB9(x)
+        x = self.rnab9(x)
         return x, xa, xb, xc
 
 class TucodecDecode(nn.Module):
-    def __init__(self, activation_constructor, Block, Cstd):
+    def __init__(self, activation_constructor, Block, Cstd, sigmoid=False):
         super(TucodecDecode, self).__init__()
 
         device = get_device()
@@ -96,7 +96,7 @@ class TucodecDecode(nn.Module):
         self.rb10a = Block(encode, activation_constructor, Cstd,)
         self.rb10b = Block(encode, activation_constructor, Cstd,)
 
-        self.RAB9 = RAB(encode, activation_constructor, Cstd, Block,
+        self.rnab9 = RAB(encode, activation_constructor, Cstd, sigmoid, Block,
                         downsample=downsample2, upsample=upsample2)
         self.conv8 = nn.ConvTranspose3d(Cstd, Cstd, kernel_size=(3, 2, 2), stride=2, padding=(1,1,0))
 
@@ -104,7 +104,7 @@ class TucodecDecode(nn.Module):
 
         self.gdn7 = GDN(Cstd, device, encode)
         self.conv6 = nn.ConvTranspose3d(Cstd, Cstd, kernel_size=(3,4,2), stride=2,)
-        self.RAB5 = RAB(encode, activation_constructor, Cstd, Block,
+        self.rnab5 = RAB(encode, activation_constructor, Cstd, sigmoid, Block,
                         downsample=downsample1, upsample=upsample1)
         self.gdn4 = GDN(Cstd, device, encode)
 
@@ -120,13 +120,13 @@ class TucodecDecode(nn.Module):
         x = self.rb10a(x)
         x = self.rb10b(x)
 
-        x = self.RAB9 (x)
+        x = self.rnab9 (x)
         x = self.conv8 (x)
 
 
         x = self.gdn7(x)
         x = self.conv6(x)
-        x = self.RAB5(x)
+        x = self.rnab5(x)
         x = self.gdn4 (x)
 
         x = self.conv3(x)

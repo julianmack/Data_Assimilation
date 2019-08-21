@@ -71,7 +71,7 @@ class NNBuilder():
         return module #No activation - this is already in the resNext
 
     @staticmethod
-    def ResNeXt3(encode, activation_fn, C, N, L, B, CS, k, SB, final=False):
+    def ResNeXt3(encode, activation_fn, C, N, L, B, CS, k, SB, A = None, S=None, final=False):
         if L < 1 or C < 1:
             return nn.Sequential()
         assert L % 3 == 0
@@ -85,7 +85,7 @@ class NNBuilder():
                             res_stacked.ResNeXt3)
         return module
 
-    def ResBespoke(encode, activation_fn, C, N, L, B, CS, k, SB, A, final=False):
+    def ResBespoke(encode, activation_fn, C, N, L, B, CS, k, SB, A, S, final=False):
         if L < 1:
             return nn.Sequential()
         block = NNBuilder.get_block(B)
@@ -94,11 +94,11 @@ class NNBuilder():
         act_fn_constructor = NNBuilder.act_constr(activation_fn)
         module = res_stacked.resOver(encode, act_fn_constructor, C, N,
                             L, block, k, CS, module=res_stacked.ResBespoke,
-                            subBlock=subBlock, attentuation=A)
+                            subBlock=subBlock, attentuation=A, sigmoid=S)
         return module
 
     @staticmethod
-    def ResNeXtRDB3(encode, activation_fn, C, N, L, B, CS, k, SB, final=False):
+    def ResNeXtRDB3(encode, activation_fn, C, N, L, B, CS, k, SB, A = None, S = None, final=False):
         if L < 1 or C < 1:
             return nn.Sequential()
         assert SB is None
@@ -112,13 +112,13 @@ class NNBuilder():
 
 
     ################## CLIC models
-    def Tucodec(encode, activation_fn, B, Cstd):
+    def Tucodec(encode, activation_fn, B, Cstd, S=False):
         act_fn_constructor = NNBuilder.act_constr(activation_fn)
         Block = NNBuilder.get_block(B)
         if encode:
-            module =  tucodec.TucodecEncode(act_fn_constructor, Block, Cstd)
+            module =  tucodec.TucodecEncode(act_fn_constructor, Block, Cstd, S)
         else:
-            module =  tucodec.TucodecDecode(act_fn_constructor, Block, Cstd)
+            module =  tucodec.TucodecDecode(act_fn_constructor, Block, Cstd, S)
         return nn.Sequential(module)
 
     def GRDN(encode, activation_fn, B, Cstd):

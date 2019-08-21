@@ -1,8 +1,12 @@
 """
-03b failed on the final experiment
-with 16 RNABs because of overflow
+I have just realised that 03b did not use Sigmoids
+in the mask of the RNAB. I will repeat the below
+and compare to see if this has had any significant effect.
 
-Hence use attenuation here and perform for 12 and 16
+
+Note: 03b failed due to overflow with more than
+8 layers so I will not use these.
+
 
 """
 
@@ -16,7 +20,7 @@ from run_expts.expt_config import ExptConfigTest
 
 TEST = False
 GPU_DEVICE = 1
-exp_base = "experiments/train/03b/"
+exp_base = "experiments/train/03b2/"
 
 #global variables for DA and training:
 class ExptConfig():
@@ -29,9 +33,9 @@ class ExptConfig():
     test_every = 10
 
 def main():
-    kwargs = {"cardinality": 1, "block_type": "RNAB",
-                    "module_type": "Bespoke", "attenuation": True}
-    layers = [1, 2, 4, 8, 12, 16]
+    kwargs = {"cardinality": 1, "block_type": "RNAB", "sigmoid": True,
+                    "module_type": "Bespoke", "attenuation": False}
+    layers = [1, 2, 4, 8,]
 
     if TEST:
         expt = ExptConfigTest()
@@ -44,9 +48,7 @@ def main():
         kwargs["subBlock"] = "NeXt" #this performed slightly better on first case
         kwargs["layers"] = layer
         idx += 1
-        #if not final layers = 12 or 16 experiment, don't perform (see 03b)
-        if (idx - 1) < 4:
-            continue
+
         for k, v in kwargs.items():
             print("{}={}, ".format(k, v), end="")
         print()

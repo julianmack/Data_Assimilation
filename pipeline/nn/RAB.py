@@ -20,11 +20,14 @@ from pipeline.nn.helpers import get_activation
 
 class RAB(nn.Module):
 
-    def __init__(self, encode, activation_constructor, Cin, Block = ResVanilla, channel_small=None,
-                    down_sf=4, residual=True, downsample=None, upsample=None):
+    def __init__(self, encode, activation_constructor, Cin, sigmoid=True,
+                    Block = ResVanilla, channel_small=None,
+                    down_sf=4, residual=True, downsample=None,
+                    upsample=None, ):
         super(RAB, self).__init__()
         if downsample is not None:
             assert upsample is not None
+        self.sigmoid = sigmoid
         self.residual = residual
         if get_activation(activation_constructor) == "GDN":
             raise NotImplementedError("Must deal with GDN w. RAB crossover")
@@ -79,6 +82,8 @@ class RAB(nn.Module):
 
     def forward(self, x):
         mask = self.mask(x)
+        if self.sigmoid:
+            mask = torch.sigmoid(mask)
         trunk = self.trunk(x)
 
         h = trunk * mask

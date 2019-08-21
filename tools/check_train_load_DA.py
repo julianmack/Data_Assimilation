@@ -19,16 +19,16 @@ TOL = 1e-2
 ACTIVATION = "prelu"
 EXPDIR = "experiments/CTL/"
 
-resNext3_k = {"layers": 3, "cardinality": 1, "block_type": "vanilla",
-                "module_type": "ResNeXt3"}
-clic_K = {"model_name": "Tucodec", "block_type": "vanilla"}
-grdn_k = {"block_type": "NeXt", "Cstd": 32}
+resNext3_k = {"layers": 3, "cardinality": 1, "block_type": "RNAB",
+                "module_type": "Bespoke", "sigmoid": True}
+clic_K = {"model_name": "Tucodec", "block_type": "vanilla", "Cstd": 64, "sigmoid": True}
+grdn_k = {"block_type": "NeXt", "Cstd": 2}
 
 CONFIGS = [ResStack3, CLIC, GRDNBaseline]
 KWARGS = ( resNext3_k, clic_K, grdn_k)
 #################
-CONFIGS = CONFIGS[-1]
-KWARGS = (KWARGS[-1],)
+CONFIGS = CONFIGS[1]
+KWARGS = (KWARGS[1],)
 
 
 #global variables for DA and training:

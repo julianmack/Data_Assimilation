@@ -13,7 +13,7 @@ ACTIVATION = "prelu"
 
 
 ########
-resNext3_k = {"layers": 27, "cardinality": 1, "block_type": "RNAB",
+resNext3_k = {"layers": 1, "cardinality": 1, "block_type": "RNAB",
                 "module_type": "Bespoke",
                 "subBlock": "NeXt"}
 clic_K = {"model_name": "Tucodec", "block_type": "vanilla", "Cstd": 64}
@@ -23,8 +23,8 @@ CONFIGS = [ResStack3, CLIC, GRDNBaseline]
 KWARGS = ( resNext3_k, clic_K, grdn_k)
 
 ###########
-CONFIGS = CONFIGS[-1]
-KWARGS = (KWARGS[-1],)
+# CONFIGS = CONFIGS[-1]
+# KWARGS = (KWARGS[-1],)
 
 
 PRINT_MODEL = True

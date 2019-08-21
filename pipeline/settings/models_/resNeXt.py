@@ -36,7 +36,7 @@ class ResNeXt(Baseline1Block):
 class ResStack3(ResNeXt):
     def __init__(self, layers, cardinality, block_type="NeXt",
                     module_type="ResNeXt3", Csmall=None, k=None,
-                    subBlock="vanilla", attenuation=True):
+                    subBlock="vanilla", attenuation=True, sigmoid=None):
         #NOTE: the block refered to as an RNAB is actually a RAB by the
         #definition in http://arxiv.org/abs/1903.10082 so therefore:
         if block_type == "RNAB":
@@ -53,7 +53,7 @@ class ResStack3(ResNeXt):
         super(ResStack3, self).__init__(layers, cardinality)
         kwargs = {"C": 32, "L": layers, "N": cardinality, "B":
                     block_type, "CS": Csmall, "k": k, "SB": subBlock,
-                    "A": attenuation}
+                    "A": attenuation, "S": sigmoid}
 
         self.BLOCKS = [M.S, (5, "conv"), (1, module_type, kwargs), (2, "conv")]
 
