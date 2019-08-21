@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from pipeline import ML_utils
 from collections import OrderedDict
 
-plt.style.use('seaborn-white')
+#plt.style.use('seaborn-white')
 
 def get_DA_info(exp_dir_base):
     max_epoch = 0
@@ -104,7 +104,7 @@ def extract_res_from_files(exp_dir_base):
                 results.append(data_dict)
 
     print("{} experiments conducted".format(len(results)))
-    sort_res = sorted(results, key = lambda x: x['path']) 
+    sort_res = sorted(results, key = lambda x: x['path'])
     return sort_res
 
 
@@ -135,7 +135,6 @@ def plot_results_loss_epochs(results, ylim1 = None, ylim2=None):
         ax.grid(True, axis='y', color=color1 )
         ax.grid(True, axis='x', )
         #############################
-
         # multiple line plot
         ax.set_ylabel('MSE loss', color=color1)
         ax.tick_params(axis='y', labelcolor=color1)
@@ -198,7 +197,7 @@ def plot_results_loss_epochs(results, ylim1 = None, ylim2=None):
         title = "act={}, ".format(activation)
 
         for idx, (key, value) in enumerate(model_data.items()):
-            if idx % 4 == 0 and idx > 0:
+            if idx % 3 == 0 and idx > 0:
                 title += "\n"
             if isinstance(value, float):
                 title += "{}={:.4f}, ".format(key, value)
@@ -310,13 +309,11 @@ def get_model_specific_data(settings, path):
         results["cardinality"]  = N
     if L:
         results["layers"]  = L
-    if (L and M )and (L > 0 and M > 0):
+    if (L and N) and (L > 0 and N > 0):
         results["block_type"] = params.get("B")
 
     if mod_typ and mod_typ != "Bespoke":
         results["mod"] = mod_typ
-    if params.get("B"):
-        results["Block"] = params.get("B")
     if params.get("SB"):
         results["sBlock"] = params.get("SB")
     if params.get("S"):
