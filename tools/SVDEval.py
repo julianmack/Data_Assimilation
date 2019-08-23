@@ -22,6 +22,7 @@ def VarDASVD(num_modes, csv_fp=None, debug = DEBUG, single_state = False):
     settings.DEBUG = debug
     settings.TOL = 1e-3
 
+
     loader, splitter = GetData(), SplitData()
     X = loader.get_X(settings)
 

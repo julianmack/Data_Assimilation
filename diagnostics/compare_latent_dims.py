@@ -4,17 +4,25 @@ from pipeline import ML_utils
 from pipeline.VarDA import VDAInit
 from pipeline.data_.load import GetData
 from pipeline.data_.split import SplitData
-
+from pipeline.settings import config
 DIR = "experiments/train/00c_baseResNext/"
 #DIR = "experiments/train/01_resNeXt_3/0/2/"
-
+GPU_DEVICE = 0
+import os
+DIR = "experiments/train/" + "06a2/0/"
 
 def main():
 
-    model, settings = ML_utils.load_model_and_settings_from_dir(DIR)
+
+
+    model, settings = ML_utils.load_model_and_settings_from_dir(DIR, device_idx=GPU_DEVICE)
+    device = ML_utils.get_device(device_idx=GPU_DEVICE)
+
+    
     initializer = VDAInit(settings, model)
     vdadata = initializer.run()
     encoder = vdadata.get("encoder")
+
 
 
     loader, splitter = GetData(), SplitData()

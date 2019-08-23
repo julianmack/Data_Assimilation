@@ -285,8 +285,9 @@ def create_res_df(results, remove_duplicates=False):
 
     return df_res
 
-def get_attenuation_from_dir(dir):
-    model, settings = ML_utils.load_model_and_settings_from_dir(dir)
+def get_attenuation_from_dir(dir, model=None):
+    if not model:
+        model, settings = ML_utils.load_model_and_settings_from_dir(dir)
     encode, decode = None, None
     for k, v in model.named_parameters():
         if "attenuate_res" in k:
@@ -296,7 +297,7 @@ def get_attenuation_from_dir(dir):
                 decode =  v.item()
     return encode, decode
 
-def get_model_specific_data(settings, path):
+def get_model_specific_data(settings, dir, model=None):
     """Helper funtion to get model data"""
     cls_name = settings.__class__.__name__
     assert cls_name in ["ResNeXt", "ResStack3", "CLIC", "GRDNBaseline"]
@@ -309,7 +310,7 @@ def get_model_specific_data(settings, path):
         results["cardinality"]  = N
     if L:
         results["layers"]  = L
-    if (L and N) and (L > 0 and N > 0):
+    if (cls_name in ["ResNeXt", "ResStack3"] and (L and N) and (L > 0 and N > 0)) or cls_name in ["CLIC", "GRDNBaseline"]:
         results["block_type"] = params.get("B")
 
     if mod_typ and mod_typ != "Bespoke":
@@ -322,7 +323,7 @@ def get_model_specific_data(settings, path):
         results["Cstd"] = params.get("Cstd")
 
     if cls_name in ["ResStack3", "ResNeXt"] and params.get("attenuation") in [None, True]:
-        encode_att, decode_att = get_attenuation_from_dir(path)
+        encode_att, decode_att = get_attenuation_from_dir(dir, model)
         if encode_att:
             results["enc"], results["dec"] = encode_att, decode_att
 

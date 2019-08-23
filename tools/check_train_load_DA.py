@@ -13,15 +13,17 @@ from pipeline.settings.block_models import Res34AE, Res34AE_Stacked, Cho2019
 from pipeline.settings.models_.resNeXt import Baseline1Block, ResNeXt, ResStack3
 from pipeline.settings.baseline_explore import Baseline1
 from pipeline.settings.models_.CLIC import CLIC, GRDNBaseline
+import os
 
 VAR = 0.05
 TOL = 1e-2
-ACTIVATION = "prelu"
+ACTIVATION = "GDN"
 EXPDIR = "experiments/CTL/"
 
 resNext3_k = {"layers": 3, "cardinality": 1, "block_type": "RNAB",
                 "module_type": "Bespoke", "sigmoid": True}
-clic_K = {"model_name": "Tucodec", "block_type": "vanilla", "Cstd": 64, "sigmoid": True}
+clic_K = {"model_name": "Tucodec", "block_type": "CBAM_NeXt", "Cstd": 32,
+        "sigmoid": False, "activation": ACTIVATION}
 grdn_k = {"block_type": "NeXt", "Cstd": 2}
 
 CONFIGS = [ResStack3, CLIC, GRDNBaseline]
@@ -76,16 +78,17 @@ def run_DA_batch(settings, model, all_data, expdir, params):
         control_states = test_X[START:NUM_STATES + START]
         print_every = 10
     if settings.COMPRESSION_METHOD == "AE":
-        out_fp = expdir + "AE.csv" #this will be written and then deleted
+        out_fp = os.path.join(expdir, "AE.csv")#this will be written and then deleted
     else:
-        out_fp = expdir + "SVD.csv"
+        out_fp = os.path.join(expdir, "SVD.csv")
 
     batch_DA_AE = BatchDA(settings, control_states, csv_fp= out_fp, AEModel=model,
                         reconstruction=True, plot=False)
 
     return batch_DA_AE.run(print_every=print_every, print_small=True)
 
-def check_train_load_DA(config, config_kwargs,  small_debug=True, all_data=False, activation=None,params={"var": VAR, "tol": TOL}):
+def check_train_load_DA(config, config_kwargs,  small_debug=True, all_data=False,
+                        activation=None, params={"var": VAR, "tol": TOL}):
     expdir = EXPDIR
     try:
         if not config_kwargs:

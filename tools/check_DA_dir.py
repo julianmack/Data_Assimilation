@@ -7,7 +7,7 @@ import shutil
 
 
 DIR = "experiments/train/01_resNeXt_3/0/2/"
-DIR = "experiments/train/00c_baseResNext/" #DA4/DA3
+DIR = "experiments/train/02a/2/" #DA4/DA3
 
 
 CONFIGS = [DIR]
@@ -18,7 +18,6 @@ KWARGS = [0,]
 #global variables for DA:
 ALL_DATA = False
 EXPDIR = "experiments/DA/load/"
-SAVE = False
 
 def main(params, prnt=True):
 

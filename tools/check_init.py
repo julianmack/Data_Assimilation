@@ -16,15 +16,16 @@ ACTIVATION = "prelu"
 resNext3_k = {"layers": 1, "cardinality": 1, "block_type": "RNAB",
                 "module_type": "Bespoke",
                 "subBlock": "NeXt"}
-clic_K = {"model_name": "Tucodec", "block_type": "vanilla", "Cstd": 64}
+kwargs = {"model_name": "Tucodec", "block_type": "CBAM_vanilla",
+        "Cstd": 64, "sigmoid": False, "activation": ACTIVATION}
 grdn_k = {"block_type": "NeXt", "Cstd": 32}
 
 CONFIGS = [ResStack3, CLIC, GRDNBaseline]
-KWARGS = ( resNext3_k, clic_K, grdn_k)
+KWARGS = ( resNext3_k, kwargs, grdn_k)
 
 ###########
-# CONFIGS = CONFIGS[-1]
-# KWARGS = (KWARGS[-1],)
+CONFIGS = CONFIGS[1]
+KWARGS = (KWARGS[1],)
 
 
 PRINT_MODEL = True
@@ -41,7 +42,7 @@ def main():
         check_init(configs[idx], KWARGS[idx], PRINT_MODEL, ACTIVATION)
         print()
 
-def check_init(config, config_kwargs, prnt, activation):
+def check_init(config, config_kwargs, prnt, activation=None):
 
     if not config_kwargs:
         config_kwargs = {}
@@ -49,7 +50,7 @@ def check_init(config, config_kwargs, prnt, activation):
 
     settings = config(**config_kwargs)
     settings.DEBUG = False
-    settings.ACTIVATION = activation
+    #settings.ACTIVATION = activation
 
     assert isinstance(settings, Config)
 
