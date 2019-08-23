@@ -80,6 +80,8 @@ class BatchDA():
         totals = {"percent_improvement": 0,
                 "ref_MAE_mean": 0,
                 "da_MAE_mean": 0,
+                "mse_DA": 0,
+                "mse_ref": 0,
                 "counts": 0,
                 "l1_loss": 0,
                 "l2_loss": 0,
@@ -137,6 +139,8 @@ class BatchDA():
             result["ref_MAE_mean"] =  DA_results["ref_MAE_mean"]
             result["da_MAE_mean"] = DA_results["da_MAE_mean"]
             result["counts"] = DA_results["counts"]
+            result["mse_ref"] = DA_results["mse_ref"]
+            result["mse_DA"] = DA_results["mse_DA"]
             if self.reconstruction:
                 result["l1_loss"] = l1.detach().cpu().numpy()
                 result["l2_loss"] = l2.detach().cpu().numpy()
@@ -169,6 +173,8 @@ class BatchDA():
     @staticmethod
     def get_tots(results_df):
         data = {}
+        data["mse_ref"] = results_df["mse_ref"].mean()
+        data["mse_DA"] = results_df["mse_DA"].mean()
         data["ref_MAE_mean"] = results_df["ref_MAE_mean"].mean()
         data["da_MAE_mean"] = results_df["da_MAE_mean"].mean()
         data["percent_improvement"] = results_df["percent_improvement"].mean()
@@ -191,11 +197,13 @@ class BatchDA():
                 print(k, "{:.2f}".format(v / num_states))
             print()
         else:
-            out_str = "DA - - L2: {:.2f}, L1: {:.2f}, % Improve: {:.2f}%, DA_MAE: {:.2f}, time(s):  {:.4f}s".format(
+            out_str = "DA - - L2: {:.2f}, L1: {:.2f}, % Improve: {:.2f}%, DA_MAE: {:.2f}, mse_ref: {:.2f}, mse_DA: {:.3f}, time(s):  {:.4f}s".format(
                                                     totals["l2_loss"]/ num_states,
                                                     totals["l1_loss"]/ num_states,
                                                     totals["percent_improvement"]/ num_states,
                                                     totals["da_MAE_mean"]/ num_states,
+                                                    totals["mse_ref"] / num_states,
+                                                    totals["mse_DA"] / num_states,
                                                     totals["time"]/ num_states)
             print(out_str)
 

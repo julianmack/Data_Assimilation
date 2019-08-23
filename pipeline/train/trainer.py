@@ -52,7 +52,7 @@ class TrainAE():
 
         self.model =  ML_utils.load_model_from_settings(AE_settings)
         print("Number of parameters:", sum(p.numel() for p in self.model.parameters()))
-
+        
         self.device = ML_utils.get_device()
         self.columns = ["epoch","reconstruction_err","DA_MAE", "DA_ratio_improve_MAE", "time_DA(s)", "time_epoch(s)"]
 

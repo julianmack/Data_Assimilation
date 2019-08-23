@@ -14,6 +14,7 @@ import math
 import torch.nn as nn
 import torch.nn.functional as F
 from pipeline.nn.helpers import get_activation
+from pipeline import nn as pnn
 
 class BasicConv(nn.Module):
     """This is edited so that it works for 3D case"""
@@ -46,7 +47,7 @@ class ChannelGate(nn.Module):
                 reduction_ratio=8, pool_types=['avg', 'max']):
         super(ChannelGate, self).__init__()
         self.gate_channels = gate_channels
-        
+
         self.mlp = nn.Sequential(
             Flatten(),
             nn.Linear(gate_channels, gate_channels // reduction_ratio),
@@ -115,8 +116,11 @@ class CBAM(nn.Module):
                     pool_types=['avg', 'max'], no_spatial=False):
         super(CBAM, self).__init__()
         if get_activation(activation_constructor) == "GDN":
-            raise NotImplementedError("Must deal with GDN w. CBAM crossover")
-        self.channelgate = ChannelGate(encode, activation_constructor, gate_channels,
+            channel_act_constr = pnn.builder.NNBuilder.act_constr("prelu")
+        else:
+            channel_act_constr = activation_constructor
+
+        self.channelgate = ChannelGate(encode, channel_act_constr, gate_channels,
                             reduction_ratio, pool_types)
         self.no_spatial=no_spatial
         if not no_spatial:

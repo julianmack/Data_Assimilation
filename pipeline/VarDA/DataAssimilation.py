@@ -55,6 +55,8 @@ class DAPipeline():
             stats["Percent_improvement"] = 100*(DA_results["ref_MAE_mean"] - DA_results["da_MAE_mean"])/DA_results["ref_MAE_mean"]
             stats["ref_MAE_mean"] = DA_results["ref_MAE_mean"]
             stats["da_MAE_mean"] = DA_results["da_MAE_mean"]
+            stats["mse_ref"] =  DA_results["mse_ref"]
+            stats["mse_DA"] = DA_results["mse_DA"]
             return w_opt, stats
 
         return w_opt
@@ -181,11 +183,25 @@ class DAPipeline():
         da_MAE = np.abs(u_DA - u_c)
         ref_MAE_mean = np.mean(ref_MAE)
         da_MAE_mean = np.mean(da_MAE)
-        percent_improvement = 100*(ref_MAE_mean - da_MAE_mean)/ref_MAE_mean
+        percent_improvement = 100 * (ref_MAE_mean - da_MAE_mean)/ref_MAE_mean
         counts = (da_MAE < ref_MAE).sum()
+        mse_ref = np.linalg.norm(u_0 - u_c) /  np.linalg.norm(u_c)
+        mse_DA = np.linalg.norm(u_DA - u_c) /  np.linalg.norm(u_c)
+
+        mse_percent = 100 * (mse_ref - mse_DA)/mse_ref
+
+        results_data = {"ref_MAE": ref_MAE,
+                    "da_MAE": da_MAE,
+                    "u_DA": u_DA,
+                    "ref_MAE_mean": ref_MAE_mean,
+                    "da_MAE_mean": da_MAE_mean,
+                    "percent_improvement": percent_improvement,
+                    "counts": counts,
+                    "w_opt": w_opt,
+                    "mse_ref": mse_ref,
+                    "mse_DA": mse_DA}
 
         if settings.DEBUG:
-
             # u_0 = u_0[:1, :2, :2]
             # u_c = u_c[:1, :2, :2]
             # u_DA = u_DA[:1, :2, :2]
@@ -193,7 +209,6 @@ class DAPipeline():
             size = len(u_0.flatten())
             if size > 5:
                 size = 5
-
             print("std:    ", std.flatten()[:size])
             print("mean:   ", mean.flatten()[:size])
             print("u_0:    ", u_0.flatten()[:size])
@@ -202,14 +217,7 @@ class DAPipeline():
             print("ref_MAE:", ref_MAE.flatten()[:size])
             print("da_MAE: ", da_MAE.flatten()[:size])
             print("%", percent_improvement, "da_MAE", da_MAE_mean,"ref_MAE", ref_MAE_mean)
-        results_data = {"ref_MAE": ref_MAE,
-                    "da_MAE": da_MAE,
-                    "u_DA": u_DA,
-                    "ref_MAE_mean": ref_MAE_mean,
-                    "da_MAE_mean": da_MAE_mean,
-                    "percent_improvement": percent_improvement,
-                    "counts": counts,
-                    "w_opt": w_opt}
+
         return results_data
 
     def __maybe_get_jacobian(self):
@@ -244,6 +252,7 @@ class DAPipeline():
 
         print("Ref MAE: {:.4f}, DA MAE: {:.4f},".format(ref_MAE_mean, da_MAE_mean), "% improvement: {:.2f}%".format(DA_results["percent_improvement"]))
         print("DA_MAE < ref_MAE for {}/{} points".format(counts, len(da_MAE.flatten())))
+        print("mse_ref: {:.4f}, mse_DA: {:.4f}".format(mse_ref, mse_DA))
         #Compare abs(u_0 - u_c).sum() with abs(u_DA - u_c).sum() in paraview
 
 if __name__ == "__main__":

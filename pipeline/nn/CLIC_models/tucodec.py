@@ -43,7 +43,9 @@ class TucodecEncode(nn.Module):
         self.convA = nn.Conv3d(Cstd, Cstd, kernel_size=3, stride=8)
         self.convB = nn.Conv3d(Cstd, Cstd, kernel_size=3, stride=4, padding=(0, 1, 0))
         self.convC = nn.Conv3d(Cstd, Cstd, kernel_size=(3, 2, 3), stride=2, padding=1)
-
+        print(Block)
+        print("Number of RNAB parameters:", sum(p.numel() for p in self.rnab5.parameters()))
+        exit()
         #final conv
         self.conv10 = nn.Conv3d(4 * Cstd, Cstd, kernel_size=(2,2,2), stride=2)
 
@@ -54,7 +56,7 @@ class TucodecEncode(nn.Module):
         hb = self.convB(xb)
         hc = self.convC(xc)
 
-        inp = torch.cat([h, ha, hb, hc], axis=1) #concat on channel
+        inp = torch.cat([h, ha, hb, hc], dim=1) #concat on channel
         h = self.conv10(inp)
         # h = self.act11(h)
         # h = self.conv12(h) #to give same latent dim as baseline model

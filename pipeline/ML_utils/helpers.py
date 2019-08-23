@@ -34,11 +34,11 @@ def load_AE(ModelClass, path, device = None, **kwargs):
 
     return encoder, decoder
 
-def load_model_from_settings(settings, device=None):
+def load_model_from_settings(settings, device=None, device_idx=None):
     """Loads model from settings - if settings.AE_MODEL_FP is set,
     this loads saved weights, otherwise it will init a new model """
     if not device:
-        device = get_device()
+        device = get_device(device_idx=device_idx)
 
     set_seeds()
 
@@ -52,9 +52,10 @@ def load_model_from_settings(settings, device=None):
     model.eval()
     return model
 
-def load_model_and_settings_from_dir(dir):
+def load_model_and_settings_from_dir(dir, device_idx=None):
     if dir[-1] != "/":
         dir += "/"
+
     #get files
     model, settings = None, None
 
@@ -63,7 +64,7 @@ def load_model_and_settings_from_dir(dir):
     for path, subdirs, files in os.walk(dir):
         for file in files:
             if file == "settings.txt":
-                with open(path + file, "rb") as f:
+                with open(os.path.join(path, file), "rb") as f:
                     settings = pickle.load(f)
             if file[-4:] == ".pth":
                 if "-" in file:
@@ -71,15 +72,15 @@ def load_model_and_settings_from_dir(dir):
                 epoch = int(file.replace(".pth", ""))
                 if epoch >= max_epoch:
                     max_epoch = epoch
-                    best_fp = path + file
+                    best_fp = os.path.join(path, file)
 
     if not settings:
         raise ValueError("No settings.txt file in dir")
 
     settings.export_env_vars()
     settings.AE_MODEL_FP = best_fp
-    model = load_model_from_settings(settings)
-
+    model = load_model_from_settings(settings, device_idx=device_idx)
+    
     return model, settings
 
 

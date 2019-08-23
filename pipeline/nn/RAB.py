@@ -29,8 +29,8 @@ class RAB(nn.Module):
             assert upsample is not None
         self.sigmoid = sigmoid
         self.residual = residual
-        if get_activation(activation_constructor) == "GDN":
-            raise NotImplementedError("Must deal with GDN w. RAB crossover")
+        # if get_activation(activation_constructor) == "GDN":
+        #     raise NotImplementedError("Must deal with GDN w. RAB crossover")
 
         #init trunk: 3 res blocks
         self.trunk = nn.Sequential()

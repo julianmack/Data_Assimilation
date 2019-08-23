@@ -71,7 +71,7 @@ class NNBuilder():
         return module #No activation - this is already in the resNext
 
     @staticmethod
-    def ResNeXt3(encode, activation_fn, C, N, L, B, CS, k, SB, A = None, S=None, final=False):
+    def ResNeXt3(encode, activation_fn, C, N, L, B, CS, k, SB=None, A = None, S=None, final=False):
         if L < 1 or C < 1:
             return nn.Sequential()
         assert L % 3 == 0
@@ -85,7 +85,7 @@ class NNBuilder():
                             res_stacked.ResNeXt3)
         return module
 
-    def ResBespoke(encode, activation_fn, C, N, L, B, CS, k, SB, A, S, final=False):
+    def ResBespoke(encode, activation_fn, C, N, L, B, CS, k, SB, A, S=None, final=False):
         if L < 1:
             return nn.Sequential()
         block = NNBuilder.get_block(B)
@@ -98,7 +98,7 @@ class NNBuilder():
         return module
 
     @staticmethod
-    def ResNeXtRDB3(encode, activation_fn, C, N, L, B, CS, k, SB, A = None, S = None, final=False):
+    def ResNeXtRDB3(encode, activation_fn, C, N, L, B, CS, k, SB=None, A = None, S = None, final=False):
         if L < 1 or C < 1:
             return nn.Sequential()
         assert SB is None
@@ -112,7 +112,10 @@ class NNBuilder():
 
 
     ################## CLIC models
-    def Tucodec(encode, activation_fn, B, Cstd, S=False):
+    def Tucodec(encode, activation_fn, B, Cstd, S=False, A=None):
+        if A:
+            assert A == activation_fn, "{} != {}".format(A, activation_fn)
+
         act_fn_constructor = NNBuilder.act_constr(activation_fn)
         Block = NNBuilder.get_block(B)
         if encode:
@@ -203,7 +206,7 @@ class NNBuilder():
             return res.CBAM_NeXt
         elif block == "CBAM_vanilla":
             return res.CBAM_vanilla
-        elif block == "RAB":
+        elif block in ["RAB", "RNAB"]:
             return RAB
         else:
             raise ValueError("`block`={} is not in [vanilla, NeXt, CBAM_NeXt, CBAM_vanilla, RAB]".format(block))
