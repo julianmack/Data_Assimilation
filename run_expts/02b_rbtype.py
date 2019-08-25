@@ -2,11 +2,11 @@
 Read expt 02a first
 This extends expt 02a by adding CBAM blocks
 """
-from varda_cae.settings.models.resNeXt import ResStack3
+from VarDACAE.settings.models.resNeXt import ResStack3
 
 
-from varda_cae import TrainAE, ML_utils, GetData, SplitData
-from varda_cae.VarDA.batch_DA import BatchDA
+from VarDACAE import TrainAE, ML_utils, GetData, SplitData
+from VarDACAE.VarDA.batch_DA import BatchDA
 from run_expts.expt_config import ExptConfigTest
 
 

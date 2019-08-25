@@ -3,11 +3,11 @@ Check that you can get a resNext system to train
 
 """
 
-from varda_cae.settings.models.resNeXt import ResNeXt
+from VarDACAE.settings.models.resNeXt import ResNeXt
 
 
-from varda_cae import TrainAE, ML_utils, GetData, SplitData
-from varda_cae.VarDA.batch_DA import BatchDA
+from VarDACAE import TrainAE, ML_utils, GetData, SplitData
+from VarDACAE.VarDA.batch_DA import BatchDA
 
 
 #global variables for DA and training:

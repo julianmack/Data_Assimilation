@@ -4,11 +4,11 @@ After looking at results of 00_train_baseline:
     2) Two training runs diverged after ~ 75 epochs.
 
 """
-from varda_cae.settings.models.resNeXt import ResNeXt
+from VarDACAE.settings.models.resNeXt import ResNeXt
 
 
-from varda_cae import TrainAE, ML_utils, GetData, SplitData
-from varda_cae.VarDA.batch_DA import BatchDA
+from VarDACAE import TrainAE, ML_utils, GetData, SplitData
+from VarDACAE.VarDA.batch_DA import BatchDA
 
 import shutil
 

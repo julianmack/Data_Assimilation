@@ -1,7 +1,7 @@
-"""File to run elements of varda_cae module from"""
-from varda_cae.settings.explore.baseline_explore import Baseline1, Baseline2
-from varda_cae import TrainAE, ML_utils, GetData, SplitData
-from varda_cae.VarDA.batch_DA import BatchDA
+"""File to run elements of VarDACAE module from"""
+from VarDACAE.settings.explore.baseline_explore import Baseline1, Baseline2
+from VarDACAE import TrainAE, ML_utils, GetData, SplitData
+from VarDACAE.VarDA.batch_DA import BatchDA
 
 import shutil
 

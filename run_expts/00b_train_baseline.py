@@ -10,11 +10,11 @@ possible to compare experiments.
 In addition, Add a final candidate baseline model:
     BaselineBlock - this has been created since I ran expt 0
 """
-from varda_cae.settings.explore.baseline_explore import Baseline1, Baseline2
-from varda_cae.settings.explore.block_models import BaselineBlock
+from VarDACAE.settings.explore.baseline_explore import Baseline1, Baseline2
+from VarDACAE.settings.explore.block_models import BaselineBlock
 
-from varda_cae import TrainAE, ML_utils, GetData, SplitData
-from varda_cae.VarDA.batch_DA import BatchDA
+from VarDACAE import TrainAE, ML_utils, GetData, SplitData
+from VarDACAE.VarDA.batch_DA import BatchDA
 
 import shutil
 

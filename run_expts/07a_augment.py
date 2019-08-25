@@ -3,17 +3,17 @@ Augmentation comparison. Use best Tucodec model.
 
 """
 
-from varda_cae.settings.models.resNeXt import ResStack3
-from varda_cae.settings.models.CLIC import CLIC
+from VarDACAE.settings.models.resNeXt import ResStack3
+from VarDACAE.settings.models.CLIC import CLIC
 
 
-from varda_cae import TrainAE, ML_utils, GetData, SplitData
-from varda_cae.VarDA.batch_DA import BatchDA
+from VarDACAE import TrainAE, ML_utils, GetData, SplitData
+from VarDACAE.VarDA.batch_DA import BatchDA
 from run_expts.expt_config import ExptConfigTest
 
 
 TEST = False
-GPU_DEVICE = 1
+GPU_DEVICE = 0
 NUM_GPU = 2
 exp_base = "experiments/train2/07a/"
 

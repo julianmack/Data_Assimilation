@@ -2,11 +2,11 @@
 Train all resNext - split over two nodes.
 lower learning rate to 0.0002 (struggling to learn at low values)
 """
-from varda_cae.settings.models.resNeXt import ResNeXt
+from VarDACAE.settings.models.resNeXt import ResNeXt
 
 
-from varda_cae import TrainAE, ML_utils, GetData, SplitData
-from varda_cae.VarDA.batch_DA import BatchDA
+from VarDACAE import TrainAE, ML_utils, GetData, SplitData
+from VarDACAE.VarDA.batch_DA import BatchDA
 
 import shutil
 
