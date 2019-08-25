@@ -95,9 +95,7 @@ class CBAM_vanilla(CBAMBlock):
                         down_sf, Cout, False)
         self.cbam = CBAM(encode, activation_constructor, Cout, reduction_ratio=down_sf,
                     pool_types=['avg', 'max'])
-        print(Cout, Cin)
-        print("Number of CBAM parameters:", sum(p.numel() for p in self.cbam.parameters()))
-
+        
 class CBAM_NeXt(CBAMBlock):
     def __init__(self, encode, activation_constructor, Cin, channel_small=None,
                     down_sf=4, Cout=None, residual=True):
@@ -108,8 +106,6 @@ class CBAM_NeXt(CBAMBlock):
                         down_sf, Cout, False)
         self.cbam = CBAM(encode, activation_constructor, Cout, reduction_ratio=down_sf,
                     pool_types=['avg', 'max'])
-        print("Number of CBAM parameters:", sum(p.numel() for p in self.cbam.parameters()))
-
 
 
 

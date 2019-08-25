@@ -21,9 +21,9 @@ DIR1 = BASE + "06a/"
 DIR2 = BASE + "06a2/"
 DIR3 = BASE + "06a3/"
 
-DIRS = [DIR1, DIR2, DIR3]
+DIRS = [DIR1, DIR2, DIR3, "experiments/train2/06a4/"]
 
-EXPDIR = "experiments/DA/"
+EXPDIR = "experiments/DA2/"
 
 
 #global variables for DA:

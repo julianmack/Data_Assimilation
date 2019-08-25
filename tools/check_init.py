@@ -13,11 +13,11 @@ ACTIVATION = "prelu"
 
 
 ########
-resNext3_k = {"layers": 1, "cardinality": 1, "block_type": "RNAB",
+resNext3_k = {"layers": 0, "cardinality": 1, "block_type": "RNAB",
                 "module_type": "Bespoke",
                 "subBlock": "NeXt"}
 kwargs = {"model_name": "Tucodec", "block_type": "CBAM_vanilla",
-        "Cstd": 64, "sigmoid": False, "activation": ACTIVATION}
+        "Cstd": 32, "sigmoid": False, "activation": ACTIVATION}
 grdn_k = {"block_type": "NeXt", "Cstd": 32}
 
 CONFIGS = [ResStack3, CLIC, GRDNBaseline]
