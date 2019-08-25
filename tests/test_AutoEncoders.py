@@ -1,9 +1,9 @@
 import torch
-from pipeline import ML_utils as ML
-from pipeline.AEs import Jacobian
-from pipeline.settings import base as config
-from pipeline.settings.base_CAE import CAEConfig, ToyAEConfig, ConfigAE
-from pipeline.AEs import ToyAE, VanillaAE, CAE_3D
+from VarDACAE import ML_utils as ML
+from VarDACAE.AEs import Jacobian
+from VarDACAE.settings import base as config
+from VarDACAE.settings.base_CAE import CAEConfig, ToyAEConfig, ConfigAE
+from VarDACAE.AEs import ToyAE, VanillaAE, CAE_3D
 import pytest
 
 class TestAEInit():

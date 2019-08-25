@@ -12,12 +12,12 @@ Cstd = 64, block = [vanilla, NeXt], sigmoid=True
 Only 2 but split between
 """
 
-from pipeline.settings.models.resNeXt import ResStack3
-from pipeline.settings.models.CLIC import CLIC
+from varda_cae.settings.models.resNeXt import ResStack3
+from varda_cae.settings.models.CLIC import CLIC
 
 
-from pipeline import TrainAE, ML_utils, GetData, SplitData
-from pipeline.VarDA.batch_DA import BatchDA
+from varda_cae import TrainAE, ML_utils, GetData, SplitData
+from varda_cae.VarDA.batch_DA import BatchDA
 from run_expts.expt_config import ExptConfigTest
 
 

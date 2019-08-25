@@ -1,13 +1,13 @@
 """This is used to check that a new model sucessfully initializes from settings
 It should print the number of parameters and channels"""
 
-from pipeline.settings.explore.block_models import BaselineRes
-from pipeline.settings.explore.block_models import Res34AE, Res34AE_Stacked, Cho2019
-from pipeline.settings.models.resNeXt import Baseline1Block, ResNeXt, ResStack3
-from pipeline.settings.explore.baseline_explore import Baseline1
-from pipeline.settings.models.CLIC import CLIC, GRDNBaseline
-from pipeline.settings.base import Config
-from pipeline import ML_utils
+from VarDACAE.settings.explore.block_models import BaselineRes
+from VarDACAE.settings.explore.block_models import Res34AE, Res34AE_Stacked, Cho2019
+from VarDACAE.settings.models.resNeXt import Baseline1Block, ResNeXt, ResStack3
+from VarDACAE.settings.explore.baseline_explore import Baseline1
+from VarDACAE.settings.models.CLIC import CLIC, GRDNBaseline
+from VarDACAE.settings.base import Config
+from VarDACAE import ML_utils
 from types import ModuleType
 
 ACTIVATION = "prelu"

@@ -1,19 +1,19 @@
 """This is used to check that a new model sucessfully initializes
 Trains, runs and can be used for DA"""
 
-from pipeline import ML_utils, GetData, SplitData
-from pipeline import TrainAE
-from pipeline.VarDA.batch_DA import BatchDA
-from pipeline.settings.base import Config
+from VarDACAE import ML_utils, GetData, SplitData
+from VarDACAE import TrainAE
+from VarDACAE.VarDA.batch_DA import BatchDA
+from VarDACAE.settings.base import Config
 
 import shutil
 
 ################# Import models
-from pipeline.settings.explore.block_models import BaselineRes
-from pipeline.settings.explore.block_models import Res34AE, Res34AE_Stacked, Cho2019
-from pipeline.settings.models.resNeXt import Baseline1Block, ResNeXt, ResStack3
-from pipeline.settings.explore.baseline_explore import Baseline1
-from pipeline.settings.models.CLIC import CLIC, GRDNBaseline
+from VarDACAE.settings.explore.block_models import BaselineRes
+from VarDACAE.settings.explore.block_models import Res34AE, Res34AE_Stacked, Cho2019
+from VarDACAE.settings.models.resNeXt import Baseline1Block, ResNeXt, ResStack3
+from VarDACAE.settings.explore.baseline_explore import Baseline1
+from VarDACAE.settings.models.CLIC import CLIC, GRDNBaseline
 import os
 
 VAR = 0.05

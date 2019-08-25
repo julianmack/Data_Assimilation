@@ -1,10 +1,10 @@
-from pipeline.VarDA import DAPipeline
-from pipeline.settings import base as config
+from VarDACAE.VarDA import DAPipeline
+from VarDACAE.settings import base as config
 import pytest
 import numpy as np
-from pipeline.VarDA import VDAInit
-from pipeline.VarDA.SVD import TSVD
-from pipeline.VarDA.cost_fn import cost_fn_J
+from VarDACAE.VarDA import VDAInit
+from VarDACAE.VarDA.SVD import TSVD
+from VarDACAE.VarDA.cost_fn import cost_fn_J
 
 import numpy.random as random
 

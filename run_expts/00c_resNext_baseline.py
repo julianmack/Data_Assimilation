@@ -7,11 +7,11 @@ Train for 400 epochs (to see if this makes large difference) but we will use
 the model after 150 epochs for comparison.
 """
 
-from pipeline.settings.models.resNeXt import ResNeXt
+from varda_cae.settings.models.resNeXt import ResNeXt
 
 
-from pipeline import TrainAE, ML_utils, GetData, SplitData
-from pipeline.VarDA.batch_DA import BatchDA
+from varda_cae import TrainAE, ML_utils, GetData, SplitData
+from varda_cae.VarDA.batch_DA import BatchDA
 
 
 #global variables for DA and training:

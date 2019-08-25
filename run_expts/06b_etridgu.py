@@ -7,12 +7,12 @@ Only train for a single channel because it is **VERY** slow
 
 """
 
-from pipeline.settings.models.resNeXt import ResStack3
-from pipeline.settings.models.CLIC import CLIC, GRDNBaseline
+from varda_cae.settings.models.resNeXt import ResStack3
+from varda_cae.settings.models.CLIC import CLIC, GRDNBaseline
 
 
-from pipeline import TrainAE, ML_utils, GetData, SplitData
-from pipeline.VarDA.batch_DA import BatchDA
+from varda_cae import TrainAE, ML_utils, GetData, SplitData
+from varda_cae.VarDA.batch_DA import BatchDA
 from run_expts.expt_config import ExptConfigTest
 
 

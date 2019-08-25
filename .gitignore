@@ -3,6 +3,7 @@ data_/*.vtu
 data_/*.zip
 .git/
 
+venv
 
 results/
 models_/

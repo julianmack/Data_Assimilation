@@ -1,7 +1,7 @@
-"""File to run elements of pipeline module from"""
-from pipeline import ML_utils, GetData, SplitData
-from pipeline.VarDA.batch_DA import BatchDA
-from pipeline.settings import config
+"""File to run elements of VarDACAE module from"""
+from VarDACAE import ML_utils, GetData, SplitData
+from VarDACAE.VarDA.batch_DA import BatchDA
+from VarDACAE.settings import config
 from tools.check_train_load_DA import run_DA_batch
 from notebooks.utils import get_model_specific_data
 import os

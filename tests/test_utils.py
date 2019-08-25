@@ -1,5 +1,5 @@
-from pipeline import ML_utils, AEs
-from pipeline.settings import base as config
+from VarDACAE import ML_utils, AEs
+from VarDACAE.settings import base as config
 import os
 import pytest
 import numpy as np

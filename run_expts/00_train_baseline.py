@@ -1,7 +1,7 @@
-"""File to run elements of pipeline module from"""
-from pipeline.settings.explore.baseline_explore import Baseline1, Baseline2
-from pipeline import TrainAE, ML_utils, GetData, SplitData
-from pipeline.VarDA.batch_DA import BatchDA
+"""File to run elements of varda_cae module from"""
+from varda_cae.settings.explore.baseline_explore import Baseline1, Baseline2
+from varda_cae import TrainAE, ML_utils, GetData, SplitData
+from varda_cae.VarDA.batch_DA import BatchDA
 
 import shutil
 

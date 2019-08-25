@@ -17,9 +17,9 @@ Defined for Fluidity data
 ### AE Define and Train
 
 ## Repo Structure
-To run tests ...: 
+To run tests ...:
 ### Config classes
 
 ## Using this repo to training your own models
-If you would like to use this repo to create an AE for an arbitrary dataset you must update the files in `pipeline/data_` for dataloading and in `pipeline/settings/config.py` as the data input size is hard-coded.
+If you would like to use this repo to create an AE for an arbitrary dataset you must update the files in `VarDACAE/data` for dataloading and in `VarDACAE/settings/base.py` as the data input size is hard-coded.
 

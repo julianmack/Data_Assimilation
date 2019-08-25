@@ -1,8 +1,8 @@
-"""File to run elements of pipeline module from"""
+"""File to run elements of VarDACAE module from"""
 
-from pipeline.settings import config
-from pipeline.VarDA.batch_DA import BatchDA
-from pipeline import GetData, SplitData
+from VarDACAE.settings import config
+from VarDACAE.VarDA.batch_DA import BatchDA
+from VarDACAE import GetData, SplitData
 import numpy as np
 
 DEBUG = False

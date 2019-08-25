@@ -1,7 +1,7 @@
 import torch
-from pipeline import ML_utils as ML
-from pipeline.settings import base_CAE as config
-from pipeline import TrainAE
+from VarDACAE import ML_utils as ML
+from VarDACAE.settings import base_CAE as config
+from VarDACAE import TrainAE
 import pytest
 import os
 import numpy as np
