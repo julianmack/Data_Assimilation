@@ -1,7 +1,7 @@
 import torch
 from pipeline import ML_utils as ML
 from pipeline.AEs import Jacobian
-from pipeline.settings import config
+from pipeline.settings import base as config
 from pipeline.AEs import ToyAE, VanillaAE, CAE_3D
 import pytest
 

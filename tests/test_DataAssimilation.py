@@ -1,5 +1,5 @@
-from pipeline.VarDA import DAPipeline
-from pipeline.settings import config
+from pipeline import DAPipeline
+from pipeline.settings import base as config
 import pytest
 import numpy as np
 from pipeline.VarDA import VDAInit

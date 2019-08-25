@@ -1,6 +1,6 @@
 import torch
 from pipeline import ML_utils as ML
-from pipeline.settings import config
+from pipeline.settings import base as config
 from pipeline import TrainAE
 import pytest
 import os

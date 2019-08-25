@@ -1,16 +1,16 @@
 # This file holds a range of CAE channel configurations that
 # can be used to experiment on the best setup in main_train_zoo.py
 
-from pipeline.settings import config
+from pipeline.settings.base_CAE import CAEConfig
 
 
-class CAE1(config.CAEConfig):
+class CAE1(CAEConfig):
     def gen_channels(self):
         channels = list(range(1, self.get_num_layers_decode() + 2))
         channels[0] = 1
         return channels
 
-class CAE3(config.CAEConfig):
+class CAE3(CAEConfig):
 
     def gen_channels(self):
         channels = [8] * (self.get_num_layers_decode() + 1)
@@ -19,7 +19,7 @@ class CAE3(config.CAEConfig):
         return channels
 
 
-class CAE4(config.CAEConfig):
+class CAE4(CAEConfig):
     def gen_channels(self):
         channels = [4] * (self.get_num_layers_decode() + 1)
 
@@ -27,7 +27,7 @@ class CAE4(config.CAEConfig):
         return channels
 
 
-class CAE5(config.CAEConfig):
+class CAE5(CAEConfig):
     def gen_channels(self):
         channels = [8] * (self.get_num_layers_decode() + 1)
         half_layers = int((self.get_num_layers_decode() + 1) / 2)
@@ -38,7 +38,7 @@ class CAE5(config.CAEConfig):
         return channels
 
 
-class CAE6(config.CAEConfig):
+class CAE6(CAEConfig):
     def gen_channels(self):
         channels = [2 ** x for x in range (self.get_num_layers_decode() + 1)]
 
@@ -58,7 +58,7 @@ ARCHITECTURES = [CAE1, CAE3, CAE4, CAE5, CAE6]
 ####### in order to enable interpretation of results with these architectures
 ####### (i.e the config classes are pickled and then loaded at analysis time)
 
-class CAE1A(config.CAEConfig):
+class CAE1A(CAEConfig):
     def gen_channels(self):
 
         channels = list(range(1, self.get_num_layers_decode() + 2))
@@ -66,7 +66,7 @@ class CAE1A(config.CAEConfig):
         channels[0] = 1
         return channels
 
-class CAE1B(config.CAEConfig):
+class CAE1B(CAEConfig):
     def gen_channels(self):
 
         channels = list(range(1, self.get_num_layers_decode() + 2))
@@ -75,7 +75,7 @@ class CAE1B(config.CAEConfig):
         return channels
 
 
-class CAE2(config.CAEConfig):
+class CAE2(CAEConfig):
 
     def gen_channels(self):
         channels = list(range(1, 2*(self.get_num_layers_decode() + 1) + 1, 2))

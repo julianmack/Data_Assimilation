@@ -1,6 +1,6 @@
-from pipeline.settings import config
+from pipeline.settings.base_CAE import CAEConfig
 
-class CAE7(config.CAEConfig):
+class CAE7(CAEConfig):
     """CAE with default values that were most successful in testing.
     CAE5 gave the best results - as this had the widest number of channels
     of the CAE settings in CAE config I will now even wider systems"""
