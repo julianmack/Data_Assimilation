@@ -1,5 +1,5 @@
 """File to run elements of pipeline module from"""
-from pipeline.settings.baseline_explore import Baseline1, Baseline2
+from pipeline.settings.explore.baseline_explore import Baseline1, Baseline2
 from pipeline import TrainAE, ML_utils, GetData, SplitData
 from pipeline.VarDA.batch_DA import BatchDA
 

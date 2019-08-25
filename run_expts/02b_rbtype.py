@@ -2,7 +2,7 @@
 Read expt 02a first
 This extends expt 02a by adding CBAM blocks
 """
-from pipeline.settings.models_.resNeXt import ResStack3
+from pipeline.settings.models.resNeXt import ResStack3
 
 
 from pipeline import TrainAE, ML_utils, GetData, SplitData

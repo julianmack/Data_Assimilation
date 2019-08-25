@@ -3,7 +3,7 @@ Check that you can get a resNext system to train
 
 """
 
-from pipeline.settings.models_.resNeXt import ResNeXt
+from pipeline.settings.models.resNeXt import ResNeXt
 
 
 from pipeline import TrainAE, ML_utils, GetData, SplitData

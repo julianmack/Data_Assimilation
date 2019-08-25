@@ -9,8 +9,8 @@ After success of first experiment (particularly with vanilla blocks)
 NOTE: 128 failed with a CUDA memory error
 """
 
-from pipeline.settings.models_.resNeXt import ResStack3
-from pipeline.settings.models_.CLIC import CLIC
+from pipeline.settings.models.resNeXt import ResStack3
+from pipeline.settings.models.CLIC import CLIC
 
 
 from pipeline import TrainAE, ML_utils, GetData, SplitData

@@ -19,7 +19,7 @@ In this experiment I will investigate the following:
 
 x8 experiments in total: split across 2 GPUS
 """
-from pipeline.settings.models_.resNeXt import ResStack3
+from pipeline.settings.models.resNeXt import ResStack3
 
 
 from pipeline import TrainAE, ML_utils, GetData, SplitData

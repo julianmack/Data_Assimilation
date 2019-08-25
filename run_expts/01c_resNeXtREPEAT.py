@@ -8,7 +8,7 @@ from pipeline import TrainAE, ML_utils, GetData, SplitData
 from pipeline.VarDA.batch_DA import BatchDA
 
 from run_expts.expt_config import ExptConfigTest
-from pipeline.settings.models_.resNeXt import ResStack3
+from pipeline.settings.models.resNeXt import ResStack3
 
 
 TEST = False

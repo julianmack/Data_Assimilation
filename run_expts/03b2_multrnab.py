@@ -10,7 +10,7 @@ Note: 03b failed due to overflow with more than
 
 """
 
-from pipeline.settings.models_.resNeXt import ResStack3
+from pipeline.settings.models.resNeXt import ResStack3
 
 
 from pipeline import TrainAE, ML_utils, GetData, SplitData

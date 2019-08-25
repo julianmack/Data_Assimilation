@@ -10,8 +10,8 @@ possible to compare experiments.
 In addition, Add a final candidate baseline model:
     BaselineBlock - this has been created since I ran expt 0
 """
-from pipeline.settings.baseline_explore import Baseline1, Baseline2
-from pipeline.settings.block_models import BaselineBlock
+from pipeline.settings.explore.baseline_explore import Baseline1, Baseline2
+from pipeline.settings.explore.block_models import BaselineBlock
 
 from pipeline import TrainAE, ML_utils, GetData, SplitData
 from pipeline.VarDA.batch_DA import BatchDA

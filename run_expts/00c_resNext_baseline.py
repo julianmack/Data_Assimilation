@@ -7,7 +7,7 @@ Train for 400 epochs (to see if this makes large difference) but we will use
 the model after 150 epochs for comparison.
 """
 
-from pipeline.settings.models_.resNeXt import ResNeXt
+from pipeline.settings.models.resNeXt import ResNeXt
 
 
 from pipeline import TrainAE, ML_utils, GetData, SplitData

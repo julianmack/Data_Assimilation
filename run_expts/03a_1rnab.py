@@ -7,7 +7,7 @@ Train for two block types:
 
 """
 
-from pipeline.settings.models_.resNeXt import ResStack3
+from pipeline.settings.models.resNeXt import ResStack3
 
 
 from pipeline import TrainAE, ML_utils, GetData, SplitData

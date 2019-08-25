@@ -2,7 +2,7 @@
 Train all resNext - split over two nodes.
 lower learning rate to 0.0002 (struggling to learn at low values)
 """
-from pipeline.settings.models_.resNeXt import ResNeXt
+from pipeline.settings.models.resNeXt import ResNeXt
 
 
 from pipeline import TrainAE, ML_utils, GetData, SplitData
