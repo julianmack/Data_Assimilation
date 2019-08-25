@@ -9,11 +9,11 @@ from pipeline.settings.base import Config
 import shutil
 
 ################# Import models
-from pipeline.settings.block_models import BaselineRes
-from pipeline.settings.block_models import Res34AE, Res34AE_Stacked, Cho2019
-from pipeline.settings.models_.resNeXt import Baseline1Block, ResNeXt, ResStack3
-from pipeline.settings.baseline_explore import Baseline1
-from pipeline.settings.models_.CLIC import CLIC, GRDNBaseline
+from pipeline.settings.explore.block_models import BaselineRes
+from pipeline.settings.explore.block_models import Res34AE, Res34AE_Stacked, Cho2019
+from pipeline.settings.models.resNeXt import Baseline1Block, ResNeXt, ResStack3
+from pipeline.settings.explore.baseline_explore import Baseline1
+from pipeline.settings.models.CLIC import CLIC, GRDNBaseline
 import os
 
 VAR = 0.05

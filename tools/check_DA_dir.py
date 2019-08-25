@@ -1,7 +1,6 @@
 """File to run elements of pipeline module from"""
 from pipeline import ML_utils, GetData, SplitData
 from pipeline.VarDA.batch_DA import BatchDA
-from pipeline.settings import config
 from tools.check_train_load_DA import run_DA_batch
 import shutil
 

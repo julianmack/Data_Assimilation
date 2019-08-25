@@ -1,7 +1,7 @@
 from tools.check_init import check_init
 from tools.check_train_load_DA import check_train_load_DA
 
-from pipeline.settings.models_.resNeXt import Baseline1Block, ResNeXt, ResStack3
+from pipeline.settings.models.resNeXt import Baseline1Block, ResNeXt, ResStack3
 import pytest
 
 class TestZoo():

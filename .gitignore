@@ -1,11 +1,11 @@
-data/
-data/*.vtu
-data/*.zip
+data_/
+data_/*.vtu
+data_/*.zip
 .git/
 
 
 results/
-models/
+models_/
 experiments/
 
 .remote-sync.json
