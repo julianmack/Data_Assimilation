@@ -1,7 +1,7 @@
 import torch
 import time
 
-from VarDACAE import ML_utils
+from VarDACAE import ML_utils, GetData, SplitData
 from VarDACAE.VarDA import DAPipeline
 from VarDACAE.VarDA import SVD, VDAInit
 from VarDACAE.utils.expdir import init_expdir
@@ -10,7 +10,7 @@ import pandas as pd
 import numpy as np
 
 class BatchDA():
-    def __init__(self, settings, control_states, csv_fp=None, AEModel=None,
+    def __init__(self, settings, control_states=None, csv_fp=None, AEModel=None,
                 reconstruction=True, plot=False):
 
         self.settings = settings
@@ -27,9 +27,16 @@ class BatchDA():
             self.expdir = init_expdir(dir, True)
             self.file_name = fps[-1]
 
+        if self.control_states is None:
+            loader, splitter = GetData(), SplitData()
+            X = loader.get_X(settings)
+
+            train_X, test_X, u_c_std, X, mean, std = splitter.train_test_DA_split_maybe_normalize(X, settings)
+            self.control_states = test_X
 
 
-    def run(self, print_every=10, print_small=False):
+
+    def run(self, print_every=10, print_small=True):
 
         shuffle = self.settings.SHUFFLE_DATA #save value
         self.settings.SHUFFLE_DATA = False

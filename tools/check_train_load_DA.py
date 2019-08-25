@@ -23,8 +23,7 @@ EXPDIR = "experiments/CTL/"
 
 resNext3_k = {"layers": 3, "cardinality": 1, "block_type": "RNAB",
                 "module_type": "Bespoke", "sigmoid": True}
-clic_K = {"model_name": "Tucodec", "block_type": "CBAM_NeXt", "Cstd": 32,
-        "sigmoid": False, "activation": ACTIVATION}
+clic_K = {"model_name": "Tucodec", "block_type": "NeXt", "Cstd": 64}
 grdn_k = {"block_type": "NeXt", "Cstd": 2}
 
 CONFIGS = [ResStack3, CLIC, GRDNBaseline]
@@ -52,7 +51,7 @@ def main():
         check_train_load_DA(configs[idx], KWARGS[idx], SMALL_DEBUG_DOM, ALL_DATA, ACTIVATION)
         print()
 
-def run_DA_batch(settings, model, all_data, expdir, params):
+def run_DA_batch(settings, model, all_data, expdir, params={"var": VAR, "tol": TOL}):
     """By default it evaluates over the whole test set"""
     settings.DEBUG = False
     settings.NORMALIZE = True

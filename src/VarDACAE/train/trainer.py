@@ -56,14 +56,14 @@ class TrainAE():
         self.device = ML_utils.get_device()
         self.columns = ["epoch","reconstruction_err","DA_MAE", "DA_ratio_improve_MAE", "time_DA(s)", "time_epoch(s)"]
 
-    def train(self, num_epoch = 100, learning_rate = 0.001, print_every=5,
-            test_every=5, num_epochs_cv=8, num_workers=4, small_debug=False):
+    def train(self, num_epochs = 100, learning_rate = 0.002, print_every=5,
+            test_every=5, num_epochs_cv=0, num_workers=4, small_debug=False):
 
         self.learning_rate = learning_rate
-        self.num_epochs = num_epoch
+        self.num_epochs = num_epochs
+        self.num_epoch = num_epochs #TODO: remove this doubling up
         self.print_every = print_every
         self.test_every = test_every
-        self.num_epoch = num_epoch
         self.small_debug = small_debug
 
         settings = self.settings
