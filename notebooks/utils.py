@@ -317,10 +317,14 @@ def get_model_specific_data(settings, dir, model=None):
         results["mod"] = mod_typ
     if params.get("SB"):
         results["sBlock"] = params.get("SB")
-    if params.get("S"):
+    if params.get("S") is not None:
         results["sigmoid"] = params.get("S")
     if params.get("Cstd"):
         results["Cstd"] = params.get("Cstd")
+    if params.get("A"):
+        results["activation"] = params.get("A")
+    if params.get("AS"):
+        results["aug_scheme"] = params.get("AS")
 
     if cls_name in ["ResStack3", "ResNeXt"] and params.get("attenuation") in [None, True]:
         encode_att, decode_att = get_attenuation_from_dir(dir, model)

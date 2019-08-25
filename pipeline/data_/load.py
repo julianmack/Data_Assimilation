@@ -4,7 +4,7 @@ import random
 import os
 
 from pipeline.fluidity import VtkSave, vtktools
-from pipeline.data_.augmentation import FlipHorizontal, FieldJitter
+from pipeline.data_ import augmentation
 from pipeline.data_.split import SplitData
 
 from vtk.util import numpy_support as nps
@@ -53,14 +53,9 @@ class GetData():
 
         #ADD Data Augmentation to train_loader
         trnsfrm = None
-        if hasattr(settings, "AUGMENTATION") and settings.AUGMENTATION:
-            trnsfrm = transforms.Compose([
-                            transforms.RandomApply([FlipHorizontal("x"),
-                                                    FlipHorizontal("y")], p=0.5),
-                            transforms.RandomChoice([FieldJitter(0.01, 0.1),
-                                                    FieldJitter(0.005, 0.5),], ),
-                            ])
 
+        if hasattr(settings, "AUGMENTATION") and settings.AUGMENTATION:
+            trnsfrm = augmentation.get_augment(settings)
 
         #Dataloaders
         train_dataset = Data3D_Dataset(torch.Tensor(train_X), transform=trnsfrm)

@@ -112,7 +112,7 @@ class NNBuilder():
 
 
     ################## CLIC models
-    def Tucodec(encode, activation_fn, B, Cstd, S=False, A=None):
+    def Tucodec(encode, activation_fn, B, Cstd, S=False, A=None, AS=None):
         if A:
             assert A == activation_fn, "{} != {}".format(A, activation_fn)
 

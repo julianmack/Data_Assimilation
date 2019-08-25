@@ -3,9 +3,56 @@
 import torch
 
 from torchvision.transforms import Lambda
+from torchvision import transforms
 
 DIM_DICT = {"x": 1,
             "y": 2}
+
+
+def get_augment(settings):
+    """Helper function to choose augmentation scheme"""
+
+    if hasattr(settings, "AUG_SCHEME"):
+        if settings.AUG_SCHEME == -1:
+            trnsfrm = transforms.Compose([
+                            transforms.RandomApply([FlipHorizontal("x"),
+                                                    FlipHorizontal("y")], p=0.5),
+                            transforms.RandomChoice([FieldJitter(0.01, 0.1),
+                                                    FieldJitter(0.005, 0.5),
+                                                    FieldJitter(0., 0.)], ),
+                            ])
+        elif settings.AUG_SCHEME == 0:
+            trnsfrm = None
+        elif settings.AUG_SCHEME == 1:
+            trnsfrm = transforms.Compose([
+                            transforms.RandomChoice([FieldJitter(0.01, 0.1),
+                                                    FieldJitter(0.005, 0.5),
+                                                    FieldJitter(0., 0.)], ),
+                            ])
+        elif settings.AUG_SCHEME == 2:
+            trnsfrm = transforms.Compose([
+                            transforms.RandomChoice([FieldJitter(0.01, 0.1),
+                                                    FieldJitter(0.005, 0.5),], ),
+                            ])
+        elif settings.AUG_SCHEME == 3:
+            trnsfrm = transforms.Compose([
+                            transforms.RandomChoice([FieldJitter(0.005, 0.5),], ),
+                            ])
+        elif settings.AUG_SCHEME == 4:
+            trnsfrm = transforms.Compose([
+                            transforms.RandomChoice([FieldJitter(0.05, 0.25),], ),
+                            ])
+        else:
+            raise ValueError("AUG_SCHEME not recognized")
+    else:
+
+        trnsfrm = transforms.Compose([
+                        # transforms.RandomApply([FlipHorizontal("x"),
+                        #                         FlipHorizontal("y")], p=0.5),
+                        transforms.RandomChoice([FieldJitter(0.01, 0.1),
+                                                FieldJitter(0.005, 0.5),], ),
+                        ])
+    return trnsfrm
 
 class FieldJitter():
     """Jitters 3D field. Analogue of torchvision's ColourJitter transform
