@@ -30,7 +30,7 @@ def init_expdir(expdir, ow_permitted=False):
             if len(files) == 1 and files[0] == 'settings.txt': #allow overwrite
                 pass
             elif len(files) > 0:
-                raise ValueError("Cannot overwrite files in expdir. Exit-ing.")
+                raise ValueError("Cannot overwrite files in expdir={}. Exit-ing.".format(expdir))
     else:
         os.makedirs(expdir)
     return expdir

@@ -87,7 +87,7 @@ class GRDN(nn.Module):
         This is appropriate in this case as the system is still of
         original size"""
         #import here to avoid circular imports
-        from pipeline.settings.block_base import Block
+        from pipeline.settings.base_block import Block
         from pipeline.AEs.AE_general import GenCAE
         from pipeline.AEs.AE_general import MODES as M
 

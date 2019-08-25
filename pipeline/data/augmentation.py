@@ -12,7 +12,7 @@ DIM_DICT = {"x": 1,
 def get_augment(settings):
     """Helper function to choose augmentation scheme"""
 
-    if hasattr(settings, "AUG_SCHEME"):
+    if hasattr(settings, "AUG_SCHEME") and settings.AUG_SCHEME is not None:
         if settings.AUG_SCHEME == -1:
             trnsfrm = transforms.Compose([
                             transforms.RandomApply([FlipHorizontal("x"),

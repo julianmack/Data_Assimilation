@@ -1,4 +1,4 @@
-from pipeline.settings.models_.resNeXt import Baseline1Block
+from pipeline.settings.models.resNeXt import Baseline1Block
 from pipeline.AEs.AE_general import MODES as M
 
 

@@ -17,8 +17,8 @@ class Config():
     def __init__(self):
         self.HOME_DIR = setting_helpers.get_home_dir()
         self.RESULTS_FP = self.HOME_DIR + "results/"
-        self.DATA_FP = self.HOME_DIR + "data/small3DLSBU/"
-        self.INTERMEDIATE_FP = self.HOME_DIR + "data/small3D_intermediate/"
+        self.DATA_FP = self.HOME_DIR + "data_/small3DLSBU/"
+        self.INTERMEDIATE_FP = self.HOME_DIR + "data_/small3D_intermediate/"
         self.FIELD_NAME = "Pressure"
         self.FORCE_GEN_X = False
         self.__n = 100040

@@ -4,8 +4,8 @@ import random
 import os
 
 from pipeline.fluidity import VtkSave, vtktools
-from pipeline.data_ import augmentation
-from pipeline.data_.split import SplitData
+from pipeline.data import augmentation
+from pipeline.data.split import SplitData
 
 from vtk.util import numpy_support as nps
 
