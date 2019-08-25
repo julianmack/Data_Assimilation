@@ -20,7 +20,7 @@ DA.run()
 ```
 
 
-  
+
 ### Example Usage: Training ResNeXt model
 ```from pipeline.settings.models_.resNeXt import ResNeXt
 from pipeline import TrainAE

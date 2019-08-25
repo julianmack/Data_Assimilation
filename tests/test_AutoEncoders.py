@@ -2,12 +2,13 @@ import torch
 from pipeline import ML_utils as ML
 from pipeline.AEs import Jacobian
 from pipeline.settings import base as config
+from pipeline.settings.base_CAE import CAEConfig, ToyAEConfig, ConfigAE
 from pipeline.AEs import ToyAE, VanillaAE, CAE_3D
 import pytest
 
 class TestAEInit():
     def test_ToyAE_init_base_config(self):
-        settings = config.ToyAEConfig()
+        settings = ToyAEConfig()
         try:
             model = settings.AE_MODEL_TYPE(**settings.get_kwargs())
         except Exception as e:
@@ -15,14 +16,14 @@ class TestAEInit():
             pytest.fail("Unable to init model")
 
     def test_VanillaAE_init_base_config(self):
-        settings = config.ConfigAE()
+        settings = ConfigAE()
         try:
             model = settings.AE_MODEL_TYPE(**settings.get_kwargs())
         except:
             pytest.fail("Unable to init model")
 
     def test_VanillaAE_init_hidden(self):
-        settings = config.ConfigAE()
+        settings = ConfigAE()
         settings.HIDDEN = 4
         try:
             model = settings.AE_MODEL_TYPE(**settings.get_kwargs())
@@ -37,7 +38,7 @@ class TestAEInit():
 
 class TestAEForward():
     def test_ToyAE_forward_nobatch(self):
-        settings = config.ToyAEConfig()
+        settings = ToyAEConfig()
         settings.set_n(3)
         settings.HIDDEN = 4
         settings.NUMBER_MODES = 2
@@ -50,7 +51,7 @@ class TestAEForward():
             pytest.fail("Unable to do forward pass")
 
     def test_ToyAE_forward_single_hid(self):
-        settings = config.ToyAEConfig()
+        settings = ToyAEConfig()
         settings.set_n(3)
         settings.HIDDEN = 4
         settings.NUMBER_MODES = 2
@@ -64,7 +65,7 @@ class TestAEForward():
             pytest.fail("Unable to do forward pass")
 
     def test_ToyAE_forward_mult_hid(self):
-        settings = config.ToyAEConfig()
+        settings = ToyAEConfig()
         settings.set_n(128)
         settings.HIDDEN = [128, 128, 64]
         settings.NUMBER_MODES = 4
@@ -78,7 +79,7 @@ class TestAEForward():
             pytest.fail("Unable to do forward pass")
 
     def test_VanillaAE_forward(self):
-        settings = config.ConfigAE()
+        settings = ConfigAE()
         settings.set_n(3)
         settings.HIDDEN = [5, 6, 7]
         settings.NUMBER_MODES = 2
@@ -165,7 +166,7 @@ class TestCAE_3D():
     so that they can be run w/o the standard AE tests)"""
 
     def test_CAE_init_base_config(self):
-        settings = config.CAEConfig()
+        settings = CAEConfig()
         try:
             model = settings.AE_MODEL_TYPE(**settings.get_kwargs())
         except Exception as e:
@@ -173,7 +174,7 @@ class TestCAE_3D():
             pytest.fail("Unable to init model")
 
     def test_CAE_forward_batched(self):
-        settings = config.CAEConfig()
+        settings = CAEConfig()
         batch_sz = 2
         Cin = settings.get_channels()[0]
         size = (batch_sz, Cin) + settings.get_n()
@@ -190,7 +191,7 @@ class TestCAE_3D():
             pytest.fail("Unable to do forward pass")
 
     def test_CAE_forward_nobatch(self):
-        settings = config.CAEConfig()
+        settings = CAEConfig()
         Cin = settings.get_channels()[0]
         size = (Cin,) + settings.get_n()
         device = ML.get_device()
@@ -206,7 +207,7 @@ class TestCAE_3D():
             pytest.fail("Unable to do forward pass")
 
     def test_CAE_linear_latent_batched(self):
-        settings = config.CAEConfig()
+        settings = CAEConfig()
         batch_sz = 2
         Cin = settings.get_channels()[0]
         size = (batch_sz, Cin) + settings.get_n()
@@ -231,7 +232,7 @@ class TestCAE_3D():
 
 
     def test_CAE_linear_latent_nonbatched(self):
-        settings = config.CAEConfig()
+        settings = CAEConfig()
         Cin = settings.get_channels()[0]
         size = (Cin, ) + settings.get_n()
         device = ML.get_device()

@@ -9,7 +9,6 @@ from scipy.optimize import minimize
 
 from pipeline import ML_utils
 from pipeline.AEs import Jacobian
-from pipeline.settings import config
 from pipeline.fluidity import VtkSave
 from pipeline import GetData, SplitData
 from pipeline.VarDA import VDAInit
@@ -105,7 +104,7 @@ class DAPipeline():
             if self.settings.NORMALIZE:
                 w_0 = V_trunc_plus @ np.zeros_like(self.data["u_0"].flatten()) #i.e. this is the value given in Rossella et al (2019).
             else:
-                raise NotImplementedError("Not implemented for non normalized SVD")
+                w_0 = V_trunc_plus @ self.data["u_0"].flatten()
             #w_0 = np.zeros((W.shape[-1],)) #TODO - I'm not sure about this - can we assume is it 0?
 
             self.data["V_trunc"] = V_trunc
@@ -249,7 +248,8 @@ class DAPipeline():
         da_MAE_mean = DA_results["da_MAE_mean"]
         w_opt = DA_results["w_opt"]
         counts = DA_results["counts"]
-
+        mse_ref = DA_results["mse_ref"]
+        mse_DA = DA_results["mse_DA"]
         print("Ref MAE: {:.4f}, DA MAE: {:.4f},".format(ref_MAE_mean, da_MAE_mean), "% improvement: {:.2f}%".format(DA_results["percent_improvement"]))
         print("DA_MAE < ref_MAE for {}/{} points".format(counts, len(da_MAE.flatten())))
         print("mse_ref: {:.4f}, mse_DA: {:.4f}".format(mse_ref, mse_DA))

@@ -2,7 +2,7 @@
 It should print the number of parameters and channels"""
 
 from pipeline.settings.block_models import Res34AE, Res34AE_Stacked, Cho2019
-from pipeline.settings.config import Config
+from pipeline.settings.base import Config
 from pipeline.settings.models_.CLIC import CLIC, GRDNBaseline
 from pipeline.settings.models_.resNeXt import Baseline1Block, ResNeXt, ResStack3
 from pipeline.settings.baseline_explore import Baseline1

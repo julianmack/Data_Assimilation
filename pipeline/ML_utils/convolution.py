@@ -1,4 +1,4 @@
-from pipeline.settings import config
+from pipeline.settings import base as config
 import os
 import pytest
 import numpy as np

@@ -1,4 +1,4 @@
-from pipeline.settings.config import Config3D
+from pipeline.settings.base_3D import Config3D
 from pipeline.AEs.AE_general import GenCAE
 from pipeline.AEs.AE_general import MODES as M
 from pipeline.ML_utils import ConvScheduler

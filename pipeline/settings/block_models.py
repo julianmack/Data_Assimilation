@@ -1,6 +1,6 @@
 
 from pipeline.AEs.AE_general import MODES as M
-from pipeline.settings.block_base import Block
+from pipeline.settings.base_block import Block
 
 class BaselineBlock(Block):
     def __init__(self):

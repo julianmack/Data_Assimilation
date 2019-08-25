@@ -40,11 +40,11 @@ class VDAInit:
 
         encoder = None
         decoder = None
-        model = self.AEmodel
-
 
         device = ML_utils.get_device()
-        model.to(device)
+        model = self.AEmodel
+        if model:
+            model.to(device)
 
         if self.settings.COMPRESSION_METHOD == "AE":
             #get encoder
