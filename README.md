@@ -9,7 +9,8 @@ In this work, we propose a method of using Autoencoders to model the Background 
 
 ## Installation
 To install do the following:
-```git clone https://github.com/julianmack/Data_Assimilation.git
+```
+git clone https://github.com/julianmack/Data_Assimilation.git
 cd Data_Assimilation
 pip install -e .    #or use `pip install .`
                     #if you don't intend to update the module
@@ -20,7 +21,7 @@ pip install -e .    #or use `pip install .`
 From the project home directory run `pytest`.
 
 ## Getting Started
-To train and evaluate a Tucodec model (this was the best on our data) on Fluidity data:
+To train and evaluate a [Tucodec](http://openaccess.thecvf.com/content_CVPRW_2019/papers/CLIC%202019/Zhou_End-to-end_Optimized_Image_Compression_with_Attention_Mechanism_CVPRW_2019_paper.pdf "Tucodec CLIC-2019 paper") model on Fluidity data:
 ```
 from VarDACAE import TrainAE, BatchDA
 from VarDACAE.settings.models.CLIC import CLIC
@@ -45,7 +46,6 @@ The API is based around a monolithic ```settings``` object that is used to defin
 To train a model on your own 3D data you must do the following:
 * Override the default ```get_X(...)``` method in the ```GetData``` loader class:
 ```
-
 from VarDACAE import GetData
 
 class NewLoaderClass(GetData):
@@ -81,5 +81,3 @@ settings = NewConfig(CLIC_kwargs, opt_kwargs)
 ```
 This ```settings``` object can now be used to train a model with the `TrainAE` method as shown above.
 
-## Repo Structure
-To run tests
