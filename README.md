@@ -1,13 +1,14 @@
-# Data Assimilation
-This module is used to create AutoEncoders that are useful for Data Assimilation. A  user can define, create and train an AE for Data Assimilation with just a few lines of code.
+# VarDACAE
+This module is used to create Convolutional AutoEncoders for Variational Data Assimilation. A  user can define, create and train an AE for Data Assimilation with just a few lines of code.
 
 ## Introduction
 
 Data Assimilation (DA) is an uncertainty quantification technique used to reduce the error in  predictions by combining forecasting data with observation of the state. The most common techniques for DA are Variational approaches and Kalman Filters.
 
-In this work, I propose a method of using Autoencoders to model the Background error covariance matrix, to greatly reduce the computational cost of solving 3D Variational DA **while increasing the quality of the Data Assimilation**.
+In this work, we propose a method of using Autoencoders to model the Background error covariance matrix, to greatly reduce the computational cost of solving 3D Variational DA **while increasing the quality of the Data Assimilation**.
 
 ## Installation
+To install do the following:
 ```git clone https://github.com/julianmack/Data_Assimilation.git
 cd Data_Assimilation
 pip install -e .    #or use `pip install .`
@@ -15,8 +16,11 @@ pip install -e .    #or use `pip install .`
                     #for your own models/data
 ```
 
+## Tests
+From the project home directory run `pytest`.
+
 ## Getting Started
-To train and evaluate a Tucodec model on Fluidity data:
+To train and evaluate a Tucodec model (this was the best on our data) on Fluidity data:
 ```
 from VarDACAE import TrainAE, BatchDA
 from VarDACAE.settings.models.CLIC import CLIC
@@ -33,18 +37,49 @@ model = trainer.train(num_epochs=150)   #this will take approximately 8 hrs on a
 results_df = BatchDA(settings, AEModel=model).run()
 
 ```
+## Settings instance
+The API is based around a monolithic ```settings``` object that is used to define all configuration parameters, from the model definition to the seed. This single point of truth is used so that, an experiment can be repeated _exactly_ by simply loading a pickled  ```settings``` object. All key classes like ```TrainAE``` and ```BatchDA``` require a ```settings``` object at initialisation.
 
-### Train a model on your own data
-To train a model on your own 3D data you must update the following:
+## Train a model on your *own* data
+
+To train a model on your own 3D data you must do the following:
+* Override the default ```get_X(...)``` method in the ```GetData``` loader class:
+```
+
+from VarDACAE import GetData
+
+class NewLoaderClass(GetData):
+    def get_X(self, settings):
+        "Arguments:
+               settings: (A settings.Config class)
+        returns:
+            np.array of dimensions B x nx x ny x nz "
+
+        # ... calculate / load or download X
+        # For an example see VarDACAE.data.load.GetData.get_X"""
+        return X
+```
+
 * Create a new settings class that inherits from your desired model's settings class (e.g. `VarDACAE.settings.models.CLIC.CLIC`) and update the data dimensions:
-```from VarDACAE.settings.models.CLIC import CLIC
-class ConfigNew(CLIC):```
+```
+from VarDACAE.settings.models.CLIC import CLIC
 
+class NewConfig(CLIC):
+    def __init__(self, CLIC_kwargs, opt_kwargs):
+        super(CLIC, self).__init__(**CLIC_kwargs)
+        self.n3d = (100, 200, 300)  # Define input domain size
+                                    # This is used by ConvScheduler
+        self.X_FP = "SET_IF_REQ_BY_get_X"
+        # ... use opt_kwargs as desired
+
+CLIC_kwargs =  {"model_name": "Tucodec", "block_type": "NeXt",
+                "Cstd": 64, "loader": NewLoaderClass}
+                # NOTE: do not initialize NewLoaderClass
+
+settings = NewConfig(CLIC_kwargs, opt_kwargs)
+
+```
+This ```settings``` object can now be used to train a model with the `TrainAE` method as shown above.
 
 ## Repo Structure
-To run tests ...:
-### Config classes
-
-## Using this repo to training your own models
-If you would like to use this repo to create an AE for an arbitrary dataset you must update the files in `VarDACAE/data` for dataloading and in `VarDACAE/settings/base.py` as the data input size is hard-coded.
-
+To run tests

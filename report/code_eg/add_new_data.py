@@ -17,6 +17,7 @@ class ConfigNew(CLIC):
         super(CLIC, self).__init__(**CLIC_kwargs)
         self.n3d = (100, 200, 300)  # Define input domain size
                                     # This is used for ConvScheduler
+        self.X_FP = "SET_IF_REQ_BY_get_X"
         # ... use opt_kwargs as desired
 
 CLIC_kwargs =  {"model_name": "Tucodec", "block_type": "NeXt",
