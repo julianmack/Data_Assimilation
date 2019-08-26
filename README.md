@@ -38,7 +38,7 @@ model = trainer.train(num_epochs=150)   #this will take approximately 8 hrs on a
 results_df = BatchDA(settings, AEModel=model).run()
 
 ```
-## Settings instance
+## Settings Instance
 The API is based around a monolithic ```settings``` object that is used to define all configuration parameters, from the model definition to the seed. This single point of truth is used so that, an experiment can be repeated _exactly_ by simply loading a pickled  ```settings``` object. All key classes like ```TrainAE``` and ```BatchDA``` require a ```settings``` object at initialisation.
 
 ## Train a model on your *own* data
