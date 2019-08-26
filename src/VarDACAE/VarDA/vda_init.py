@@ -3,7 +3,7 @@ import random
 import torch
 
 from VarDACAE import ML_utils
-from VarDACAE import GetData, SplitData
+from VarDACAE import SplitData
 
 class VDAInit:
     def __init__(self, settings, AEmodel=None, u_c=None):
@@ -18,7 +18,7 @@ class VDAInit:
         (M X n) or (M x nx x ny x nz) format """
 
         data = {}
-        loader = GetData()
+        loader = self.settings.get_loader()
         splitter = SplitData()
         settings = self.settings
 

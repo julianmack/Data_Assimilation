@@ -20,8 +20,8 @@ class Block(Config3D):
 
     Note: this class is not to be confused with the settings.Config() class
     which is the base cofiguration class """
-    def __init__(self):
-        super(Block, self).__init__()
+    def __init__(self, loader=None):
+        super(Block, self).__init__(loader)
         self.REDUCED_SPACE = True
         self.COMPRESSION_METHOD = "AE"
         self.AE_MODEL_TYPE = GenCAE

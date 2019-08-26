@@ -8,7 +8,6 @@ import pickle
 
 from VarDACAE import ML_utils
 from VarDACAE.AEs import Jacobian
-from VarDACAE import GetData
 from VarDACAE.utils.expdir import init_expdir
 from VarDACAE.VarDA.batch_DA import BatchDA
 
@@ -72,7 +71,7 @@ class TrainAE():
             self.model_dir = self.expdir
         else:
             self.model_dir = None
-        self.loader = GetData()
+        self.loader = settings.get_loader()
         self.train_loader, self.test_loader = self.loader.get_train_test_loaders(settings,
                                                             self.batch_sz, num_workers=num_workers,
                                                             small_debug=small_debug)

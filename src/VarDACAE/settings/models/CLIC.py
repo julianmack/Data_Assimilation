@@ -1,17 +1,15 @@
 from VarDACAE.settings.models.resNeXt import Baseline1Block
 from VarDACAE.AEs.AE_general import MODES as M
-
+from VarDACAE import GetData
 
 class CLIC(Baseline1Block):
     """Settings class for ResNext variants
     Args:
-        layers - number of layers of ResNeXt
-        cardinality - width of each layer (in terms of number of res blocks)
     """
 
-    def __init__(self, model_name, block_type, Cstd, sigmoid=None,
+    def __init__(self, model_name, block_type, Cstd, loader = None, sigmoid=None,
                     activation="prelu", aug_scheme=None):
-        super(CLIC, self).__init__()
+        super(CLIC, self).__init__(loader)
         assert model_name in ["Tucodec"]
         assert block_type in ["vanilla", "NeXt", "CBAM_vanilla", "CBAM_NeXt",]
         #assert sigmoid is not None, "Comment out this line if you would like to overrule"
@@ -28,7 +26,7 @@ class CLIC(Baseline1Block):
         self.CHANNELS = "see model def"
 
 class GRDNBaseline(CLIC):
-    def __init__(self, block_type, Cstd):
+    def __init__(self, block_type, Cstd,  loader = None):
         super(CLIC, self).__init__()
         assert block_type in ["vanilla", "NeXt"]
         GRDN_kwargs = {"B": block_type, "Cstd": Cstd}

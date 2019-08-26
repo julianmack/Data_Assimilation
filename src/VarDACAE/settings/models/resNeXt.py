@@ -4,8 +4,8 @@ from VarDACAE.AEs.AE_general import MODES as M
 
 class Baseline1Block(Block):
     """Replica of Baseline1 w. Block build"""
-    def __init__(self):
-        super(Baseline1Block, self).__init__()
+    def __init__(self, loader = None):
+        super(Baseline1Block, self).__init__(loader)
         self.ACTIVATION = "prelu"
         self.BLOCKS = [M.S, (7, "conv")]
         down = [0, 0, 1, 1, 1, 1, 1]
@@ -24,8 +24,8 @@ class ResNeXt(Baseline1Block):
         cardinality - width of each layer (in terms of number of res blocks)
     """
 
-    def __init__(self, layers, cardinality):
-        super(ResNeXt, self).__init__()
+    def __init__(self, layers, cardinality, loader = None,):
+        super(ResNeXt, self).__init__(loader)
         kwargs = {"C": 32, "L": layers, "N": cardinality}
         self.BLOCKS = [M.S, (5, "conv"), (1, "resResNeXt", kwargs), (2, "conv")]
         down = [[0, 0, 1, 1, 1,], [], [1, 1]]
@@ -35,7 +35,7 @@ class ResNeXt(Baseline1Block):
 
 class ResStack3(ResNeXt):
     def __init__(self, layers, cardinality, block_type="NeXt",
-                    module_type="ResNeXt3", Csmall=None, k=None,
+                    module_type="ResNeXt3", loader = None, Csmall=None, k=None,
                     subBlock="vanilla", attenuation=True, sigmoid=None):
         #NOTE: the block refered to as an RNAB is actually a RAB by the
         #definition in http://arxiv.org/abs/1903.10082 so therefore:

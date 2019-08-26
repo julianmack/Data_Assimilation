@@ -2,7 +2,7 @@
 
 from VarDACAE.settings import config
 from VarDACAE.VarDA.batch_DA import BatchDA
-from VarDACAE import GetData, SplitData
+from VarDACAE import SplitData
 import numpy as np
 
 DEBUG = False
@@ -23,7 +23,7 @@ def VarDASVD(num_modes, csv_fp=None, debug = DEBUG, single_state = False):
     settings.TOL = 1e-3
 
 
-    loader, splitter = GetData(), SplitData()
+    loader, splitter = settings.get_loader(), SplitData()
     X = loader.get_X(settings)
 
     _, test_X, u_c_std, _, _, _ = splitter.train_test_DA_split_maybe_normalize(X, settings)

@@ -34,10 +34,12 @@ results_df = BatchDA(settings, AEModel=model).run()
 
 ```
 
+### Train a model on your own data
+To train a model on your own 3D data you must update the following:
+* Create a new settings class that inherits from your desired model's settings class (e.g. `VarDACAE.settings.models.CLIC.CLIC`) and update the data dimensions:
+```from VarDACAE.settings.models.CLIC import CLIC
+class ConfigNew(CLIC):```
 
-### Data Assimilation
-
-### AE Define and Train
 
 ## Repo Structure
 To run tests ...:

@@ -10,7 +10,7 @@ from scipy.optimize import minimize
 from VarDACAE import ML_utils
 from VarDACAE.AEs import Jacobian
 from VarDACAE.fluidity import VtkSave
-from VarDACAE import GetData, SplitData
+from VarDACAE import SplitData
 from VarDACAE.VarDA import VDAInit
 from VarDACAE.VarDA import SVD
 from VarDACAE.VarDA.cost_fn import cost_fn_J, grad_J
@@ -40,7 +40,7 @@ class DAPipeline():
 
         if self.settings.SAVE:
             #Save .vtu files so that I can look @ in paraview
-            sample_fp = GetData.get_sorted_fps_U(self.settings.DATA_FP)[0]
+            sample_fp = self.settings.get_loader().get_sorted_fps_U(self.settings.DATA_FP)[0]
             out_fp_ref = self.settings.INTERMEDIATE_FP + "ref_MAE.vtu"
             out_fp_DA =  self.settings.INTERMEDIATE_FP + "DA_MAE.vtu"
 

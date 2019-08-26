@@ -1,7 +1,7 @@
 import torch
 import time
 
-from VarDACAE import ML_utils, GetData, SplitData
+from VarDACAE import ML_utils, SplitData
 from VarDACAE.VarDA import DAPipeline
 from VarDACAE.VarDA import SVD, VDAInit
 from VarDACAE.utils.expdir import init_expdir
@@ -28,7 +28,7 @@ class BatchDA():
             self.file_name = fps[-1]
 
         if self.control_states is None:
-            loader, splitter = GetData(), SplitData()
+            loader, splitter = settings.get_loader(), SplitData()
             X = loader.get_X(settings)
 
             train_X, test_X, u_c_std, X, mean, std = splitter.train_test_DA_split_maybe_normalize(X, settings)

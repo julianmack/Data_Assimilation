@@ -1,7 +1,7 @@
 """This is used to check that a new model sucessfully initializes
 Trains, runs and can be used for DA"""
 
-from VarDACAE import ML_utils, GetData, SplitData
+from VarDACAE import ML_utils, SplitData
 from VarDACAE import TrainAE
 from VarDACAE.VarDA.batch_DA import BatchDA
 from VarDACAE.settings.base import Config
@@ -18,7 +18,7 @@ import os
 
 VAR = 0.05
 TOL = 1e-2
-ACTIVATION = "GDN"
+ACTIVATION = "prelu"
 EXPDIR = "experiments/CTL/"
 
 resNext3_k = {"layers": 3, "cardinality": 1, "block_type": "RNAB",
@@ -61,7 +61,7 @@ def run_DA_batch(settings, model, all_data, expdir, params={"var": VAR, "tol": T
     settings.TOL = params.get("tol") if params.get("tol") else 1e-2
     #set control_states
     #Load data
-    loader, splitter = GetData(), SplitData()
+    loader, splitter = settings.get_loader(), SplitData()
     X = loader.get_X(settings)
 
     train_X, test_X, u_c_std, X, mean, std = splitter.train_test_DA_split_maybe_normalize(X, settings)

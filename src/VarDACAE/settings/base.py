@@ -14,7 +14,7 @@ import os, sys
 
 class Config():
 
-    def __init__(self):
+    def __init__(self, loader=None):
         self.HOME_DIR = setting_helpers.get_home_dir()
         self.RESULTS_FP = self.HOME_DIR + "results/"
         self.DATA_FP = self.HOME_DIR + "data_/small3DLSBU/"
@@ -27,6 +27,8 @@ class Config():
         self.DEBUG = True
         self.GPU_DEVICE = 0
 
+
+        self.LOADER = loader
         self.SEED = 42
         self.NORMALIZE = True #Whether to normalize input data
         self.UNDO_NORMALIZE = self.NORMALIZE
@@ -64,6 +66,17 @@ class Config():
         self.AZURE_CONTAINER = "x-data"
         self.AZURE_DOWNLOAD = True
 
+    def get_loader(self):
+        from VarDACAE import GetData #import here to avoid circular imports
+
+        if hasattr(self, "LOADER") and self.LOADER != None:
+            assert iscallable(self.LOADER)
+            loader = self.LOADER()
+            assert isinstance(loader, GetData())
+            return loader
+        else: #use fulidity data
+            return GetData()
+
     def get_X_fp(self, force_init=False):
         if hasattr(self, "X_FP_hid") and not force_init:
             return self.X_FP_hid
@@ -74,6 +87,7 @@ class Config():
                 dim = 1
             self.X_FP_hid = self.INTERMEDIATE_FP + "X_{}D_{}.npy".format(dim, self.FIELD_NAME)
             return self.X_FP_hid
+
     def set_X_fp(self, fp):
         self.X_FP_hid = fp
 
@@ -106,15 +120,15 @@ class Config():
 
 class ConfigExample(Config):
     """Override and add relevant configuration options."""
-    def __init__(self):
-        super(ConfigExample, self).__init__()
+    def __init__(self, loader=None):
+        super(ConfigExample, self).__init__(loader)
         self.ALPHA = 2.0 #override
         self.NEW_OPTION = "FLAG" #Add new
 
 
 class SmallTestDomain(Config):
-    def __init__(self):
-        super(SmallTestDomain, self).__init__()
+    def __init__(self, loader=None):
+        super(SmallTestDomain, self).__init__(loader)
         self.SAVE = False
         self.DEBUG = True
         self.NORMALIZE = True

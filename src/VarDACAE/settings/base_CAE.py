@@ -7,8 +7,8 @@ from VarDACAE.settings.base import Config
 from VarDACAE import ML_utils
 
 class ConfigAE(Config):
-    def __init__(self):
-        super(ConfigAE, self).__init__()
+    def __init__(self, loader=None):
+        super(ConfigAE, self).__init__(loader)
         self.BATCH_NORM = False
         self.COMPRESSION_METHOD = "AE"
         self.NUMBER_MODES = 4
@@ -26,8 +26,8 @@ class ConfigAE(Config):
 
 
 class CAEConfig(ConfigAE):
-    def __init__(self):
-        super(CAEConfig, self).__init__()
+    def __init__(self, loader=None):
+        super(CAEConfig, self).__init__(loader)
         self.AE_MODEL_TYPE = CAE_3D
         self.n3d = (91, 85, 32)
         self.FACTOR_INCREASE = 2.43 #interpolation ratio of oridinal # points to final
