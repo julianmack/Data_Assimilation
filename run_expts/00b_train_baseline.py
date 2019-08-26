@@ -13,8 +13,8 @@ In addition, Add a final candidate baseline model:
 from VarDACAE.settings.explore.baseline_explore import Baseline1, Baseline2
 from VarDACAE.settings.explore.block_models import BaselineBlock
 
-from VarDACAE import TrainAE, ML_utils, GetData, SplitData
-from VarDACAE.VarDA.batch_DA import BatchDA
+from VarDACAE import TrainAE, ML_utils, BatchDA
+
 
 import shutil
 

@@ -4,8 +4,7 @@ Duplicate experiment 01c with a larger set of values.
 Split over 4 nodes. and use training scheme from 02a_rbtype.py
 
 """
-from VarDACAE import TrainAE, ML_utils, GetData, SplitData
-from VarDACAE.VarDA.batch_DA import BatchDA
+from VarDACAE import TrainAE, ML_utils, BatchDA
 
 from run_expts.expt_config import ExptConfigTest
 from VarDACAE.settings.models.resNeXt import ResStack3

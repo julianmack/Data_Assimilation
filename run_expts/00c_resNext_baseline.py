@@ -9,9 +9,7 @@ the model after 150 epochs for comparison.
 
 from VarDACAE.settings.models.resNeXt import ResNeXt
 
-
-from VarDACAE import TrainAE, ML_utils, GetData, SplitData
-from VarDACAE.VarDA.batch_DA import BatchDA
+from VarDACAE import TrainAE, ML_utils, BatchDA
 
 
 #global variables for DA and training:

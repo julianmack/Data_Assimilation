@@ -12,9 +12,8 @@ NOTE: 128 failed with a CUDA memory error
 from VarDACAE.settings.models.resNeXt import ResStack3
 from VarDACAE.settings.models.CLIC import CLIC
 
+from VarDACAE import TrainAE, ML_utils, BatchDA
 
-from VarDACAE import TrainAE, ML_utils, GetData, SplitData
-from VarDACAE.VarDA.batch_DA import BatchDA
 from run_expts.expt_config import ExptConfigTest
 
 

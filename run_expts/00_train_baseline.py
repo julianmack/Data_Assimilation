@@ -1,7 +1,6 @@
 """File to run elements of VarDACAE module from"""
 from VarDACAE.settings.explore.baseline_explore import Baseline1, Baseline2
-from VarDACAE import TrainAE, ML_utils, GetData, SplitData
-from VarDACAE.VarDA.batch_DA import BatchDA
+from VarDACAE import TrainAE, ML_utils, BatchDA
 
 import shutil
 

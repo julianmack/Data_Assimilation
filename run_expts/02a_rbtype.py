@@ -21,9 +21,8 @@ x8 experiments in total: split across 2 GPUS
 """
 from VarDACAE.settings.models.resNeXt import ResStack3
 
+from VarDACAE import TrainAE, ML_utils, BatchDA
 
-from VarDACAE import TrainAE, ML_utils, GetData, SplitData
-from VarDACAE.VarDA.batch_DA import BatchDA
 from run_expts.expt_config import ExptConfigTest
 
 

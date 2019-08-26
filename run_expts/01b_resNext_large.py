@@ -5,9 +5,7 @@ Check that you can get a resNext system to train
 
 from VarDACAE.settings.models.resNeXt import ResNeXt
 
-
-from VarDACAE import TrainAE, ML_utils, GetData, SplitData
-from VarDACAE.VarDA.batch_DA import BatchDA
+from VarDACAE import TrainAE, ML_utils, BatchDA
 
 
 #global variables for DA and training:

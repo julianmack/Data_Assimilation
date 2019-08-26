@@ -3,9 +3,8 @@ Expt 02a- final two did not train. Repeat
 """
 from VarDACAE.settings.models.resNeXt import ResStack3
 
+from VarDACAE import TrainAE, ML_utils, BatchDA
 
-from VarDACAE import TrainAE, ML_utils, GetData, SplitData
-from VarDACAE.VarDA.batch_DA import BatchDA
 from run_expts.expt_config import ExptConfigTest
 
 
