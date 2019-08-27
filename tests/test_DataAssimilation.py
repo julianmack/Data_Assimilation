@@ -226,8 +226,8 @@ class TestMinimizeJ():
             data = vda_initilizer.run()
 
             data["V"] = vda_initilizer.create_V_from_X(data["train_X"], settings).T
-
-
+            data["G_V"] = (data["G"] @ data["V"] ).astype(float)
+            
             self.u_0 = data.get("u_0")
             self.H_0 = data.get("G")
             self.d = data.get("d")

@@ -1,7 +1,6 @@
 """File to run elements of VarDACAE module from"""
 from VarDACAE import ML_utils,  SplitData
 from VarDACAE.VarDA.batch_DA import BatchDA
-from VarDACAE.settings import config
 from tools.check_train_load_DA import run_DA_batch
 from notebooks.utils import get_model_specific_data
 import os
@@ -23,7 +22,7 @@ DIR3 = BASE + "06a3/"
 
 DIRS = [DIR1, DIR2, DIR3, "experiments/train2/06a4/"]
 
-EXPDIR = "experiments/DA2/"
+EXPDIR = "experiments/DA3/"
 
 
 #global variables for DA:

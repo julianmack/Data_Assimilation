@@ -78,6 +78,11 @@ class DAPipeline():
                 self.data["V_trunc"] = V_red.T #tau x M
 
                 self.data["w_0"] = np.zeros((V_red.shape[0]))
+                if self.data["G"] is 1:
+                    self.data["G_V"] =self.data["V_trunc"]
+                else:
+                    self.data["G_V"] = (self.data["G"] @ self.data["V_trunc"] ).astype(float)
+
             self.data["V_grad"] = None
         else:
 
@@ -112,6 +117,10 @@ class DAPipeline():
             self.data["w_0"] = w_0
             self.data["V_grad"] = None
 
+            if self.data["G"] is 1:
+                self.data["G_V"] =self.data["V_trunc"]
+            else:
+                self.data["G_V"] = (self.data["G"] @ self.data["V_trunc"] ).astype(float)
         DA_results = self.perform_VarDA(self.data, self.settings)
         return DA_results
 

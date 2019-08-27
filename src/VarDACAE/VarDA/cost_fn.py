@@ -11,6 +11,7 @@ def cost_fn_J(w, data, settings):
     G = data.get("G")
     V_trunc = data.get("V_trunc")
     V =  V_trunc if V_trunc is not None else data.get("V")
+    G_V = data.get("G_V")
     V_grad = data.get("V_grad")
     R_inv = data.get("R_inv")
 
@@ -25,12 +26,7 @@ def cost_fn_J(w, data, settings):
         Q = (G @ V_w - d)
 
     else:
-        #print("H", G[0, 2], ", V", V[0, 0], ", d", d[0],  ", w", w[0])
-        # print("H", G.shape)
-        # print("V", V.shape)
-        # print("d", d.shape)
-        # print("w", w.shape)
-        Q = (G @ V @ w - d)
+        Q = (G_V @ w - d)
 
     if settings.OBS_VARIANCE and not R_inv:
         #When R is proportional to identity
@@ -54,6 +50,7 @@ def grad_J(w, data, settings):
     G = data.get("G")
     V_trunc = data.get("V_trunc")
     V =  V_trunc if V_trunc is not None else data.get("V")
+    G_V = data.get("G_V")
     V_grad = data.get("V_grad")
     R_inv = data.get("R_inv")
 
@@ -71,8 +68,8 @@ def grad_J(w, data, settings):
         Q = (G @ V_w - d)
         P = V_grad_w.T @ G.T
     else:
-        Q = (G @ V @ w - d)
-        P = V.T @ G.T
+        Q = (G_V @ w - d)
+        P = G_V.T
 
     if not R_inv and settings.OBS_VARIANCE:
         #When R is proportional to identity

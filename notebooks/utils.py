@@ -5,7 +5,7 @@ import numpy as np
 import pickle
 import sys
 import matplotlib.pyplot as plt
-from pipeline import ML_utils
+from VarDACAE import ML_utils
 from collections import OrderedDict
 
 #plt.style.use('seaborn-white')

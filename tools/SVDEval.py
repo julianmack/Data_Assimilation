@@ -1,18 +1,20 @@
 """File to run elements of VarDACAE module from"""
 
-from VarDACAE.settings import config
-from VarDACAE.VarDA.batch_DA import BatchDA
-from VarDACAE import SplitData
+from VarDACAE.settings.base_3D import Config3D
+from VarDACAE import BatchDA, SplitData
+
 import numpy as np
 
 DEBUG = False
 SINGLE_STATE = False
+ALL_OBSERVATIONS = True
 
-def VarDASVD(num_modes, csv_fp=None, debug = DEBUG, single_state = False):
+def VarDASVD(num_modes, csv_fp=None, debug = DEBUG,
+            single_state = False, all_obs=False):
     """Calculates VarDA percentage improvement averaged across the
     whole test set. """
 
-    settings = config.Config3D()
+    settings = Config3D()
 
     settings.NORMALIZE = True
     settings.UNDO_NORMALIZE = True
@@ -21,6 +23,9 @@ def VarDASVD(num_modes, csv_fp=None, debug = DEBUG, single_state = False):
     settings.NUMBER_MODES = num_modes
     settings.DEBUG = debug
     settings.TOL = 1e-3
+    if all_obs == True:
+        settings.OBS_FRAC = 1.0
+        settings.OBS_MODE = "all"
 
 
     loader, splitter = settings.get_loader(), SplitData()
@@ -43,4 +48,4 @@ if __name__ == "__main__":
     for mode in modes:
         print(mode)
         csv_fp = "{}modes{}.csv".format(exp_base, str(mode))
-        VarDASVD(mode, csv_fp, DEBUG, SINGLE_STATE)
+        VarDASVD(mode, csv_fp, DEBUG, SINGLE_STATE, ALL_OBSERVATIONS)

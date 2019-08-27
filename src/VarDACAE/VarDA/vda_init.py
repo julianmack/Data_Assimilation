@@ -165,7 +165,7 @@ class VDAInit:
         return observations, obs_idx, nobs
 
     @staticmethod
-    def create_H(obs_idxs, n, nobs, three_dim=False):
+    def create_H(obs_idxs, n, nobs, three_dim=False, obs_mode=None):
         """Creates the mapping matrix from the statespace to the observations.
             :obs_idxs - an iterable of indexes @ which the observations are made
             :n - size of state space
@@ -178,7 +178,8 @@ class VDAInit:
              n = nx * ny * nz
         else:
             assert type(n) == int
-
+        if obs_mode == "all":
+            return 1 #i.e. identity but no need to store full size
         H = np.zeros((nobs, n))
         H[range(nobs), obs_idxs] = 1
 
@@ -216,10 +217,22 @@ class VDAInit:
             w_0 = None #this will be initialized in SVD_DA()
         observations, obs_idx, nobs = VDAInit.select_obs(settings, u_c) #options are specific for rand
 
-        H_0 = VDAInit.create_H(obs_idx, settings.get_n(), nobs, settings.THREE_DIM)
+        H_0 = VDAInit.create_H(obs_idx, settings.get_n(), nobs,
+                            settings.THREE_DIM, settings.OBS_MODE)
 
         #NOTE: assert np.allclose(observations, H_0 @ u_c.flatten())
-        d = observations - H_0 @ u_0.flatten() #'d' in literature
+        # print("H_0", H_0.shape)
+        # print("u_0", u_0.shape)
+        # print("u_0.flatten", u_0.flatten().shape)
+        # print("H_0 @ u_0.flatten()", (H_0 @ u_0.flatten()).shape)
+        # print("observations", observations.shape)
+        # 
+        if H_0 is 1:
+            d = observations.flatten() - H_0 * u_0.flatten()
+            assert settings.COMPRESSION_METHOD == "SVD"
+        else:
+            d = observations - H_0 @ u_0.flatten()
+        #d = observations - H_u_0 #'d' in literature
         #R_inv = self.create_R_inv(OBS_VARIANCE, nobs)
         return observations, H_0, w_0, d
 
