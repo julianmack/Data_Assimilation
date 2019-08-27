@@ -40,7 +40,7 @@
           <y:Geometry height="213.47131215476924" width="74.90556591200641" x="510.95256838473614" y="296.0805917528873"/>
           <y:Fill hasColor="false" transparent="false"/>
           <y:BorderStyle hasColor="false" raised="false" type="line" width="1.0"/>
-          <y:NodeLabel alignment="center" autoSizePolicy="content" borderDistance="0.0" bottomInset="0" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" hasText="false" height="290.0" horizontalTextPosition="center" iconData="2" iconTextGap="0" leftInset="0" modelName="custom" rightInset="0" rotationAngle="90.0" textColor="#000000" topInset="0" verticalTextPosition="bottom" visible="true" width="250.0" x="-114.0791835612468" y="-2.098805726431465">
+          <y:NodeLabel alignment="center" autoSizePolicy="content" borderDistance="0.0" bottomInset="0" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" hasText="false" height="290.0" horizontalTextPosition="center" iconData="2" iconTextGap="0" leftInset="0" modelName="custom" rightInset="0" rotationAngle="90.0" textColor="#000000" topInset="0" verticalTextPosition="bottom" visible="true" width="250.0" x="-114.0791835612468" y="-2.098805726431408">
             <y:LabelModel>
               <y:SmartNodeLabelModel distance="4.0"/>
             </y:LabelModel>
