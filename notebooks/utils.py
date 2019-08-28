@@ -224,13 +224,18 @@ def extract(res):
 
     activation = sttn.ACTIVATION
     channels = sttn.get_channels()
-    num_channels = sum(channels)
+    num_channels = None
+    if isinstance(channels, list):
+        num_channels = sum(channels)
+
 
     first_channel = channels[1] #get the input channel (this may be a bottleneck)
 
     if hasattr(sttn, "get_num_layers_decode"):
         num_layers = sttn.get_num_layers_decode()
-        chan_layer = num_channels/num_layers
+        chan_layer = "??"
+        if num_channels:
+            chan_layer = num_channels/num_layers
     else:
         num_layers = "??"
         chan_layer = "??"
