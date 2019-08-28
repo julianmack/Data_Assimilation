@@ -42,6 +42,14 @@ def get_augment(settings):
             trnsfrm = transforms.Compose([
                             transforms.RandomChoice([FieldJitter(0.05, 0.25),], ),
                             ])
+        elif settings.AUG_SCHEME == 5:
+            trnsfrm = transforms.Compose([
+                            transforms.RandomChoice([FieldJitter(0.10, 0.5),], ),
+                            ])
+        elif settings.AUG_SCHEME == 6:
+            trnsfrm = transforms.Compose([
+                            transforms.RandomChoice([FieldJitter(0.2, 1.0),], ),
+                            ])
         else:
             raise ValueError("AUG_SCHEME not recognized")
     else:

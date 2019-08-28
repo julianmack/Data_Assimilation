@@ -61,10 +61,11 @@ class Config():
         self.JAC_NOT_IMPLEM = True #whether explicit jacobian has been implemented
         self.export_env_vars()
 
-        self.AZURE_STORAGE_ACCOUNT = "vtudata"
-        self.AZURE_STORAGE_KEY = "yguh9jwnySH8FsHxX25rPOf4qE3wwdB6G+pqf/spwx/ofYHPBYHzAl32lx1swOETlqC3qorH1JKwJoWOWt4L4Q=="
+        self.AZURE_STORAGE_ACCOUNT = "vtudata2"
+        #self.AZURE_STORAGE_KEY = ""
         self.AZURE_CONTAINER = "x-data"
         self.AZURE_DOWNLOAD = True
+        self.AZURE_URL = "https://vtudata2.blob.core.windows.net/x-data/X_3D_Pressure.npy"
 
     def get_loader(self):
         from VarDACAE import GetData #import here to avoid circular imports
