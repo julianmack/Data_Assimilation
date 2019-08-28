@@ -45,13 +45,9 @@ def get_augment(settings):
         else:
             raise ValueError("AUG_SCHEME not recognized")
     else:
+        trnsfrm = None
+        settings.AUG_SCHEME = 0
 
-        trnsfrm = transforms.Compose([
-                        # transforms.RandomApply([FlipHorizontal("x"),
-                        #                         FlipHorizontal("y")], p=0.5),
-                        transforms.RandomChoice([FieldJitter(0.01, 0.1),
-                                                FieldJitter(0.005, 0.5),], ),
-                        ])
     return trnsfrm
 
 class FieldJitter():
@@ -76,12 +72,14 @@ class FieldJitter():
 
         results = []
         for x in sample:
-            apply_jitter = ((torch.rand_like(x) * self.ratio_apply) > 0.5).type(torch.float)
+            apply_jitter = (torch.rand_like(x) < self.ratio_apply).type(torch.float)
             std = torch.randn_like(x) #the data is normalized and mean centred
             std = self.jitter_std * std
             std_apply = std * apply_jitter
             res = x + std_apply
+
             results.append(res)
+
 
         return tuple(results)
 

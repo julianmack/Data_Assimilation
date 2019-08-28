@@ -48,11 +48,13 @@ class ChannelGate(nn.Module):
         super(ChannelGate, self).__init__()
         self.gate_channels = gate_channels
 
+        Cinner = gate_channels // reduction_ratio
+        Cinner = Cinner if Cinner > 0 else 1
         self.mlp = nn.Sequential(
             Flatten(),
-            nn.Linear(gate_channels, gate_channels // reduction_ratio),
-            activation_constructor(gate_channels // reduction_ratio, not encode),
-            nn.Linear(gate_channels // reduction_ratio, gate_channels)
+            nn.Linear(gate_channels, Cinner),
+            activation_constructor(Cinner, not encode),
+            nn.Linear(Cinner, gate_channels)
             )
         self.pool_types = pool_types
     def forward(self, x):
@@ -98,9 +100,9 @@ class ChannelPool(nn.Module):
         return torch.cat( (torch.max(x,1)[0].unsqueeze(1), torch.mean(x,1).unsqueeze(1)), dim=1 )
 
 class SpatialGate(nn.Module):
-    def __init__(self, encode, activation_constructor):
+    def __init__(self, encode, activation_constructor, kernel_size=7):
         super(SpatialGate, self).__init__()
-        kernel_size = 7
+        assert kernel_size % 2 == 1
         self.compress = ChannelPool()
         self.spatial = BasicConv(encode, activation_constructor, 2, 1, kernel_size,
                                     stride=1, padding=(kernel_size-1) // 2,
@@ -113,7 +115,7 @@ class SpatialGate(nn.Module):
 
 class CBAM(nn.Module):
     def __init__(self, encode, activation_constructor, gate_channels, reduction_ratio=8,
-                    pool_types=['avg', 'max'], no_spatial=False):
+                    pool_types=['avg', 'max'], no_spatial=False, kernel_size=7):
         super(CBAM, self).__init__()
         if get_activation(activation_constructor) == "GDN":
             channel_act_constr = pnn.builder.NNBuilder.act_constr("prelu")
@@ -124,7 +126,7 @@ class CBAM(nn.Module):
                             reduction_ratio, pool_types)
         self.no_spatial=no_spatial
         if not no_spatial:
-            self.spatialgate = SpatialGate(encode, activation_constructor)
+            self.spatialgate = SpatialGate(encode, activation_constructor, kernel_size)
     def forward(self, x):
         x_out = self.channelgate(x)
         if not self.no_spatial:

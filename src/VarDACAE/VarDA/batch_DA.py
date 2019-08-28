@@ -5,7 +5,7 @@ from VarDACAE import ML_utils, SplitData
 from VarDACAE.VarDA import DAPipeline
 from VarDACAE.VarDA import SVD, VDAInit
 from VarDACAE.utils.expdir import init_expdir
-
+from VarDACAE.settings import helpers
 import pandas as pd
 import numpy as np
 
@@ -26,6 +26,8 @@ class BatchDA():
             dir = "/".join(fps[:-1])
             self.expdir = init_expdir(dir, True)
             self.file_name = fps[-1]
+            
+            self.csv_fp = helpers.win_to_unix_fp(self.expdir + self.file_name)
 
         if self.control_states is None:
             loader, splitter = settings.get_loader(), SplitData()
@@ -172,7 +174,7 @@ class BatchDA():
         results_df = pd.DataFrame(results)
         #save to csv
         if self.csv_fp:
-            results_df.to_csv(self.expdir + self.file_name)
+            results_df.to_csv(self.csv_fp)
 
         if self.plot:
             raise NotImplementedError("plotting functionality not implemented yet")

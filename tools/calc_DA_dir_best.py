@@ -5,31 +5,27 @@ from tools.check_train_load_DA import run_DA_batch
 from notebooks.utils import get_model_specific_data
 import os
 import pickle
-BASE = "experiments/train/"
 
-################## HOME 03b
-# DIR1 = BASE + "DA5/03b/"
-# DIR2 = BASE + "DA5/03b2/"
-#
-# DIRS = [DIR1, DIR2]#DA4/DA3
-#
-# EXPDIR = BASE + "DA/03b/"
 
 ################ DA3 06a/06b
+BASE = "experiments/train/"
 DIR1 = BASE + "06a/"
 DIR2 = BASE + "06a2/"
 DIR3 = BASE + "06a3/"
 
 DIRS = [DIR1, DIR2, DIR3, "experiments/train2/06a4/"]
 
-EXPDIR = "experiments/DA3/"
+EXPDIR = "experiments/TSVD/06b300/"
+EPOCH = None #choose latest epoch if this is None
 
+# BASE = "experiments/DA5/"
+# DIRS = [BASE + "06b/"]
 
 #global variables for DA:
 PRINT = True
 ALL_DATA = True
 
-def calc_DA_best(dirs, params, expdir, prnt=True, all_data=True,):
+def calc_DA_best(dirs, params, expdir, prnt=True, all_data=True, epoch=None):
     if isinstance(dirs, list):
         pass
     elif isinstance(dirs, str):
@@ -50,10 +46,11 @@ def calc_DA_best(dirs, params, expdir, prnt=True, all_data=True,):
                     expdirnew = os.path.join(expdir, expt_name[-1])
 
                     mse_DA, model_data = calc_DA_dir(dir, params, expdirnew,
-                                            prnt=True, all_data=all_data)
+                                            prnt=True, all_data=all_data, epoch=epoch)
                     results.append((mse_DA, model_data, path))
                     index += 1
-
+    print(results)
+    print()
     res = sorted(results)
     out_fp = os.path.join(expdir, "final.txt")
 
@@ -74,8 +71,8 @@ def calc_DA_best(dirs, params, expdir, prnt=True, all_data=True,):
     print("FIFTH")
     print(res[4])
 
-def calc_DA_dir(dir, params, expdir, prnt=True, all_data=True):
-    model, settings = ML_utils.load_model_and_settings_from_dir(dir)
+def calc_DA_dir(dir, params, expdir, prnt=True, all_data=True, epoch=None):
+    model, settings = ML_utils.load_model_and_settings_from_dir(dir, choose_epoch=epoch)
     df = run_DA_batch(settings, model, all_data, expdir, params)
     mse_DA = df["mse_DA"].mean()
     model_data = get_model_specific_data(settings, dir, model=model)
@@ -87,7 +84,7 @@ def calc_DA_dir(dir, params, expdir, prnt=True, all_data=True):
 
 if __name__ == "__main__":
     params = {"var": 0.005, "tol":1e-3}
-    calc_DA_best(DIRS, params, EXPDIR, PRINT, ALL_DATA)
+    calc_DA_best(DIRS, params, EXPDIR, PRINT, ALL_DATA, EPOCH)
 
 
 

@@ -48,7 +48,7 @@ class RBD3(nn.Module):
                                 "Csmall": Cs, "Block": Block,
                                 "dense_layers": 3}
         Block_in_ResNext = _DenseBlock
-        print("kwargs", dense_block_kwargs)
+
         self.rdb3 = res.ResNeXt(encode, activation_constructor, Cin,
                                         cardinality, k, Cs, Block_in_ResNext,
                                         block_kwargs=dense_block_kwargs)

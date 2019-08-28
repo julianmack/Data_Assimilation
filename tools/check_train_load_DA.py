@@ -14,6 +14,7 @@ from VarDACAE.settings.explore.block_models import Res34AE, Res34AE_Stacked, Cho
 from VarDACAE.settings.models.resNeXt import Baseline1Block, ResNeXt, ResStack3
 from VarDACAE.settings.explore.baseline_explore import Baseline1
 from VarDACAE.settings.models.CLIC import CLIC, GRDNBaseline
+from VarDACAE.settings import helpers
 import os
 
 VAR = 0.05
@@ -24,13 +25,13 @@ EXPDIR = "experiments/CTL/"
 resNext3_k = {"layers": 3, "cardinality": 1, "block_type": "RNAB",
                 "module_type": "Bespoke", "sigmoid": True}
 clic_K = {"model_name": "Tucodec", "block_type": "NeXt", "Cstd": 64}
-grdn_k = {"block_type": "NeXt", "Cstd": 2}
+grdn_k = {"block_type": "NeXt", "Cstd": 32}
 
 CONFIGS = [ResStack3, CLIC, GRDNBaseline]
 KWARGS = ( resNext3_k, clic_K, grdn_k)
 #################
-CONFIGS = CONFIGS[1]
-KWARGS = (KWARGS[1],)
+CONFIGS = CONFIGS[-1]
+KWARGS = (KWARGS[-1],)
 
 
 #global variables for DA and training:
@@ -38,7 +39,7 @@ EPOCHS = 1
 SMALL_DEBUG_DOM = True #For training
 ALL_DATA = False
 PRINT_MODEL = False
-
+RUN_DA_IN_TRAINING = False
 def main():
 
     if isinstance(CONFIGS, list):
@@ -59,6 +60,7 @@ def run_DA_batch(settings, model, all_data, expdir, params={"var": VAR, "tol": T
     settings.SHUFFLE_DATA = True
     settings.OBS_VARIANCE = params.get("var") if params.get("var") else 0.005
     settings.TOL = params.get("tol") if params.get("tol") else 1e-2
+    helpers.set_local_dirs(settings)
     #set control_states
     #Load data
     loader, splitter = settings.get_loader(), SplitData()
@@ -81,7 +83,7 @@ def run_DA_batch(settings, model, all_data, expdir, params={"var": VAR, "tol": T
         out_fp = os.path.join(expdir, "AE.csv")#this will be written and then deleted
     else:
         out_fp = os.path.join(expdir, "SVD.csv")
-
+    out_fp = out_fp.replace("\\", "/")
     batch_DA_AE = BatchDA(settings, control_states, csv_fp= out_fp, AEModel=model,
                         reconstruction=True, plot=False)
 
@@ -100,11 +102,11 @@ def check_train_load_DA(config, config_kwargs,  small_debug=True, all_data=False
         if activation:
             settings.ACTIVATION = activation
 
-        calc_DA_MAE = True
+        calc_DA_MAE = RUN_DA_IN_TRAINING
         num_epochs_cv = 0
         print_every = 1
         test_every = 1
-        lr = 0.0003
+        lr = 0.0002
 
         print(settings.__class__.__name__)
         if config_kwargs:

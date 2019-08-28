@@ -52,7 +52,7 @@ def load_model_from_settings(settings, device=None, device_idx=None):
     model.eval()
     return model
 
-def load_model_and_settings_from_dir(dir, device_idx=None):
+def load_model_and_settings_from_dir(dir, device_idx=None, choose_epoch=None):
     if dir[-1] != "/":
         dir += "/"
 
@@ -70,17 +70,22 @@ def load_model_and_settings_from_dir(dir, device_idx=None):
                 if "-" in file:
                     continue
                 epoch = int(file.replace(".pth", ""))
-                if epoch >= max_epoch:
-                    max_epoch = epoch
-                    best_fp = os.path.join(path, file)
+                if choose_epoch is not None:
+                    if choose_epoch == epoch:
+                        best_fp = os.path.join(path, file)
+                else:
+                    if epoch >= max_epoch:
+                        max_epoch = epoch
+                        best_fp = os.path.join(path, file)
 
     if not settings:
         raise ValueError("No settings.txt file in dir")
-
+    if choose_epoch and not best_fp:
+        raise ValueError("No file named {}.pth in dir".format(choose_epoch))
     settings.export_env_vars()
     settings.AE_MODEL_FP = best_fp
     model = load_model_from_settings(settings, device_idx=device_idx)
-    
+
     return model, settings
 
 

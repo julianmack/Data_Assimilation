@@ -14,6 +14,12 @@ def get_home_dir():
     wd += "/"
     return wd
 
+def set_local_dirs(settings):
+    settings.HOME_DIR = get_home_dir()
+    settings.DATA_FP = settings.HOME_DIR + "data_/small3DLSBU/"
+    settings.INTERMEDIATE_FP = settings.HOME_DIR + "data_/small3D_intermediate/"
+    settings.get_X_fp(True)
+    return settings
 
 def recursive_len(item):
     if type(item) == list:

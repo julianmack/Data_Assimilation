@@ -2,7 +2,7 @@ data_/
 data_/*.vtu
 data_/*.zip
 .git/
-
+pipeline/*
 venv
 
 results/

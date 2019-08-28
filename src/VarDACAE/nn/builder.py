@@ -58,12 +58,14 @@ class NNBuilder():
         return conv
 
     @staticmethod
-    def ResNeXt(encode, activation_fn, C, N, final=False):
+    def ResNeXt(encode, activation_fn, C, N, final=False, A="prelu", AS=None):
+        assert A == activation_fn, "{} != {}".format(A, activation_fn)
         act_fn_constructor = NNBuilder.act_constr(activation_fn)
         module = res.ResNeXt(encode, act_fn_constructor, C, N)
         return NNBuilder.maybe_add_activation(encode, module, act_fn_constructor, final, C)
     @staticmethod
-    def resResNeXt(encode, activation_fn, C, N, L, final=False):
+    def resResNeXt(encode, activation_fn, C, N, L, final=False, A="prelu", AS=None):
+        assert A == activation_fn, "{} != {}".format(A, activation_fn)
         if L < 1 or C < 1:
             return nn.Sequential()
         act_fn_constructor = NNBuilder.act_constr(activation_fn)
@@ -71,7 +73,9 @@ class NNBuilder():
         return module #No activation - this is already in the resNext
 
     @staticmethod
-    def ResNeXt3(encode, activation_fn, C, N, L, B, CS, k, SB=None, A = None, S=None, final=False):
+    def ResNeXt3(encode, activation_fn, C, N, L, B, CS, k, SB=None, A = None,
+                S=None, final=False,  AS=None):
+        assert A == activation_fn, "{} != {}".format(A, activation_fn)
         if L < 1 or C < 1:
             return nn.Sequential()
         assert L % 3 == 0
@@ -85,7 +89,9 @@ class NNBuilder():
                             res_stacked.ResNeXt3)
         return module
 
-    def ResBespoke(encode, activation_fn, C, N, L, B, CS, k, SB, A, S=None, final=False):
+    def ResBespoke(encode, activation_fn, C, N, L, B, CS, k, SB, A, S=None,
+                    final=False, AS=None):
+        assert A == activation_fn, "{} != {}".format(A, activation_fn)
         if L < 1:
             return nn.Sequential()
         block = NNBuilder.get_block(B)
@@ -98,7 +104,9 @@ class NNBuilder():
         return module
 
     @staticmethod
-    def ResNeXtRDB3(encode, activation_fn, C, N, L, B, CS, k, SB=None, A = None, S = None, final=False):
+    def ResNeXtRDB3(encode, activation_fn, C, N, L, B, CS, k, SB=None, A = None,
+                    S = None, final=False, AS=None):
+        assert A == activation_fn, "{} != {}".format(A, activation_fn)
         if L < 1 or C < 1:
             return nn.Sequential()
         assert SB is None
@@ -124,7 +132,9 @@ class NNBuilder():
             module =  tucodec.TucodecDecode(act_fn_constructor, Block, Cstd, S)
         return nn.Sequential(module)
 
-    def GRDN(encode, activation_fn, B, Cstd):
+    def GRDN(encode, activation_fn, B, Cstd, A="prelu", AS=None):
+        assert A == activation_fn, "{} != {}".format(A, activation_fn)
+
         activation_constructor = NNBuilder.act_constr(activation_fn)
         Block = NNBuilder.get_block(B)
 
@@ -214,7 +224,7 @@ class NNBuilder():
     @staticmethod
     def act_constr(activation_fn):
         if  activation_fn == "relu":
-            activation_constructor = lambda x, y: nn.ReLU()()
+            activation_constructor = lambda x, y: nn.ReLU()
         elif activation_fn == "lrelu":
             activation_constructor = lambda x, y: nn.LeakyReLU(0.05)
         elif activation_fn == "GDN":

@@ -26,10 +26,10 @@ class CLIC(Baseline1Block):
         self.CHANNELS = "see model def"
 
 class GRDNBaseline(CLIC):
-    def __init__(self, block_type, Cstd,  loader = None):
+    def __init__(self, block_type, Cstd,  loader = None, activation="prelu", aug_scheme=None):
         super(CLIC, self).__init__()
-        assert block_type in ["vanilla", "NeXt"]
-        GRDN_kwargs = {"B": block_type, "Cstd": Cstd}
+        assert block_type in ["vanilla", "NeXt", "CBAM_vanilla", "CBAM_NeXt",]
+        GRDN_kwargs = {"B": block_type, "Cstd": Cstd, "A": activation, "AS": aug_scheme}
 
         self.BLOCKS = [M.S, (1, "GRDN", GRDN_kwargs), (7, "conv")]
         down = [[], [0, 0, 1, 1, 1, 1, 1]]
@@ -39,4 +39,5 @@ class GRDNBaseline(CLIC):
         channels[0] = 1
         channels[1] = 1
         self.update_channels(channels)
-
+        self.ACTIVATION = activation
+        self.AUG_SCHEME = aug_scheme

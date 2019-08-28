@@ -323,7 +323,7 @@ def get_model_specific_data(settings, dir, model=None):
         results["Cstd"] = params.get("Cstd")
     if params.get("A"):
         results["activation"] = params.get("A")
-    if params.get("AS"):
+    if params.get("AS") is not None:
         results["aug_scheme"] = params.get("AS")
 
     if cls_name in ["ResStack3", "ResNeXt"] and params.get("attenuation") in [None, True]:

@@ -24,19 +24,21 @@ class ResNeXt(Baseline1Block):
         cardinality - width of each layer (in terms of number of res blocks)
     """
 
-    def __init__(self, layers, cardinality, loader = None,):
+    def __init__(self, layers, cardinality, loader = None, activation="prelu", aug_scheme=None):
         super(ResNeXt, self).__init__(loader)
-        kwargs = {"C": 32, "L": layers, "N": cardinality}
+        kwargs = {"C": 32, "L": layers, "N": cardinality, "A": activation, "AS": aug_scheme}
         self.BLOCKS = [M.S, (5, "conv"), (1, "resResNeXt", kwargs), (2, "conv")]
         down = [[0, 0, 1, 1, 1,], [], [1, 1]]
         down_z = [[0, 0, 1, 1, 1,], [], [0, 0]]
         self.DOWNSAMPLE__  = (down, down, down_z)
-
+        self.ACTIVATION = activation
+        self.AUG_SCHEME = aug_scheme
 
 class ResStack3(ResNeXt):
     def __init__(self, layers, cardinality, block_type="NeXt",
                     module_type="ResNeXt3", loader = None, Csmall=None, k=None,
-                    subBlock="vanilla", attenuation=True, sigmoid=None):
+                    subBlock="vanilla", attenuation=True, sigmoid=None,
+                    activation="prelu", aug_scheme=None):
         #NOTE: the block refered to as an RNAB is actually a RAB by the
         #definition in http://arxiv.org/abs/1903.10082 so therefore:
         if block_type == "RNAB":
@@ -53,10 +55,11 @@ class ResStack3(ResNeXt):
         super(ResStack3, self).__init__(layers, cardinality)
         kwargs = {"C": 32, "L": layers, "N": cardinality, "B":
                     block_type, "CS": Csmall, "k": k, "SB": subBlock,
-                    "A": attenuation, "S": sigmoid}
+                    "A": attenuation, "S": sigmoid, "A": activation, "AS": aug_scheme}
 
         self.BLOCKS = [M.S, (5, "conv"), (1, module_type, kwargs), (2, "conv")]
-
+        self.ACTIVATION = activation
+        self.AUG_SCHEME = aug_scheme
 
 
 
