@@ -14,15 +14,15 @@ from VarDACAE import TrainAE, ML_utils, BatchDA
 from run_expts.expt_config import ExptConfigTest
 
 
-TEST = True
-GPU_DEVICE = 0
-NUM_GPU = 1
+TEST = False
+GPU_DEVICE = 3
+NUM_GPU = 4
 exp_base = "experiments/train2/08b/"
 
 #global variables for DA and training:
 class ExptConfig():
     EPOCHS = 150
-    SMALL_DEBUG_DOM = False #For training
+    SMALL_DEBUG_DOM = False
     calc_DA_MAE = True
     num_epochs_cv = 0
     LR = 0.0002

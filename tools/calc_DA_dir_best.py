@@ -8,18 +8,18 @@ import pickle
 
 
 ################ DA3 06a/06b
-BASE = "experiments/train/"
-DIR1 = BASE + "06a/"
-DIR2 = BASE + "06a2/"
-DIR3 = BASE + "06a3/"
+# BASE = "experiments/train/"
+# DIR1 = BASE + "06a/"
+# DIR2 = BASE + "06a2/"
+# DIR3 = BASE + "06a3/"
+#
+# DIRS = [DIR1, DIR2, DIR3, "experiments/train2/06a4/"]
 
-DIRS = [DIR1, DIR2, DIR3, "experiments/train2/06a4/"]
-
-EXPDIR = "experiments/TSVD/06b300/"
+EXPDIR = "experiments/DA/02/"
 EPOCH = None #choose latest epoch if this is None
 
-# BASE = "experiments/DA5/"
-# DIRS = [BASE + "06b/"]
+#Expt 02
+#DIRS = ["experiments/DA3/02a/", "experiments/02b/", INSERT_02c]
 
 #global variables for DA:
 PRINT = True
