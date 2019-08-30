@@ -1,7 +1,7 @@
 import torch
 import time
 
-from VarDACAE import ML_utils, SplitData
+from VarDACAE import ML_utils, SplitData, fluidity
 from VarDACAE.VarDA import DAPipeline
 from VarDACAE.VarDA import SVD, VDAInit
 from VarDACAE.utils.expdir import init_expdir
@@ -11,7 +11,7 @@ import numpy as np
 
 class BatchDA():
     def __init__(self, settings, control_states=None, csv_fp=None, AEModel=None,
-                reconstruction=True, plot=False):
+                reconstruction=True, plot=False, save_vtu=False):
 
         self.settings = settings
         self.control_states = control_states
@@ -19,6 +19,7 @@ class BatchDA():
         self.plot = plot
         self.model = AEModel
         self.csv_fp = csv_fp
+        self.save_vtu = save_vtu
 
         if self.csv_fp:
             fps = self.csv_fp.split("/")
@@ -26,8 +27,14 @@ class BatchDA():
             dir = "/".join(fps[:-1])
             self.expdir = init_expdir(dir, True)
             self.file_name = fps[-1]
-            
+
             self.csv_fp = helpers.win_to_unix_fp(self.expdir + self.file_name)
+
+        if self.save_vtu:
+            if self.csv_fp:
+                self.save_vtu_fp = self.csv_fp.replace(".csv", "")
+            else:
+                raise ValueError("Must past csv fp to save vtu file")
 
         if self.control_states is None:
             loader, splitter = settings.get_loader(), SplitData()
@@ -96,6 +103,8 @@ class BatchDA():
                 "l2_loss": 0,
                 "time": 0}
 
+        tot_DA_MAE = np.zeros_like(self.control_states[0]).flatten()
+        tot_ref_MAE = np.zeros_like(self.control_states[0]).flatten()
         results = []
 
         if len(self.control_states.shape) in [1, 3]:
@@ -154,6 +163,9 @@ class BatchDA():
                 result["l1_loss"] = l1.detach().cpu().numpy()
                 result["l2_loss"] = l2.detach().cpu().numpy()
             result["time"] = t2 - t1
+            if self.save_vtu:
+                tot_DA_MAE += DA_results["da_MAE"]
+                tot_ref_MAE += DA_results["ref_MAE"]
             #add to results list (that will become a .csv)
             results.append(result)
 
@@ -172,6 +184,14 @@ class BatchDA():
 
 
         results_df = pd.DataFrame(results)
+        if self.save_vtu:
+            tot_DA_MAE /= num_states
+            tot_ref_MAE /= num_states
+            out_fp_ref = self.save_vtu_fp + "av_ref_MAE.vtu"
+            out_fp_DA =  self.save_vtu_fp + "av_da_MAE.vtu"
+            fluidity.utils.save_vtu(self.settings, out_fp_ref, tot_ref_MAE)
+            fluidity.utils.save_vtu(self.settings, out_fp_DA, tot_DA_MAE)
+
         #save to csv
         if self.csv_fp:
             results_df.to_csv(self.csv_fp)

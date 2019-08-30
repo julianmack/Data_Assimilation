@@ -13,10 +13,9 @@ from run_expts.expt_config import ExptConfigTest
 
 
 TEST = False
-GPU_DEVICE = 3
+GPU_DEVICE = 1
 NUM_GPU = 2
-exp_base = "experiments/train2/09a/"
-GPU_OFFSET = 2
+exp_base = "experiments/train2/09a2/"
 
 #global variables for DA and training:
 class ExptConfig():
@@ -31,22 +30,21 @@ class ExptConfig():
 def main():
 
     activations = ["GDN", "relu"]
-    lr_factors = [1, 0.3]
+    lr_factors = [1, 0.05]
 
-    resNextk1 = {"layers": 27, "cardinality": 4,
-            "block_type": "CBAM_vanilla",
+
+    resNextk3 = {"layers": 3, "cardinality": 8,
+            "block_type": "vanilla",
             "module_type": "RDB3",
             "aug_scheme": 0}
 
+    rabkwargs = {"cardinality": 1, "block_type": "RAB",
+                    "sigmoid": True, "module_type": "Bespoke",
+                    "attenuation": False, "layers": 4,
+                    "aug_scheme": 0, "subBlock": "NeXt",}
 
-    resNextk2 = {"layers": 27, "cardinality": 1,
-            "block_type": "CBAM_vanilla",
-            "module_type": "ResNeXt3",
-            "aug_scheme": 0}
-
-
-    kwarg_lst = (resNextk1, resNextk2, )
-    models = (ResStack3, ResStack3, )
+    kwarg_lst = ( resNextk3, rabkwargs,)
+    models = ( ResStack3, ResStack3,)
 
 
     assert len(models) == len(kwarg_lst)
@@ -63,19 +61,15 @@ def main():
                 expt = ExptConfig()
                 expt.LR = expt.LR * lr_factors[idx2]
 
-            batch_sz = 16
-            # if act == "GDN" and "module_type" == "RDB3":
-            #     batch_sz = 8
-
             Model = models[index]
 
             kwargs["activation"] = act
 
             idx_ = idx
             idx += 1
-
-            if idx_ % NUM_GPU != GPU_DEVICE - GPU_OFFSET:
+            if idx_ % NUM_GPU != GPU_DEVICE:
                 continue
+
 
             for k, v in kwargs.items():
                 print("{}={}, ".format(k, v), end="")
@@ -88,7 +82,7 @@ def main():
             expdir = exp_base + str(idx - 1) + "/"
 
 
-            trainer = TrainAE(settings, expdir, expt.calc_DA_MAE, batch_sz=batch_sz)
+            trainer = TrainAE(settings, expdir, expt.calc_DA_MAE)
             expdir = trainer.expdir #get full path
 
 

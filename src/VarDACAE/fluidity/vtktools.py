@@ -15,6 +15,29 @@ import vtk
 # All returned arrays are cast into either numpy or numarray arrays
 arr=numpy.array
 
+class vtuStruct:
+  """Structured grid object to deal with VTK unstructured grids."""
+  def __init__(self, filename = None, sg=None):
+    """Creates a vtu object by reading the specified file."""
+    if filename is None and ugrid is None:
+      self.ugrid = vtk.vtkStructuredGrid()
+    elif filename is None and ugrid is not None:
+      self.ugrid = ugrid
+    else:
+      self.gridreader = None
+      if filename[-4:] == ".vtu":
+        self.gridreader=vtk.vtkXMLStructuredGridReader()
+      elif filename[-5:] == ".pvtu":
+        self.gridreader=vtk.vtkXMLPStructuredGridReader()
+      else:
+        raise Exception("ERROR: don't recognise file extension" + filename)
+      self.gridreader.SetFileName(filename)
+      self.gridreader.Update()
+      self.ugrid=self.gridreader.GetOutput()
+      if self.ugrid.GetNumberOfPoints() + self.ugrid.GetNumberOfCells() == 0:
+        raise Exception("ERROR: No points or cells found after loading vtu " + filename)
+    self.filename=filename
+
 class vtu:
   """Unstructured grid object to deal with VTK unstructured grids."""
   def __init__(self, filename = None, ugrid=None):
@@ -34,6 +57,7 @@ class vtu:
       self.gridreader.SetFileName(filename)
       self.gridreader.Update()
       self.ugrid=self.gridreader.GetOutput()
+      
       if self.ugrid.GetNumberOfPoints() + self.ugrid.GetNumberOfCells() == 0:
         raise Exception("ERROR: No points or cells found after loading vtu " + filename)
     self.filename=filename

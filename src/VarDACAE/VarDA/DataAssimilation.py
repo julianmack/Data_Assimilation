@@ -6,10 +6,9 @@ import random
 import torch
 from scipy.optimize import minimize
 
-
 from VarDACAE import ML_utils
 from VarDACAE.AEs import Jacobian
-from VarDACAE.fluidity import VtkSave
+from VarDACAE import fluidity
 from VarDACAE import SplitData
 from VarDACAE.VarDA import VDAInit
 from VarDACAE.VarDA import SVD
@@ -38,14 +37,6 @@ class DAPipeline():
         w_opt = DA_results["w_opt"]
         self.print_DA_results(DA_results)
 
-        if self.settings.SAVE:
-            #Save .vtu files so that I can look @ in paraview
-            sample_fp = self.settings.get_loader().get_sorted_fps_U(self.settings.DATA_FP)[0]
-            out_fp_ref = self.settings.INTERMEDIATE_FP + "ref_MAE.vtu"
-            out_fp_DA =  self.settings.INTERMEDIATE_FP + "DA_MAE.vtu"
-
-            VtkSave.save_vtu_file(ref_MAE, "ref_MAE", out_fp_ref, sample_fp)
-            VtkSave.save_vtu_file(da_MAE, "DA_MAE", out_fp_DA, sample_fp)
 
 
         if return_stats:
@@ -169,16 +160,6 @@ class DAPipeline():
             u_DA = u_0 + delta_u_DA
 
 
-
-        if False:
-            print("std:    ", std.shape)
-            print("mean:   ", mean.shape)
-            print("u_0:    ", u_0.shape)
-            print("u_c:    ", u_c.shape)
-            print("u_DA:   ", u_DA.shape)
-            print("delta_u_DA:   ", delta_u_DA.shape)
-
-
         if settings.UNDO_NORMALIZE:
 
             u_DA = (u_DA * std + mean)
@@ -208,6 +189,14 @@ class DAPipeline():
                     "w_opt": w_opt,
                     "mse_ref": mse_ref,
                     "mse_DA": mse_DA}
+
+
+        if settings.SAVE:
+            if False:
+                out_fp_ref = settings.INTERMEDIATE_FP + "ref_MAE.vtu"
+                out_fp_DA =  settings.INTERMEDIATE_FP + "da_MAE.vtu"
+                fluidity.utils.save_vtu(settings, out_fp_ref, ref_MAE)
+                fluidity.utils.save_vtu(settings, out_fp_DA, da_MAE)
 
         if settings.DEBUG:
             # u_0 = u_0[:1, :2, :2]

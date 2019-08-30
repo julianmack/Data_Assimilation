@@ -204,9 +204,12 @@ class GetData():
         # This will interpolate between points in the unstructured grid
         struct_grid = ug.StructuredPointProbe(nx, ny, nz)
 
-        if save_newgrid_fp: # useful for debug
-            VtkSave.save_structured_vtu(save_newgrid_fp, struct_grid)
-
+        if True: # useful for debug
+            vtksaver = VtkSave()
+            #VtkSave.save_vtu_file(ref_MAE, settings.VTU_FP, out_fp_ref, sample_fp)
+            vtksaver.save_structured_vtu(settings.VTU_FP, struct_grid)
+            print("Saved sg")
+            
         pointdata = struct_grid.GetPointData()
         vtkdata = pointdata.GetScalars(field_name)
         np_data = nps.vtk_to_numpy(vtkdata)

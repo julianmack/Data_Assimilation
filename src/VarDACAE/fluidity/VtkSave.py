@@ -1,5 +1,7 @@
 import numpy as np
 
+from vtk.util import numpy_support as nps
+
 from VarDACAE.fluidity import vtktools
 
 class VtkSave():
@@ -13,13 +15,21 @@ class VtkSave():
         pass
 
 
-    def save_structured_vtu(self, filename, struc_grid):
+    def save_structured_vtu(self, filename, struc_grid, data=None, field="Pressure"):
+        """Function to save structured vtu grid
+        Arguments:
+            filename (str/fp) - location to save vtu file
+            struct_grid (sg) - sg to give locations and (optionally) the data too
+            data_grid (sg) Optional - sg providing the data
+            """
         from evtk.hl import pointsToVTK
 
         filename = filename.replace(".vtu", "")
         xs, ys, zs = self.__get_grid_locations(struc_grid)
-        data = self.__get_grid_data(struc_grid)
-
+        if data is None:
+            data = self.__get_grid_data(struc_grid)
+        #assert isinstance(data, type(np.array))
+        data = {field: data}
         pointsToVTK(filename, xs, ys, zs, data)
 
 

@@ -87,6 +87,7 @@ class Config():
             else:
                 dim = 1
             self.X_FP_hid = self.INTERMEDIATE_FP + "X_{}D_{}.npy".format(dim, self.FIELD_NAME)
+            self.VTU_FP = self.INTERMEDIATE_FP + "{}D_{}_grid.vtu".format(dim, self.FIELD_NAME)
             return self.X_FP_hid
 
     def set_X_fp(self, fp):

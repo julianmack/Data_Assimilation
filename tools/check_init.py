@@ -16,11 +16,13 @@ ACTIVATION = "prelu"
 ########
 resNext3_k = {"layers": 3, "cardinality": 1, "block_type": "RNAB",
                 "module_type": "Bespoke", "sigmoid": True}
-clic_K = {"model_name": "Tucodec", "block_type": "NeXt", "Cstd": 64}
+clic_k = {"model_name": "Tucodec", "block_type": "NeXt",
+        "Cstd": 64, "sigmoid": True,
+        "activation": "relu", "aug_scheme": 0}
 grdn_k = {"block_type": "NeXt", "Cstd": 2}
 
 CONFIGS = [ResStack3, CLIC, GRDNBaseline]
-KWARGS = ( resNext3_k, clic_K, grdn_k)
+KWARGS = ( resNext3_k, clic_k, grdn_k)
 
 ###########
 CONFIGS = CONFIGS[1]

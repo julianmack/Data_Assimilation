@@ -226,7 +226,7 @@ class VDAInit:
         # print("u_0.flatten", u_0.flatten().shape)
         # print("H_0 @ u_0.flatten()", (H_0 @ u_0.flatten()).shape)
         # print("observations", observations.shape)
-        # 
+        #
         if H_0 is 1:
             d = observations.flatten() - H_0 * u_0.flatten()
             assert settings.COMPRESSION_METHOD == "SVD"

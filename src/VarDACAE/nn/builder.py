@@ -75,7 +75,7 @@ class NNBuilder():
     @staticmethod
     def ResNeXt3(encode, activation_fn, C, N, L, B, CS, k, SB=None, A = None,
                 S=None, final=False,  AS=None):
-        assert A == activation_fn, "{} != {}".format(A, activation_fn)
+        #assert A == activation_fn, "{} != {}".format(A, activation_fn)
         if L < 1 or C < 1:
             return nn.Sequential()
         assert L % 3 == 0
@@ -106,7 +106,7 @@ class NNBuilder():
     @staticmethod
     def ResNeXtRDB3(encode, activation_fn, C, N, L, B, CS, k, SB=None, A = None,
                     S = None, final=False, AS=None):
-        assert A == activation_fn, "{} != {}".format(A, activation_fn)
+        #assert A == activation_fn, "{} != {}".format(A, activation_fn)
         if L < 1 or C < 1:
             return nn.Sequential()
         assert SB is None

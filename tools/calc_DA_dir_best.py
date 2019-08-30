@@ -15,16 +15,19 @@ import pickle
 #
 # DIRS = [DIR1, DIR2, DIR3, "experiments/train2/06a4/"]
 
-EXPDIR = "experiments/DA/02/"
+EXPDIR = "experiments/DA/02c/"
 EPOCH = None #choose latest epoch if this is None
 
 #Expt 02
-#DIRS = ["experiments/DA3/02a/", "experiments/02b/", INSERT_02c]
+B = "/home/jfm1118/DA/experiments/"
+DIRS = [B + "02b/", B + "train/02a/"]
+# B = "/home/jfm1118/DA/experiments/train2/08b/"
+# DIRS = [B + str(x) + "/" for x in range(8, 11)]
+
 
 #global variables for DA:
 PRINT = True
 ALL_DATA = True
-
 def calc_DA_best(dirs, params, expdir, prnt=True, all_data=True, epoch=None):
     if isinstance(dirs, list):
         pass
