@@ -30,7 +30,7 @@ class ExptConfig():
 def main():
 
     activations = ["GDN", "relu"]
-    lr_factors = [1, 0.05]
+    lr_factors = [1, 0.2]
 
 
     resNextk3 = {"layers": 3, "cardinality": 8,

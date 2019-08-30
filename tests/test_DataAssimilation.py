@@ -115,7 +115,7 @@ class TestSetup():
         assert np.array_equal(mean_exp, u_0)
         assert data.get("observations") == [1]
         assert nobs == 1
-        assert np.allclose(np.array([1, 0, 0]), data.get("G"))
+        #assert np.allclose(np.array([1, 0, 0]), data.get("G"))
         assert [0.5] == data.get("d")
         assert np.array_equal(std_exp,  data.get("std"))
         assert np.array_equal(mean_exp, data.get("mean"))
@@ -170,7 +170,7 @@ class TestSetup():
         assert np.allclose(np.zeros((3)), u_0)
         assert data.get("observations") == [1.]
         assert nobs == 1
-        assert np.allclose(np.array([1, 0, 0]), data.get("G"))
+        #assert np.allclose(np.array([1, 0, 0]), data.get("G"))
         assert [1.] == data.get("d")
         assert np.array_equal(std_exp, data.get("std"))
         assert np.array_equal(mean_exp, data.get("mean"))
@@ -226,10 +226,9 @@ class TestMinimizeJ():
             data = vda_initilizer.run()
 
             data["V"] = vda_initilizer.create_V_from_X(data["train_X"], settings).T
-            data["G_V"] = (data["G"] @ data["V"] ).astype(float)
-            
+            data["G_V"] = (data["V"][data["obs_idx"]]).astype(float)
+            self.G_V = data["G_V"]
             self.u_0 = data.get("u_0")
-            self.H_0 = data.get("G")
             self.d = data.get("d")
             nobs = len(data["observations"])
             self.R_inv = (1 / settings.OBS_VARIANCE) * np.eye(nobs)
@@ -282,10 +281,10 @@ class TestMinimizeJ():
 
         V = DA.data.get("V")
 
-        prefix = V.T @ self.H_0.T @ self.R_inv
+        prefix = self.G_V.T @ self.R_inv
 
         LHS = prefix @ self.d
-        RHS_ = prefix @ self.H_0 @ V + alpha * np.eye(w_opt_ret.shape[0])
+        RHS_ = prefix @ self.G_V + alpha * np.eye(w_opt_ret.shape[0])
         RHS = RHS_ @ w_opt_ret
 
         assert np.allclose(LHS, RHS)
@@ -302,13 +301,13 @@ class TestMinimizeJ():
         #w_opt_ret = 0.25 * np.array([-1, 1]) #This is value we want
         V = DA.data.get("V")
 
-        prefix = V.T @ self.H_0.T @ self.R_inv
+        prefix = self.G_V.T @ self.R_inv
 
         LHS = prefix @ self.d
-        RHS_ = prefix @ self.H_0 @ V + alpha * np.eye(w_opt_ret.shape[0])
+        RHS_ = prefix @ self.G_V + alpha * np.eye(w_opt_ret.shape[0])
         RHS = RHS_ @ w_opt_ret
 
-        # print("prefix @ self.H_0 @ V\n", prefix @ self.H_0 @ V = DA.data.get("V"))
+        
         # print("RHS_", RHS_)
         # print("LHS", LHS)
         # print("----------")

@@ -83,6 +83,7 @@ class VDAInit:
             encoder = __create_encoderOrDecoder(model.encode)
             decoder = __create_encoderOrDecoder(model.decode)
 
+        H_0, obs_idx = None, None
 
         if self.settings.REDUCED_SPACE == True:
             if self.settings.COMPRESSION_METHOD == "SVD":
@@ -93,14 +94,14 @@ class VDAInit:
             observations, H_0, w_0, d = self.__get_obs_and_d_reduced_space(self.settings, self.u_c, u_0, encoder)
 
         else:
-            observations, H_0, w_0, d = self.__get_obs_and_d_not_reduced(self.settings, self.u_c, u_0, encoder)
+            observations, w_0, d, obs_idx = self.__get_obs_and_d_not_reduced(self.settings, self.u_c, u_0, encoder)
 
         #TODO - **maybe** get rid of this monstrosity...:
         #i.e. you could return a class that has these attributes:
 
         data = {"d": d, "G": H_0,
                 "observations": observations,
-                "model": model,
+                "model": model, "obs_idx": obs_idx,
                 "encoder": encoder, "decoder": decoder,
                 "u_c": self.u_c, "u_0": u_0, "X": X,
                 "train_X": train_X, "test_X":test_X,
@@ -217,8 +218,8 @@ class VDAInit:
             w_0 = None #this will be initialized in SVD_DA()
         observations, obs_idx, nobs = VDAInit.select_obs(settings, u_c) #options are specific for rand
 
-        H_0 = VDAInit.create_H(obs_idx, settings.get_n(), nobs,
-                            settings.THREE_DIM, settings.OBS_MODE)
+        #H_0 = VDAInit.create_H(obs_idx, settings.get_n(), nobs,
+        #                    settings.THREE_DIM, settings.OBS_MODE)
 
         #NOTE: assert np.allclose(observations, H_0 @ u_c.flatten())
         # print("H_0", H_0.shape)
@@ -227,14 +228,12 @@ class VDAInit:
         # print("H_0 @ u_0.flatten()", (H_0 @ u_0.flatten()).shape)
         # print("observations", observations.shape)
         #
-        if H_0 is 1:
-            d = observations.flatten() - H_0 * u_0.flatten()
-            assert settings.COMPRESSION_METHOD == "SVD"
-        else:
-            d = observations - H_0 @ u_0.flatten()
-        #d = observations - H_u_0 #'d' in literature
-        #R_inv = self.create_R_inv(OBS_VARIANCE, nobs)
-        return observations, H_0, w_0, d
+        d = observations.flatten() - u_0.flatten()[obs_idx]
+        assert settings.COMPRESSION_METHOD == "SVD"
+
+        #d = observations - H_0 @ u_0.flatten()
+
+        return observations, w_0, d, obs_idx
 
     @staticmethod
     def __get_obs_and_d_reduced_space(settings, u_c, u_0, encoder):
@@ -268,10 +267,9 @@ class VDAInit:
         if u_0 is None:
             raise ValueError("u_0 must be initialized in `data` dict")
 
-        observations, H_0, w_0, d = VDAInit.__get_obs_and_d_not_reduced(settings, u_c, u_0, encoder)
+        observations, w_0, d, obs_idx= VDAInit.__get_obs_and_d_not_reduced(settings, u_c, u_0, encoder)
         data["observations"] = observations
-        data["G"] = H_0
-
+        data["obs_idx"] = obs_idx
         if w_0 is not None: #i.e. don't update if no result was returned
             data["w_0"] = w_0
 
@@ -306,22 +304,22 @@ class VDAInit:
         V = VDAInit.create_V_from_X(X, settings)
 
         res = []
-        BATCH = 16
-        if V.shape[0] > BATCH:
-            i_start = 0
-            for i in range(BATCH, V.shape[0] + BATCH, BATCH):
+        BATCH = V.shape[0] if V.shape[0] >= 16 else 16
 
-                idx_end = i if i < V.shape[0] else V.shape[0]
-                inp = V[i_start:idx_end]
+        assert BATCH <= 16
+        
+        i_start = 0
+        for i in range(BATCH, V.shape[0] + BATCH, BATCH):
 
-                v = encoder(inp)
-                res.append(v)
+            idx_end = i if i < V.shape[0] else V.shape[0]
+            inp = V[i_start:idx_end]
 
-                i_start = i
-            V_red = np.concatenate(res, axis=0)
+            v = encoder(inp)
+            res.append(v)
 
-        else:
-            raise ValueError("Must have more timesteps available than in BATCH")
+            i_start = i
+        V_red = np.concatenate(res, axis=0)
+
 
         if number_modes:
             #take evenly spaced states

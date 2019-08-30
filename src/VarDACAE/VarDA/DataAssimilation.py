@@ -108,10 +108,13 @@ class DAPipeline():
             self.data["w_0"] = w_0
             self.data["V_grad"] = None
 
-            if self.data["G"] is 1:
-                self.data["G_V"] =self.data["V_trunc"]
+            if self.data.get("G") is 1:
+                self.data["G_V"] = self.data["V_trunc"]
+            elif self.data.get("G") is None:
+                assert self.data.get("obs_idx") is not None
+                self.data["G_V"] = self.data["V_trunc"][self.data.get("obs_idx")]
             else:
-                self.data["G_V"] = (self.data["G"] @ self.data["V_trunc"] ).astype(float)
+                raise ValueError("G has be deprecated in favour of `obs_idx`. It should be None")
         DA_results = self.perform_VarDA(self.data, self.settings)
         return DA_results
 
