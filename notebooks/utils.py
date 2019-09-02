@@ -10,7 +10,7 @@ from collections import OrderedDict
 
 #plt.style.use('seaborn-white')
 
-def get_DA_info(exp_dir_base):
+def get_DA_info(exp_dir_base, key="percent_improvement"):
     max_epoch = 0
     last_df = None
 
@@ -21,9 +21,11 @@ def get_DA_info(exp_dir_base):
                 epoch_csv = int(file.replace("_test.csv", ""))
                 fp = os.path.join(path, file)
                 dfDA = pd.read_csv(fp)
-
-                DA_mean = dfDA["percent_improvement"].mean()
-                DA_std = dfDA["percent_improvement"].std()
+                try:
+                    DA_mean = dfDA[key].mean()
+                    DA_std = dfDA[key].std()
+                except:
+                    DA_mean, DA_std = None, None
                 res = (epoch_csv, dfDA, DA_mean, DA_std)
                 DA_data.append(res)
 
@@ -34,8 +36,11 @@ def get_DA_info(exp_dir_base):
     #get DF with best
     mean_DA = [(epoch, mean, std) for (epoch, _, mean, std) in DA_data]
     mean_DA.sort()
-    mean_DA = [{"epoch": x, "mean": y, "std1": z, "upper2std": (y + 2 * z), "lower2std": (y - 2 * z), "std2": 2 * z} for (x, y, z) in mean_DA]
-    mean_DF = pd.DataFrame(mean_DA)
+    if mean_DA[0][1] is not None:
+        mean_DA = [{"epoch": x, "mean": y, "std1": z, "upper2std": (y + 2 * z), "lower2std": (y - 2 * z), "std2": 2 * z} for (x, y, z) in mean_DA]
+        mean_DF = pd.DataFrame(mean_DA)
+    else:
+        mean_DF = None
 
     return DA_data, mean_DF, last_df
 
@@ -87,11 +92,10 @@ def extract_res_from_files(exp_dir_base):
                 with open(settings, "rb") as f:
                     settings = pickle.load(f)
 
-                test_DA_df = get_DA_info(path)
 
                 model_data = get_model_specific_data(settings, path)
 
-                DA_data, mean_DF, last_df = get_DA_info(path)
+                DA_data, mean_DF, last_df = get_DA_info(path, "mse_DA")
 
 
                 data_dict = {"train_df": dftrain,
@@ -173,7 +177,7 @@ def plot_results_loss_epochs(results, ylim1 = None, ylim2=None):
         else:
             BN = "NBN"
 
-
+        
         if hasattr(sttn, "learning_rate"):
             lr = sttn.learning_rate
         else:
