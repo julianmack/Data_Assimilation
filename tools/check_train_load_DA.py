@@ -17,7 +17,7 @@ from VarDACAE.settings.models.CLIC import CLIC, GRDNBaseline
 from VarDACAE.settings import helpers
 import os
 
-VAR = 0.05
+VAR = 0.005
 TOL = 1e-2
 ACTIVATION = "prelu"
 EXPDIR = "experiments/CTL/"
@@ -52,7 +52,8 @@ def main():
         check_train_load_DA(configs[idx], KWARGS[idx], SMALL_DEBUG_DOM, ALL_DATA, ACTIVATION)
         print()
 
-def run_DA_batch(settings, model, all_data, expdir, params={"var": VAR, "tol": TOL}):
+def run_DA_batch(settings, model, all_data, expdir, params={"var": VAR, "tol": TOL},
+                    save_vtu=False, gpu_device=None):
     """By default it evaluates over the whole test set"""
     settings.DEBUG = False
     settings.NORMALIZE = True
@@ -61,6 +62,9 @@ def run_DA_batch(settings, model, all_data, expdir, params={"var": VAR, "tol": T
     settings.OBS_VARIANCE = params.get("var") if params.get("var") else 0.005
     settings.TOL = params.get("tol") if params.get("tol") else 1e-2
     helpers.set_local_dirs(settings)
+    if gpu_device is not None:
+        settings.GPU_DEVICE = gpu_device
+        settings.export_env_vars()
     #set control_states
     #Load data
     loader, splitter = settings.get_loader(), SplitData()
@@ -85,7 +89,7 @@ def run_DA_batch(settings, model, all_data, expdir, params={"var": VAR, "tol": T
         out_fp = os.path.join(expdir, "SVD.csv")
     out_fp = out_fp.replace("\\", "/")
     batch_DA_AE = BatchDA(settings, control_states, csv_fp= out_fp, AEModel=model,
-                        reconstruction=True, plot=False)
+                        reconstruction=True, plot=False, save_vtu=save_vtu)
 
     return batch_DA_AE.run(print_every=print_every, print_small=True)
 

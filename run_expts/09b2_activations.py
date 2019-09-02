@@ -1,10 +1,9 @@
 """
-Run outstanding activation experiments for GDN and relu
-    GRDN (place on x2 GPU)
+ReLU didn't work
 """
 
 from VarDACAE.settings.models.resNeXt import ResStack3
-from VarDACAE.settings.models.CLIC import CLIC, GRDNBaseline
+from VarDACAE.settings.models.CLIC import CLIC
 
 from VarDACAE import TrainAE, ML_utils, BatchDA
 
@@ -14,7 +13,7 @@ from run_expts.expt_config import ExptConfigTest
 TEST = False
 GPU_DEVICE = 0
 NUM_GPU = 1
-exp_base = "experiments/train2/09c/"
+exp_base = "experiments/train2/09b2/"
 
 #global variables for DA and training:
 class ExptConfig():
@@ -27,20 +26,20 @@ class ExptConfig():
     test_every = 10
 
 def main():
-    activations = ["GDN", "relu"]
+    activations = ["relu"]
+    if TEST:
+        expt = ExptConfigTest()
+    else:
+        expt = ExptConfig()
 
+    expt.LR *= 0.1
 
     idx = 0
     for act in activations:
-        if TEST:
-            expt = ExptConfigTest()
-        else:
-            expt = ExptConfig()
-        if act == "relu":
-            expt.LR *= 0.1
 
-        grdnkwargs =  {"block_type": "CBAM_NeXt", "Cstd": 32,
-                    "aug_scheme": 0, "activation": act }
+        kwargs = {"layers": 0, "cardinality": 2,
+                    "aug_scheme": 4, "activation": act}
+
 
         idx_ = idx
         idx += 1
@@ -48,11 +47,11 @@ def main():
             continue
 
 
-        for k, v in grdnkwargs.items():
+        for k, v in kwargs.items():
             print("{}={}, ".format(k, v), end="")
         print()
 
-        settings = GRDNBaseline(**grdnkwargs)
+        settings = ResStack3(**kwargs)
         settings.GPU_DEVICE = GPU_DEVICE
         settings.export_env_vars()
 

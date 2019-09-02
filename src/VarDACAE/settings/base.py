@@ -111,6 +111,9 @@ class Config():
         env = os.environ
         for k, v in self.env_vars.items():
             env[str(k)] = str(v)
+        setting_helpers.set_local_dirs(self) # Also set local directories
+
+
     def get_channels(self):
         if hasattr(self, "CHANNELS") and self.CHANNELS != None:
             return self.CHANNELS

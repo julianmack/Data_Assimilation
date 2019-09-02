@@ -49,8 +49,8 @@ class TestAE_TrainLinear():
         expdir = tmpdir.mkdir("experiments/")
         calc_DA_MAE = True
 
-        trainer = TrainAE(settings, str(expdir), calc_DA_MAE)
-        model = trainer.train(epochs, num_workers=0)
+        trainer = TrainAE(settings, str(expdir))
+        model = trainer.train(epochs, num_workers=0, calc_DA_MAE=calc_DA_MAE)
 
 class TestAE_Train3D():
     def __settings(self, tmpdir, force_init=False):
@@ -93,5 +93,5 @@ class TestAE_Train3D():
         expdir = tmpdir.mkdir("experiments/")
         calc_DA_MAE = True
 
-        trainer = TrainAE(settings, str(expdir), calc_DA_MAE)
-        model = trainer.train(epochs, num_workers=0)
+        trainer = TrainAE(settings, str(expdir))
+        model = trainer.train(epochs, num_workers=0, calc_DA_MAE=calc_DA_MAE)

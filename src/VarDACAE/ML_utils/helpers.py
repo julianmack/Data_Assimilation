@@ -34,11 +34,11 @@ def load_AE(ModelClass, path, device = None, **kwargs):
 
     return encoder, decoder
 
-def load_model_from_settings(settings, device=None, device_idx=None):
+def load_model_from_settings(settings, device=None, device_idx=None, gpu=True):
     """Loads model from settings - if settings.AE_MODEL_FP is set,
     this loads saved weights, otherwise it will init a new model """
     if not device:
-        device = get_device(device_idx=device_idx)
+        device = get_device(use_gpu = gpu, device_idx=device_idx)
 
     set_seeds()
 
@@ -52,7 +52,8 @@ def load_model_from_settings(settings, device=None, device_idx=None):
     model.eval()
     return model
 
-def load_model_and_settings_from_dir(dir, device_idx=None, choose_epoch=None):
+def load_model_and_settings_from_dir(dir, device_idx=None, choose_epoch=None,
+            gpu=True, return_epoch=False):
     if dir[-1] != "/":
         dir += "/"
 
@@ -79,13 +80,16 @@ def load_model_and_settings_from_dir(dir, device_idx=None, choose_epoch=None):
                         best_fp = os.path.join(path, file)
 
     if not settings:
-        raise ValueError("No settings.txt file in dir")
+        raise ValueError("No settings.txt file in dir: {}".format(dir))
     if choose_epoch and not best_fp:
-        raise ValueError("No file named {}.pth in dir".format(choose_epoch))
+        raise ValueError("No file named {}.pth in dir {}".format(choose_epoch, dir))
+    settings.GPU_DEVICE = device_idx
     settings.export_env_vars()
-    settings.AE_MODEL_FP = best_fp
-    model = load_model_from_settings(settings, device_idx=device_idx)
 
+    settings.AE_MODEL_FP = best_fp
+    model = load_model_from_settings(settings, device_idx=device_idx, gpu=gpu)
+    if return_epoch:
+        return model, settings, max_epoch
     return model, settings
 
 
@@ -95,6 +99,8 @@ def get_device(use_gpu=True, device_idx=None):
         device_idx = os.environ.get("GPU_DEVICE")
         if device_idx == None:
             raise NameError("GPU_DEVICE environment variable has not been initialized. Do this manually or initialize a Config class")
+        elif device_idx == "CPU":
+            use_gpu = False
     if use_gpu:
         device = torch.device("cuda:" + str(device_idx) if torch.cuda.is_available() else "cpu")
     else:

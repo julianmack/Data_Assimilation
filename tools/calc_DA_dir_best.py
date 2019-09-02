@@ -8,27 +8,35 @@ import pickle
 
 
 ################ DA3 06a/06b
-# BASE = "experiments/train/"
-# DIR1 = BASE + "06a/"
-# DIR2 = BASE + "06a2/"
-# DIR3 = BASE + "06a3/"
-#
-# DIRS = [DIR1, DIR2, DIR3, "experiments/train2/06a4/"]
 
-EXPDIR = "experiments/DA/02c/"
+fp = "experiments/06a4/"
+fp2 = "experiments/06a5/"
+fp3 = "experiments/DA3/06a/1/"
+fp4 = "experiments/DA3/06a/3/"
+
+DIRS = [fp, fp2, fp3, fp4]
+
+EXPDIR = "experiments/DA/06b/"
 EPOCH = None #choose latest epoch if this is None
 
+fp1 = "experiments/06b2"
+fp2 = "experiments/09c/"
+
+DIRS = [fp1, fp2]
+
 #Expt 02
-B = "/home/jfm1118/DA/experiments/"
-DIRS = [B + "02b/", B + "train/02a/"]
+# B = "/home/jfm1118/DA/experiments/train2/"
+# DIRS = ["experiments/06b2"]
 # B = "/home/jfm1118/DA/experiments/train2/08b/"
 # DIRS = [B + str(x) + "/" for x in range(8, 11)]
 
-
+#DIRS = ["experiments/06a5/12/"]
 #global variables for DA:
 PRINT = True
 ALL_DATA = True
-def calc_DA_best(dirs, params, expdir, prnt=True, all_data=True, epoch=None):
+SAVE_VTU = False
+def calc_DA_best(dirs, params, expdir, prnt=True, all_data=True, epoch=None,
+                save_vtu=False):
     if isinstance(dirs, list):
         pass
     elif isinstance(dirs, str):
@@ -45,12 +53,13 @@ def calc_DA_best(dirs, params, expdir, prnt=True, all_data=True, epoch=None):
                     #this is a model directory
                     dir = path
                     expt_name = path.split("/")
-                    expt_name = "{}_{}".format([-1], str(index))
-                    expdirnew = os.path.join(expdir, expt_name[-1])
+                    expt_name = "{}_{}".format(expt_name[-1], str(index))
+                    expdirnew = os.path.join(expdir, expt_name)
 
                     mse_DA, model_data = calc_DA_dir(dir, params, expdirnew,
-                                            prnt=True, all_data=all_data, epoch=epoch)
-                    results.append((mse_DA, model_data, path))
+                                            prnt=True, all_data=all_data,
+                                            epoch=epoch, save_vtu=save_vtu)
+                    results.append((mse_DA, model_data, path, expdirnew))
                     index += 1
     print(results)
     print()
@@ -74,20 +83,28 @@ def calc_DA_best(dirs, params, expdir, prnt=True, all_data=True, epoch=None):
     print("FIFTH")
     print(res[4])
 
-def calc_DA_dir(dir, params, expdir, prnt=True, all_data=True, epoch=None):
-    model, settings = ML_utils.load_model_and_settings_from_dir(dir, choose_epoch=epoch)
-    df = run_DA_batch(settings, model, all_data, expdir, params)
+def calc_DA_dir(dir, params, expdir, prnt=True, all_data=True, epoch=None,
+                save_vtu=False, gpu_device=0):
+    gpu = False
+    if gpu_device is not "CPU":
+        gpu = True
+
+    model, settings = ML_utils.load_model_and_settings_from_dir(dir,
+                        device_idx= gpu_device, choose_epoch=epoch, gpu=gpu)
+
+    df = run_DA_batch(settings, model, all_data, expdir, params, save_vtu,
+                gpu_device=gpu_device)
     mse_DA = df["mse_DA"].mean()
     model_data = get_model_specific_data(settings, dir, model=model)
     if prnt:
-        print(mse_DA, model_data)
+        print(mse_DA, model_data, expdir)
         print(df.tail(5))
     return mse_DA, model_data
 
 
 if __name__ == "__main__":
     params = {"var": 0.005, "tol":1e-3}
-    calc_DA_best(DIRS, params, EXPDIR, PRINT, ALL_DATA, EPOCH)
+    calc_DA_best(DIRS, params, EXPDIR, PRINT, ALL_DATA, EPOCH, SAVE_VTU)
 
 
 

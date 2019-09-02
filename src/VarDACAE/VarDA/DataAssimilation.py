@@ -13,6 +13,7 @@ from VarDACAE import SplitData
 from VarDACAE.VarDA import VDAInit
 from VarDACAE.VarDA import SVD
 from VarDACAE.VarDA.cost_fn import cost_fn_J, grad_J
+import time
 
 class DAPipeline():
     """Class to hold pipeline functions for Variational DA
@@ -53,7 +54,7 @@ class DAPipeline():
 
 
 
-    def DA_AE(self, force_init=False):
+    def DA_AE(self, force_init=False, save_vtu=False):
         if self.data.get("model") == None or force_init:
             self.model = ML_utils.load_model_from_settings(self.settings, self.data.get("device"))
             self.data["model"] = self.model
@@ -80,10 +81,10 @@ class DAPipeline():
             # Now access explicit gradient function
             self.data["V_grad"] = self.__maybe_get_jacobian()
 
-        DA_results = self.perform_VarDA(self.data, self.settings)
+        DA_results = self.perform_VarDA(self.data, self.settings, save_vtu=save_vtu)
         return DA_results
 
-    def DA_SVD(self, force_init=False):
+    def DA_SVD(self, force_init=False, save_vtu=False):
         if self.data.get("V") is None or force_init:
             V = VDAInit.create_V_from_X(self.data.get("train_X"), self.settings)
 
@@ -115,21 +116,25 @@ class DAPipeline():
                 self.data["G_V"] = self.data["V_trunc"][self.data.get("obs_idx")]
             else:
                 raise ValueError("G has be deprecated in favour of `obs_idx`. It should be None")
-        DA_results = self.perform_VarDA(self.data, self.settings)
+        DA_results = self.perform_VarDA(self.data, self.settings, save_vtu=save_vtu)
         return DA_results
 
 
     @staticmethod
-    def perform_VarDA(data, settings):
+    def perform_VarDA(data, settings, save_vtu=False):
         """This is a static method so that it can be performed in AE_train with user specified data"""
+        timing_debug = False
+
         args = (data, settings)
         w_0 = data.get("w_0")
         if w_0 is None:
             raise ValueError("w_0 was not initialized")
 
+        t1 = time.time()
         res = minimize(cost_fn_J, data.get("w_0"), args = args, method='L-BFGS-B',
                 jac=grad_J, tol=settings.TOL)
-
+        t2 = time.time()
+        string_out = "min = {:.4f}, ".format(t2 - t1)
         w_opt = res.x
         u_0 = data.get("u_0")
         u_c = data.get("u_c")
@@ -151,10 +156,17 @@ class DAPipeline():
             # u_DA = u_0 + u_DA
 
 
-            q_opt = data.get("V_trunc") @ w_opt
-            delta_u_DA  = data.get("decoder")(q_opt)
 
+            ta = time.time()
+            q_opt = data.get("V_trunc") @ w_opt
+            tb = time.time()
+            delta_u_DA  = data.get("decoder")(q_opt)
+            tc = time.time()
             u_DA = u_0 + delta_u_DA
+            td = time.time()
+            out_str_2 = "v_trunc = {:.4f}, dec = {:.4f}, add= {:.4f}"
+            out_str_2 = out_str_2.format(tb - ta, tc - tb, td-tc)
+
         elif settings.COMPRESSION_METHOD == "AE":
             delta_u_DA = data.get("decoder")(w_opt)
             if settings.THREE_DIM and len(delta_u_DA.shape) != 3:
@@ -162,15 +174,22 @@ class DAPipeline():
 
             u_DA = u_0 + delta_u_DA
 
-
+        t3 = time.time()
+        string_out += "decode = {:.4f}, ".format(t3 - t2)
         if settings.UNDO_NORMALIZE:
 
             u_DA = (u_DA * std + mean)
+            t4 = time.time() #end of DA: could return now with assilated state
+            # Now calculate stats
+
             u_c = (u_c * std + mean)
             u_0 = (u_0 * std + mean)
         elif settings.NORMALIZE:
+            t4 = time.time()
             print("Normalization not undone")
 
+        string_out += "unnorm = {:.4f}, ".format(t4 - t3)
+        string_out += "TOTAL = {:.4f}, ".format(t4 - t1)
         ref_MAE = np.abs(u_0 - u_c)
         da_MAE = np.abs(u_DA - u_c)
         ref_MAE_mean = np.mean(ref_MAE)
@@ -182,17 +201,24 @@ class DAPipeline():
 
         mse_percent = 100 * (mse_ref - mse_DA)/mse_ref
 
-        results_data = {"ref_MAE": ref_MAE,
-                    "da_MAE": da_MAE,
-                    "u_DA": u_DA,
+        results_data = {"u_DA": u_DA,
                     "ref_MAE_mean": ref_MAE_mean,
                     "da_MAE_mean": da_MAE_mean,
                     "percent_improvement": percent_improvement,
                     "counts": counts,
                     "w_opt": w_opt,
                     "mse_ref": mse_ref,
-                    "mse_DA": mse_DA}
+                    "mse_DA": mse_DA,
+                    "time_online": t4 - t1}
+        if save_vtu:
+            results_data["ref_MAE"] = ref_MAE.flatten()
+            results_data["da_MAE"]  = da_MAE.flatten()
 
+        if timing_debug:
+            t5 = time.time()
+            string_out += "inc stats = {:.4f}, ".format(t5- t1)
+            print(string_out)
+            print(out_str_2)
 
         if settings.SAVE:
             if False:
@@ -242,8 +268,6 @@ class DAPipeline():
     @staticmethod
     def print_DA_results(DA_results):
 
-        ref_MAE = DA_results["ref_MAE"]
-        da_MAE = DA_results["da_MAE"]
         u_DA = DA_results["u_DA"]
         ref_MAE_mean = DA_results["ref_MAE_mean"]
         da_MAE_mean = DA_results["da_MAE_mean"]
@@ -252,7 +276,7 @@ class DAPipeline():
         mse_ref = DA_results["mse_ref"]
         mse_DA = DA_results["mse_DA"]
         print("Ref MAE: {:.4f}, DA MAE: {:.4f},".format(ref_MAE_mean, da_MAE_mean), "% improvement: {:.2f}%".format(DA_results["percent_improvement"]))
-        print("DA_MAE < ref_MAE for {}/{} points".format(counts, len(da_MAE.flatten())))
+        print("DA_MAE < ref_MAE for {}/{} points".format(counts, len(u_DA.flatten())))
         print("mse_ref: {:.4f}, mse_DA: {:.4f}".format(mse_ref, mse_DA))
         #Compare abs(u_0 - u_c).sum() with abs(u_DA - u_c).sum() in paraview
 

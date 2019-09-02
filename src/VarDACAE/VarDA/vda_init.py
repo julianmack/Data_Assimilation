@@ -40,7 +40,7 @@ class VDAInit:
 
         encoder = None
         decoder = None
-
+        
         device = ML_utils.get_device()
         model = self.AEmodel
         if model:
@@ -145,12 +145,14 @@ class VDAInit:
         npoints = VDAInit.__get_npoints_from_shape(vec.shape)
         if settings.OBS_MODE == "rand":
             # Define observations as a random subset of the control state.
-            nobs = int(settings.OBS_FRAC * npoints) #number of observations
-
+            if hasattr(settings, "NOBS"):
+                nobs = settings.NOBS
+            else:
+                nobs = int(settings.OBS_FRAC * npoints) #number of observations
+            assert nobs <= npoints, "You can't select more observations that are in the state space"
             if nobs == npoints: #then we are selecting all points
                 settings.OBS_MODE = "all"
                 return VDAInit.__select_all_obs(vec)
-
             ML_utils.set_seeds(seed = settings.SEED) #set seeds so that the selected subset is the same every time
             obs_idx = random.sample(range(npoints), nobs) #select nobs integers w/o replacement
             observations = np.take(vec, obs_idx)
@@ -163,6 +165,7 @@ class VDAInit:
             observations, obs_idx, nobs = VDAInit.__select_all_obs(vec)
         else:
             raise ValueError("OBS_MODE = {} is not allowed.".format(settings.OBS_MODE))
+        assert nobs == len(obs_idx)
         return observations, obs_idx, nobs
 
     @staticmethod
@@ -304,10 +307,10 @@ class VDAInit:
         V = VDAInit.create_V_from_X(X, settings)
 
         res = []
-        BATCH = V.shape[0] if V.shape[0] >= 16 else 16
+        BATCH = V.shape[0] if V.shape[0] <= 16 else 16
 
-        assert BATCH <= 16
-        
+        assert BATCH <= 16, "Batch must be <=16 and BATCH = {}".format(BATCH)
+
         i_start = 0
         for i in range(BATCH, V.shape[0] + BATCH, BATCH):
 

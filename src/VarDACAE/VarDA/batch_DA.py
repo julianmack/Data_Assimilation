@@ -122,11 +122,12 @@ class BatchDA():
                                                                                         self.settings, u_c)
             t1 = time.time()
             if self.settings.COMPRESSION_METHOD == "AE":
-                DA_results = self.DA_pipeline.DA_AE()
+                DA_results = self.DA_pipeline.DA_AE(save_vtu=self.save_vtu)
             elif self.settings.COMPRESSION_METHOD == "SVD":
-                DA_results = self.DA_pipeline.DA_SVD()
+                DA_results = self.DA_pipeline.DA_SVD(save_vtu=self.save_vtu)
             t2 = time.time()
             t_tot = t2 - t1
+            #print("time_online {:.4f}s".format(DA_results["time_online"]))
 
             if self.reconstruction:
                 data_tensor = torch.Tensor(u_c)
@@ -164,8 +165,8 @@ class BatchDA():
                 result["l2_loss"] = l2.detach().cpu().numpy()
             result["time"] = t2 - t1
             if self.save_vtu:
-                tot_DA_MAE += DA_results["da_MAE"]
-                tot_ref_MAE += DA_results["ref_MAE"]
+                tot_DA_MAE += DA_results.get("da_MAE")
+                tot_ref_MAE += DA_results.get("ref_MAE")
             #add to results list (that will become a .csv)
             results.append(result)
 

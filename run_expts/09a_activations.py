@@ -14,9 +14,9 @@ from run_expts.expt_config import ExptConfigTest
 
 TEST = False
 GPU_DEVICE = 3
-NUM_GPU = 2
+NUM_GPU = 4
 exp_base = "experiments/train2/09a/"
-GPU_OFFSET = 2
+GPU_OFFSET = 0
 
 #global variables for DA and training:
 class ExptConfig():
@@ -29,9 +29,8 @@ class ExptConfig():
     test_every = 10
 
 def main():
-
     activations = ["GDN", "relu"]
-    lr_factors = [1, 0.3]
+    lr_factors = [1, 0.10]
 
     resNextk1 = {"layers": 27, "cardinality": 4,
             "block_type": "CBAM_vanilla",
@@ -67,6 +66,9 @@ def main():
             # if act == "GDN" and "module_type" == "RDB3":
             #     batch_sz = 8
 
+            if act == "relu":
+                kwargs["aug_scheme"] = 4
+
             Model = models[index]
 
             kwargs["activation"] = act
@@ -87,7 +89,7 @@ def main():
 
             expdir = exp_base + str(idx - 1) + "/"
 
-
+            print(expdir)
             trainer = TrainAE(settings, expdir, expt.calc_DA_MAE, batch_sz=batch_sz)
             expdir = trainer.expdir #get full path
 

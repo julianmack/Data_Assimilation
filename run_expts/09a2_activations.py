@@ -64,7 +64,8 @@ def main():
             Model = models[index]
 
             kwargs["activation"] = act
-
+            if act == "relu":
+                kwargs["aug_scheme"] = 4
             idx_ = idx
             idx += 1
             if idx_ % NUM_GPU != GPU_DEVICE:
