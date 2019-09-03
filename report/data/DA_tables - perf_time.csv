@@ -1,0 +1,10 @@
+Model,da_mse,time,Formulation
+Tucodec-vanilla,,0.1294,CAE
+Tucodec-NeXt,,0.0537,CAE
+RDB3-27-4-vanilla+CBAM,,0.4666,CAE
+ResNeXt3-27-1-vanilla+CBAM,,0.1693,CAE
+RAB-4-NeXt,,0.1192,CAE
+GRDN-NeXt+CBAM,,0.0883,CAE
+Backbone,0.1665,0.0897,CAE
+"$\tau = 32, M=n$",0.1270,1.8600,TSVD
+"$\tau = 32, M= 0.01n$",0.1334,0.0440,TSVD
