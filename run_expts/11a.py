@@ -6,27 +6,29 @@ from VarDACAE import retrain
 from run_expts.expt_config import ExptConfigTest, ExptConfig
 import pickle
 import shutil
+from collections import OrderedDict
 
-TEST = True
+
+TEST = False
 GPU_DEVICE = 0
 NUM_GPU = 1
 
 NEW_EXPDIR_BASE = "experiments/retrain/"
 LOCATION_BASE = "models_/best/"
+AUGMENTATION = 1
 
 ########################
 TRAIN1 = [("L1", 50)]
 TRAIN2 = [("L2", 150), ("L1", 50)]
 
-#NOTE: these locations are not used
-models = {
-    "tucodec_relu_vanilla": {"loc": 'experiments/06a5/12', "sched": TRAIN1},
-    "tucodec_prelu_next": {"loc": 'experiments/DA3/06a/1/', "sched": TRAIN1},
-    "RDB3_27_4": {"loc": 'experiments/09a/09a/0', "sched": TRAIN2},
-    "ResNeXt_27_1": {"loc": 'experiments/09a/09a/2', "sched": TRAIN2},
-    "RAB_4_next":  {"loc": 'experiments/03c/10/', "sched": TRAIN2},
-    "GDRN_CBAM": {"loc": 'experiments/09c/0', "sched": TRAIN2}
-}
+#NOTE: these locs are NOT used
+models = OrderedDict([
+    #("tucodec_relu_vanilla", {"loc": 'experiments/06a5/12', "sched": TRAIN1}),
+    #("tucodec_prelu_next", {"loc": 'experiments/DA3/06a/1/', "sched": TRAIN1}),
+    #("RDB3_27_4",  {"loc": 'experiments/09a/09a/0', "sched": TRAIN2}),
+    #("ResNeXt_27_1", {"loc": 'experiments/09a/09a/2', "sched": TRAIN2}),
+    #("RAB_4_next",   {"loc": 'experiments/03c/10/', "sched": TRAIN2}),
+    ("GDRN_CBAM",  {"loc": 'experiments/09c/0', "sched": TRAIN2})])
 
 def main():
     if TEST:
@@ -46,21 +48,21 @@ def main():
         expdir_new = NEW_EXPDIR_BASE + name + "/"
         location = LOCATION_BASE + name + "/"
 
-        trainer = retrain(location, GPU_DEVICE, expdir_new)
+        trainer = retrain(location, GPU_DEVICE, expdir_new, 8)
         expdir_new = trainer.expdir
+        trainer.settings.AUG_SCHEME = AUGMENTATION
 
-        epochs_added = 0
         for loss, epochs in data["sched"]:
-            epochs_added += epochs
+
 
             if loss == "L1": #use smaller learning rate
                 lr = expt.LR / 4
             else:
-                lr = expt.LR
+                lr = expt.LR * 0.8
 
 
             if TEST:
-                epochs = 1
+                epochs = 2
 
             print("model: {}, loss: {}, epochs: {}, lr: {:.5f}".format(name, loss, epochs, lr))
 

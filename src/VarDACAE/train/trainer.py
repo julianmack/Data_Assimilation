@@ -73,7 +73,7 @@ class TrainAE():
         if self.settings.SAVE:
             self.test_fp = self.expdir + "{}-{}_test.csv".format(self.start_epoch, self.start_epoch + num_epochs)
             self.train_fp = self.expdir + "{}-{}_train.csv".format(self.start_epoch, self.start_epoch + num_epochs)
-
+        
         self.calc_DA_MAE = calc_DA_MAE
         self.learning_rate = learning_rate
         self.num_epoch = num_epochs #TODO: remove this doubling up
@@ -162,7 +162,7 @@ class TrainAE():
         epoch = self.end - 1 #for case where no training occurs
 
         for epoch in range(self.start, self.end):
-            
+
             self.epoch = epoch
 
             train_loss, test_loss = self.train_one_epoch(epoch, print_every, test_every)

@@ -84,11 +84,11 @@ def calc_DA_best(dirs, params, expdir, prnt=True, all_data=True, epoch=None,
     print(res[4])
 
 def calc_DA_dir(dir, params, expdir, prnt=True, all_data=True, epoch=None,
-                save_vtu=False, gpu_device=0):
+                save_vtu=False, gpu_device=0, return_df=False):
     gpu = False
     if gpu_device is not "CPU":
         gpu = True
-
+    
     model, settings = ML_utils.load_model_and_settings_from_dir(dir,
                         device_idx= gpu_device, choose_epoch=epoch, gpu=gpu)
 
@@ -96,9 +96,13 @@ def calc_DA_dir(dir, params, expdir, prnt=True, all_data=True, epoch=None,
                 gpu_device=gpu_device)
     mse_DA = df["mse_DA"].mean()
     model_data = get_model_specific_data(settings, dir, model=model)
+    model_data["num_params"] = sum(p.numel() for p in model.parameters())
     if prnt:
         print(mse_DA, model_data, expdir)
         print(df.tail(5))
+
+    if return_df:
+        return mse_DA, model_data, df
     return mse_DA, model_data
 
 

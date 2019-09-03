@@ -4,7 +4,7 @@ for 3D case.
 
 Using implementation discussed in: http://openaccess.thecvf.com/content_CVPRW_2019/html/CLIC_2019/Cho_Low_Bit-rate_Image_Compression_based_on_Post-processing_with_Grouped_Residual_CVPRW_2019_paper.html
 """
-
+import os
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -70,7 +70,7 @@ class GRDN(nn.Module):
 
 
     def forward(self, x):
-        
+
         h = self.conv1(x)
         h = self.downsample(h)
         h = self.conv2(h)
@@ -96,6 +96,10 @@ class GRDN(nn.Module):
 
         class ConfigTemp(Block):
             def __init__(self):
+                #preserve env vars
+                device = os.environ.get("GPU_DEVICE")
+                seed = os.environ.get("SEED")
+
                 super(ConfigTemp, self).__init__()
                 self.ACTIVATION = activation
                 layers = 5
@@ -108,6 +112,13 @@ class GRDN(nn.Module):
                 self.CHANNELS[1] =  2
                 self.CHANNELS[2] =  4
                 self.CHANNELS[-1] =  16
+
+                if seed:
+                    self.SEED = seed
+                if device:
+                    self.GPU_DEVICE = device
+
+                self.export_env_vars()
 
 
         settings_tmp = ConfigTemp()

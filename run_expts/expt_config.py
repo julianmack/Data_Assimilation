@@ -10,7 +10,7 @@ class ExptConfigTest():
 
 class ExptConfig():
     EPOCHS = 300
-    SMALL_DEBUG_DOM = False 
+    SMALL_DEBUG_DOM = False
     calc_DA_MAE = True
     num_epochs_cv = 0
     LR = 0.0002

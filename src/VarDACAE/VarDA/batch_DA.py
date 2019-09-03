@@ -101,7 +101,8 @@ class BatchDA():
                 "counts": 0,
                 "l1_loss": 0,
                 "l2_loss": 0,
-                "time": 0}
+                "time": 0,
+                "time_online": 0}
 
         tot_DA_MAE = np.zeros_like(self.control_states[0]).flatten()
         tot_ref_MAE = np.zeros_like(self.control_states[0]).flatten()
@@ -164,6 +165,7 @@ class BatchDA():
                 result["l1_loss"] = l1.detach().cpu().numpy()
                 result["l2_loss"] = l2.detach().cpu().numpy()
             result["time"] = t2 - t1
+            result["time_online"] = DA_results["time_online"]
             if self.save_vtu:
                 tot_DA_MAE += DA_results.get("da_MAE")
                 tot_ref_MAE += DA_results.get("ref_MAE")

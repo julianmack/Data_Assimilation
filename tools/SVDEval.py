@@ -7,8 +7,9 @@ import numpy as np
 
 DEBUG = False
 SINGLE_STATE = False
-SAVE_VTU = True
+SAVE_VTU = False
 TEST = False
+
 def VarDASVD(num_modes, csv_fp=None, debug = DEBUG,
             single_state = False, all_obs=False, save_vtu=False, nobs=None):
     """Calculates VarDA percentage improvement averaged across the
@@ -52,6 +53,13 @@ def VarDASVD(num_modes, csv_fp=None, debug = DEBUG,
 
 
 if __name__ == "__main__":
+    num_obs = [248, 25, 2]
+    mode = 32
+    exp_base = "experiments/TSVD3/extra/"
+    for nobs in num_obs:
+        csv_fp = "{}modes{}_{}_obs.csv".format(exp_base, str(mode), str(nobs))
+        VarDASVD(mode, csv_fp, False, SINGLE_STATE, False, SAVE_VTU, nobs)
+    exit()
     modes = [1, 2, 4, 8, 12, 16, 32, 60, 100, 150, 250, 350, 450, 550, 700, 791]
     if TEST:
         modes = [1, 791]
@@ -86,6 +94,6 @@ if __name__ == "__main__":
                 final = True
 
             print("nobs", nobs, "mode", mode)
-            
+
             csv_fp = "{}modes{}_{}_obs.csv".format(exp_base, str(mode), str(nobs))
             VarDASVD(mode, csv_fp, DEBUG, SINGLE_STATE, False, SAVE_VTU, nobs)
