@@ -1,0 +1,35 @@
+\documentclass{article}
+\begin{document}
+Kalman Filter Derivation via cost function formulation \label{appendix:KF_costfn} \\
+
+KFs
+\begin{align}
+\bm{x} &= \bm{x}^b + \bm{K} ( \bm{y} - \bm{H}\bm{x}^b) \\
+\bm{x} &= \bm{x}^b + \bm{B}\bm{H}^T \big ( \bm{H} \bm{B} \bm{H}^T + \bm{R} \big)^{-1} ( \bm{y} - \bm{H}\bm{x}^b)
+\end{align}
+
+Cost Function
+\begin{align}
+    J(\bm{x}) = \frac{1}{2}\norm{ \bm{x}- \bm{x}^b }^2_{\bm{B}^{-1}} + \frac{1}{2}\norm{\bm{y} - \bm{\mathcal{H}}[\bm{x}]}^2_{\bm{R}^{-1}}
+ \end{align}
+ Linearize operator
+ \begin{align}
+    J(\bm{x}) = \frac{1}{2}\norm{ \bm{x}- \bm{x}^b }^2_{\bm{B}^{-1}} + \frac{1}{2}\norm{\bm{y} - \bm{H}\bm{x}}^2_{\bm{R}^{-1}}
+ \end{align}
+ Differentiate and set to zero to find exact solution.
+  \begin{align*}
+    0 = \bm{B}^{-1} ( \bm{x}- \bm{x}^b)  &-\bm{H}^T \bm{R}^{-1} (\bm{y} - \bm{H}\bm{x} ) \\
+     \bm{B}^{-1} ( \bm{x}- \bm{x}^b) &= -\bm{H}^T\bm{R}^{-1} \bm{H}\bm{x} +\bm{H}^T\bm{R}^{-1}  \bm{y} \\
+\bm{B}^{-1} ( \bm{x}- \bm{x}^b) &= -\bm{H}^T\bm{R}^{-1} \bm{H}\bm{x} +\bm{H}^T\bm{R}^{-1}  \bm{y}  +\bm{H}^T\bm{R}^{-1} \bm{H}\bm{x}^b\\
+& \;\;\;\;\;  \;\;\;\;\;   -\bm{H}^T\bm{R}^{-1} \bm{H}\bm{x}^b \\
+\bm{B}^{-1} ( \bm{x}- \bm{x}^b) &=  +\bm{H}^T\bm{R}^{-1}  \bm{y}   -\bm{H}^T\bm{R}^{-1} \bm{H}\bm{x}^b - \bm{H}^T\bm{R}^{-1} \bm{H}( \bm{x}- \bm{x}^b) \\
+(\bm{B}^{-1} + \bm{H}^T\bm{R}^{-1} \bm{H}) ( \bm{x}- \bm{x}^b) &=  +\bm{H}^T\bm{R}^{-1}  \bm{y}   -\bm{H}^T\bm{R}^{-1} \bm{H}\bm{x}^b \\
+\bm{R}(\bm{H}^T)^{-1}(\bm{B}^{-1} + &\bm{H}^T\bm{R}^{-1} \bm{H}) ( \bm{x}- \bm{x}^b) =  \bm{y}   - \bm{H}\bm{x}^b\\
+\big(\bm{R}(\bm{H}^T)^{-1}\bm{B}^{-1} + &\bm{H} \big) ( \bm{x}- \bm{x}^b) =  \bm{y}   - \bm{H}\bm{x}^b \\
+\big(\bm{R} + &\bm{H} \bm{B}\bm{H}^{T}\big) (\bm{B}\bm{H}^{T})^{-1}( \bm{x}- \bm{x}^b) =  \bm{y}   - \bm{H}\bm{x}^b \\
+\big( \bm{B}\bm{H}^{T}(\bm{R} + &\bm{H} \bm{B}\bm{H}^{T})^{-1}\big)^{-1}( \bm{x}- \bm{x}^b) =  \bm{y}   - \bm{H}\bm{x}^b \\
+\bm{x} &= \bm{x}^b + \bm{B}\bm{H}^T \big ( \bm{H} \bm{B} \bm{H}^T + \bm{R} \big)^{-1} ( \bm{y} - \bm{H}\bm{x}^b)
+ \end{align*}
+ 
+Note that the Woodbury Identity (found in \cite{cookbook}) can be used to achieve this result much more quickly. Please see \cite{Lacey1998} for a tutorial on KFs. 
+\end{document}
