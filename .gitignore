@@ -18,3 +18,7 @@ pipeline/__pycache__/
 *.pytest
 *.egg-info
 
+#report archive
+submission.zip
+archive.zip
+report.pdf

@@ -133,7 +133,7 @@ def extract_res_from_files2(exp_dir_base, epochs, keys):
                 #collate train and test data
                 train_dfs["Subset"] = "train"
                 test_dfs["Subset"] = "test"
-                df = pd.concat([train_dfs, test_dfs], ignore_index=True)
+                df = pd.concat([test_dfs, train_dfs], ignore_index=True)
 
                 model_data = get_model_specific_data(settings, path)
 
