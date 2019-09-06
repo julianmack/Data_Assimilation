@@ -53,7 +53,7 @@ def VarDASVD(num_modes, csv_fp=None, debug = DEBUG,
 
 
 if __name__ == "__main__":
-    num_obs = [248, 25, 2]
+    num_obs = [24752, 25, 2]
     mode = 32
     exp_base = "experiments/TSVD3/extra/"
     for nobs in num_obs:

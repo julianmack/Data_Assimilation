@@ -18,7 +18,10 @@ def get_DA_info(exp_dir_base, key="percent_improvement"):
     for path, subdirs, files in os.walk(exp_dir_base):
         for file in files:
             if file[-9:] == "_test.csv":
-                epoch_csv = int(file.replace("_test.csv", ""))
+                try:
+                    epoch_csv = int(file.replace("_test.csv", ""))
+                except:
+                    continue
                 fp = os.path.join(path, file)
                 dfDA = pd.read_csv(fp)
                 try:
@@ -44,6 +47,108 @@ def get_DA_info(exp_dir_base, key="percent_improvement"):
 
     return DA_data, mean_DF, last_df
 
+
+def extract_res_from_files2(exp_dir_base, epochs, keys):
+    """Takes a directory (or directories) and searches recursively for
+    subdirs that have a test train and settings file
+    (meaning a complete experiment was conducted).
+    Returns:
+        A list of dictionaries where each element in the list
+        is an experiment and the dictionary has the following form:
+
+        data_dict = {"train_df": df1, "test_df":df2,
+                    "settings":settings, "path": path}
+"""
+
+    if isinstance(exp_dir_base, str):
+        exp_dirs = [exp_dir_base]
+
+    elif isinstance(exp_dir_base, list):
+        exp_dirs = exp_dir_base
+    else:
+        raise ValueError("exp_dir_base must be a string or a list")
+
+    SETTINGS = "settings.txt"
+    results = []
+
+
+    for exp_dir_base in exp_dirs:
+        for path, subdirs, files in os.walk(exp_dir_base):
+            test_fps, train_fps, settings = [], [], None
+
+            for name in files:
+
+                if fnmatch(name, SETTINGS):
+                    settings = os.path.join(path, name)
+
+                if fnmatch(name, "*test.csv"):
+                    splt = name.split("-")
+                    if len(splt) > 1:
+                        continue
+                    num, _ = name.split("_")
+                    epoch = int(num)
+                    if epoch in epochs:
+                        fp = os.path.join(path, name)
+                        test_fps.append((epoch, fp))
+                if fnmatch(name, "*train.csv"):
+                    splt = name.split("-")
+                    if len(splt) > 1:
+                        continue
+                    num, _ = name.split("_")
+                    epoch = int(num)
+                    if epoch in epochs:
+                        fp = os.path.join(path, name)
+                        train_fps.append((epoch, fp))
+
+
+            if test_fps and train_fps and settings:
+                test_fps = sorted(test_fps)
+                train_fps = sorted(train_fps)
+
+                with open(settings, "rb") as f:
+                    settings = pickle.load(f)
+
+                test_dfs, train_dfs = [], []
+                for epoch, fp in test_fps:
+                    df = pd.read_csv(fp)
+                    result = {"epoch": epoch}
+                    for key in keys:
+                        res = df[key].mean()
+                        result[key] = res
+                    test_dfs.append(result)
+
+                test_dfs = pd.DataFrame(test_dfs)
+
+                for epoch, fp in train_fps:
+                    df = pd.read_csv(fp)
+                    result = {"epoch": epoch}
+                    for key in keys:
+                        res = df[key].mean()
+                        result[key] = res
+                    train_dfs.append(result)
+
+                train_dfs = pd.DataFrame(train_dfs)
+
+
+                #collate train and test data
+                train_dfs["Subset"] = "train"
+                test_dfs["Subset"] = "test"
+                df = pd.concat([train_dfs, test_dfs], ignore_index=True)
+
+                model_data = get_model_specific_data(settings, path)
+
+                #DA_data, mean_DF, last_df = get_DA_info(path, "mse_DA")
+
+
+                data_dict = {"df": df,
+                            "settings":settings,
+                             "path": path,
+                             "model_data": model_data,}
+                results.append(data_dict)
+
+    print("{} experiments conducted".format(len(results)))
+    sort_res = sorted(results, key = lambda x: x['path'])
+    return sort_res
 
 
 #Extract results files from sub directories
@@ -86,9 +191,26 @@ def extract_res_from_files(exp_dir_base):
                 elif fnmatch(name, SETTINGS):
                     settings = os.path.join(path, name)
 
+            if settings and not test and not train:
+                test, train = [], []
+                for name in files:
+                    if fnmatch(name, "*test.csv"):
+                        test.append(os.path.join(path, name))
+                    elif fnmatch(name, "*train.csv"):
+                        train.append(os.path.join(path, name))
+
+
             if test and train and settings:
-                dftest = pd.read_csv(test)
-                dftrain = pd.read_csv(train)
+                if isinstance(test, list):
+                    dftest = []
+                    for fp in test:
+                        dftest.append(pd.read_csv(fp))
+                    dftrain = []
+                    for fp in train:
+                        dftrain.append(pd.read_csv(fp))
+                else:
+                    dftest = pd.read_csv(test)
+                    dftrain = pd.read_csv(train)
                 with open(settings, "rb") as f:
                     settings = pickle.load(f)
 
@@ -130,6 +252,12 @@ def plot_results_loss_epochs(results, ylim1 = None, ylim2=None):
             break
         test_df = results[idx]["test_df"]
         train_df = results[idx]["train_df"]
+
+        if isinstance(test_df, list):
+
+            test_df = pd.concat(test_df, axis=0, ignore_index=True)
+            train_df = pd.concat(train_df, axis=0, ignore_index=True)
+
         sttn = results[idx]["settings"]
         DA_mean_DF = results[idx].get("DA_mean_DF")
         model_data = results[idx]["model_data"]
@@ -177,7 +305,7 @@ def plot_results_loss_epochs(results, ylim1 = None, ylim2=None):
         else:
             BN = "NBN"
 
-        
+
         if hasattr(sttn, "learning_rate"):
             lr = sttn.learning_rate
         else:

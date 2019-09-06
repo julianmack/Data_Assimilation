@@ -1,6 +1,6 @@
 pyevtk
 torch
 torchvision
-numpy
+scipy
 vtk
 azure-storage-blob

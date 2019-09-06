@@ -148,6 +148,7 @@ class DAPipeline():
             std = std.flatten()
             mean = mean.flatten()
             u_DA = u_0 + delta_u_DA
+            out_str_2 = ""
 
         elif settings.COMPRESSION_METHOD == "AE" and settings.REDUCED_SPACE:
             #w_0 = data.get("w_0")

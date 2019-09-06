@@ -16,13 +16,15 @@ fp4 = "experiments/DA3/06a/3/"
 
 DIRS = [fp, fp2, fp3, fp4]
 
-EXPDIR = "experiments/DA/06b/"
+EXPDIR = "experiments/DA/retrain/"
 EPOCH = None #choose latest epoch if this is None
 
-fp1 = "experiments/06b2"
-fp2 = "experiments/09c/"
+# fp1 = "experiments/06b2"
+# fp2 = "experiments/09c/"
+#
+# DIRS = [fp1, fp2]
 
-DIRS = [fp1, fp2]
+DIRS = "experiments/retrain/"
 
 #Expt 02
 # B = "/home/jfm1118/DA/experiments/train2/"
@@ -35,6 +37,7 @@ DIRS = [fp1, fp2]
 PRINT = True
 ALL_DATA = True
 SAVE_VTU = False
+
 def calc_DA_best(dirs, params, expdir, prnt=True, all_data=True, epoch=None,
                 save_vtu=False):
     if isinstance(dirs, list):
@@ -88,7 +91,7 @@ def calc_DA_dir(dir, params, expdir, prnt=True, all_data=True, epoch=None,
     gpu = False
     if gpu_device is not "CPU":
         gpu = True
-    
+
     model, settings = ML_utils.load_model_and_settings_from_dir(dir,
                         device_idx= gpu_device, choose_epoch=epoch, gpu=gpu)
 

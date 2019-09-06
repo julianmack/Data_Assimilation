@@ -81,6 +81,8 @@ def load_model_and_settings_from_dir(dir, device_idx=None, choose_epoch=None,
 
     if not settings:
         raise ValueError("No settings.txt file in dir: {}".format(dir))
+    if not best_fp:
+        raise ValueError("No model.pth file in dir: {}".format(dir))
     if choose_epoch and not best_fp:
         raise ValueError("No file named {}.pth in dir {}".format(choose_epoch, dir))
     settings.GPU_DEVICE = device_idx
