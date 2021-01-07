@@ -30,24 +30,24 @@ class Config():
 
         self.LOADER = loader
         self.SEED = 42
-        self.NORMALIZE = True #Whether to normalize input data
+        self.NORMALIZE = True # Whether to normalize input data
         self.UNDO_NORMALIZE = self.NORMALIZE
 
-        self.SHUFFLE_DATA = True #Shuffle data (after splitting into historical, test and control state?)
-        #config options to divide up data between "History", "observation" and "control_state"
-        #User is responsible for checking that these regions do not overlap
-        self.HIST_FRAC = 4.0 / 5.0 #fraction of data used as "history"
-        self.TDA_IDX_FROM_END = 0 #timestep index of u_c (control state from which
-                            #observations are selcted). Value given as integer offset
-                            #from final timestep (since number of historical timesteps M is
-                            #not known by config file)
-        self.OBS_MODE = "rand" #Observation mode: "single_max" or "rand" - i.e. use a single
+        self.SHUFFLE_DATA = True # Shuffle data (after splitting into historical, test and control state?)
+        # config options to divide up data between "History", "observation" and "control_state"
+        # User is responsible for checking that these regions do not overlap
+        self.HIST_FRAC = 4.0 / 5.0 # fraction of data used as "history"
+        self.TDA_IDX_FROM_END = 0 # timestep index of u_c (control state from which
+                            # observations are selcted). Value given as integer offset
+                            # from final timestep (since number of historical timesteps M is
+                            # not known by config file)
+        self.OBS_MODE = "rand" # Observation mode: "single_max" or "rand" - i.e. use a single
                          # observation or a random subset
         self.OBS_FRAC = 0.005 # (with OBS_MODE=rand). fraction of state used as "observations".
                         # This is ignored when OBS_MODE = single_max
 
 
-        #VarDA hyperparams
+        # VarDA hyperparams
         self.ALPHA = 0.1
         self.OBS_VARIANCE = 0.05 #TODO - CHECK this is specific to the sensors (in this case - the error in model predictions)
 
@@ -62,14 +62,14 @@ class Config():
         self.export_env_vars()
 
     def get_loader(self):
-        from VarDACAE import GetData #import here to avoid circular imports
+        from VarDACAE import GetData # import here to avoid circular imports
 
         if hasattr(self, "LOADER") and self.LOADER != None:
             assert iscallable(self.LOADER)
             loader = self.LOADER()
             assert isinstance(loader, GetData())
             return loader
-        else: #use fulidity data
+        else: # use fulidity data
             return GetData()
 
     def get_X_fp(self, force_init=False):
@@ -121,8 +121,8 @@ class ConfigExample(Config):
     """Override and add relevant configuration options."""
     def __init__(self, loader=None):
         super(ConfigExample, self).__init__(loader)
-        self.ALPHA = 2.0 #override
-        self.NEW_OPTION = "FLAG" #Add new
+        self.ALPHA = 2.0 # override
+        self.NEW_OPTION = "FLAG" # Add new
 
 
 class SmallTestDomain(Config):
