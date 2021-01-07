@@ -1,5 +1,5 @@
 # VarDACAE
-This module is used to create Convolutional AutoEncoders for Variational Data Assimilation. A  user can define, create and train an AE for Data Assimilation with just a few lines of code.
+This module is used to create Convolutional AutoEncoders for Variational Data Assimilation. A  user can define, create and train an AE for Data Assimilation with just a few lines of code. It is the accompanying code to the paper [here](https://arxiv.org/abs/2101.02121), published in _Computer Methods in Applied Mechanics and Engineering_.
 
 ## Introduction
 
@@ -7,34 +7,39 @@ Data Assimilation (DA) is an uncertainty quantification technique used to reduce
 
 In this work, we propose a method of using Autoencoders to model the Background error covariance matrix, to greatly reduce the computational cost of solving 3D Variational DA **while increasing the quality of the Data Assimilation**.
 
+## Data
+The data used in this paper is owned by the Data Science Institute, Imperial College, London. If you do not have access to this data, please see the section below on training a model with your own data.
 ## Installation
-To install do the following:
-```
-git clone https://github.com/julianmack/Data_Assimilation.git
-cd Data_Assimilation
-pip install -e .    #or use `pip install .`
-                    #if you don't intend to update the module
-                    #for your own models/data
-```
+
+1. Install `vtk` by navigating to [this link](https://vtk.org/download/) and installing the version applicable to your system.
+
+2. Navigate to the base directory and run:
+
+   ```bash
+   pip install -e .
+   ```
+
+3. Run `pytest` from the home directory to ensure correct installation.
 
 ## Tests
 From the project home directory run `pytest`.
 
 ## Getting Started
 To train and evaluate a [Tucodec](http://openaccess.thecvf.com/content_CVPRW_2019/papers/CLIC%202019/Zhou_End-to-end_Optimized_Image_Compression_with_Attention_Mechanism_CVPRW_2019_paper.pdf "Tucodec CLIC-2019 paper") model on Fluidity data:
-```
+
+```python
 from VarDACAE import TrainAE, BatchDA
 from VarDACAE.settings.models.CLIC import CLIC
 
 model_kwargs = {"model_name": "Tucodec", "block_type": "NeXt", "Cstd": 64}
 
-settings = CLIC(**model_kwargs)    #settings describing experimental setup
-expdir = "experiments/expt1/"      #dir to save results data and models
+settings = CLIC(**model_kwargs)    # settings describing experimental setup
+expdir = "experiments/expt1/"      # dir to save results data and models
 
 trainer = TrainAE(settings, expdir, batch_sz=16)
-model = trainer.train(num_epochs=150)   #this will take approximately 8 hrs on a K80
+model = trainer.train(num_epochs=150)   # this will take approximately 8 hrs on a K80
 
-#evaluate DA on the test set:
+# evaluate DA on the test set:
 results_df = BatchDA(settings, AEModel=model).run()
 
 ```
@@ -45,7 +50,8 @@ The API is based around a monolithic ```settings``` object that is used to defin
 
 To train a model on your own 3D data you must do the following:
 * Override the default ```get_X(...)``` method in the ```GetData``` loader class:
-```
+
+```python
 from VarDACAE import GetData
 
 class NewLoaderClass(GetData):
@@ -61,7 +67,8 @@ class NewLoaderClass(GetData):
 ```
 
 * Create a new settings class that inherits from your desired model's settings class (e.g. `VarDACAE.settings.models.CLIC.CLIC`) and update the data dimensions:
-```
+
+```python
 from VarDACAE.settings.models.CLIC import CLIC
 
 class NewConfig(CLIC):
@@ -79,5 +86,5 @@ CLIC_kwargs =  {"model_name": "Tucodec", "block_type": "NeXt",
 settings = NewConfig(CLIC_kwargs, opt_kwargs)
 
 ```
-This ```settings``` object can now be used to train a model with the `TrainAE` method as shown above.
 
+This ```settings``` object can now be used to train a model with the `TrainAE` method as shown above.
